@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="BazadeDate.db" uuid="0eb67741-c77b-4b17-b6ab-7792cdcb6436">
-      <driver-ref>duckdb</driver-ref>
+    <data-source source="LOCAL" name="identifier.sqlite" uuid="4d89c966-0e12-4d61-b7fe-ce23db79a6da">
+      <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
-      <jdbc-driver>org.duckdb.DuckDBDriver</jdbc-driver>
-      <jdbc-url>jdbc:duckdb:C:\Users\Cosmin\Desktop\Facultate\Licenta_\licenta.db</jdbc-url>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:identifier.sqlite</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
