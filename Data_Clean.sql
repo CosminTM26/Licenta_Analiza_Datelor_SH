@@ -4,7 +4,7 @@ alter table Germany_Cars rename column fuel_consumption_l_100km to fuel_consumpt
 select *
 from Germany_Cars
 where year in ('Automatic' , 'Manual');
-
+--w5y
 -- transformare din string in double
 update cars_details_merges
 set price=
