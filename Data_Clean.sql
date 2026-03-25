@@ -43,7 +43,7 @@ set
     fuel_type=fuel_consumption_l_100km
 
 where year in ('Automatic' , 'Manual');
-
+--
 select count(year) as numar, year
 from Germany_Cars
 group by year
