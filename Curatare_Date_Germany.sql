@@ -126,7 +126,7 @@ from Germany_Cars
 where year in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown');
 
 
---transmisia are deja valoriile, asa ca stergem year
+--transmisia are deja valoriile, așa ca stergem year
 update Germany_Cars
 set year=null
 where year in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown');
@@ -136,7 +136,7 @@ select year
 from Germany_Cars
 where year not between 1800 and 2026;
 
---inlocuim valoriile anormale cu NULL
+--înlocuim valoriile anormale cu NULL
 update Germany_Cars
 set year=null
 where year not between 1800 and 2026;
@@ -150,3 +150,78 @@ where year is null;
 delete from Germany_Cars
 where year is null;
 
+alter table Germany_Cars
+rename column mileage_in_km to km;
+
+alter table Germany_Cars
+rename column offer_description to engine_type;
+
+
+--verificam duplicatele
+ SELECT brand, model, color,year, price_in_euro,power_ps,transmission_type,fuel_type, km,engine_type, COUNT(*) as nr
+  FROM Germany_Cars
+  GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type
+  HAVING COUNT(*) > 1
+order by nr desc;
+
+
+alter table Germany_Cars
+add column id INTEGER;
+
+update Germany_Cars
+set id=rowid;
+
+ SELECT COUNT(*) FROM Germany_Cars
+  WHERE id NOT IN (
+      SELECT MIN(id)
+      FROM Germany_Cars
+      GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type
+  );
+
+--STERGEM dublurile
+delete from Germany_Cars
+where id not in(SELECT MIN(id)
+      FROM Germany_Cars
+      GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type);
+
+select count() from Germany_Cars;
+
+
+--verificam valoriile nule
+  SELECT
+    SUM(CASE WHEN brand IS NULL THEN 1 ELSE 0 END) as brand_null,
+    SUM(CASE WHEN model IS NULL THEN 1 ELSE 0 END) as model_null,
+    SUM(CASE WHEN color IS NULL THEN 1 ELSE 0 END) as color_null,
+    SUM(CASE WHEN year IS NULL THEN 1 ELSE 0 END) as year_null,
+    SUM(CASE WHEN price_in_euro IS NULL THEN 1 ELSE 0 END) as price_null,
+    SUM(CASE WHEN power_ps IS NULL THEN 1 ELSE 0 END) as power_null,
+    SUM(CASE WHEN transmission_type IS NULL THEN 1 ELSE 0 END) as trans_null,
+    SUM(CASE WHEN fuel_type IS NULL THEN 1 ELSE 0 END) as fuel_null,
+    SUM(CASE WHEN km IS NULL THEN 1 ELSE 0 END) as km_null
+  FROM Germany_Cars;
+
+--km sunt imortanti deci stergem ce este null
+ DELETE FROM Germany_Cars WHERE km IS NULL;
+
+--culoarea nu este importanta, pastram inregistrarile
+UPDATE Germany_Cars SET color = 'Unknown' WHERE color IS NULL;
+
+
+--inlocuim valoriile nule cu media
+ UPDATE Germany_Cars
+  SET power_ps = (SELECT ROUND(AVG(power_ps), 0) FROM Germany_Cars_Cleaned WHERE power_ps IS NOT NULL)
+  WHERE power_ps IS NULL;
+
+ SELECT DISTINCT brand, COUNT(*) as nr FROM Germany_Cars GROUP BY brand ORDER BY brand;
+  SELECT DISTINCT color, COUNT(*) as nr FROM Germany_Cars GROUP BY color ORDER BY color;
+SELECT DISTINCT transmission_type, COUNT(*) as nr FROM Germany_Cars GROUP BY transmission_type ORDER
+  BY transmission_type;
+SELECT DISTINCT fuel_type, COUNT(*) as nr FROM Germany_Cars GROUP BY fuel_type ORDER BY fuel_type;
+
+--exista atat diesel hybrid cat si hybrid, le unificam
+UPDATE Germany_Cars SET fuel_type = 'Hybrid' WHERE fuel_type = 'Diesel Hybrid';
+
+drop table if exists Germany_Cars_Cleaned;
+create table Germany_Cars_Cleaned as
+    select id, brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type,km,engine_type
+    from Germany_Cars;
