@@ -12,3 +12,6 @@
 # Git directory
 .git/
 
+identifier.sqlite
+identifier.db
+*.xml
