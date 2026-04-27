@@ -1,0 +1,14 @@
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+
+# JetBrains IDE
+.idea/
+
+# Git directory
+.git/
+
