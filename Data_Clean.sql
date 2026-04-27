@@ -15,10 +15,18 @@ set price=
 update cars_details_merges
     set "Max Power" = round(CAST("Max Power" AS REAL),0);
 
+
+alter table cars_details_merges
+    add column id integer;
+
+update cars_details_merges
+    set id=rowid;
+
 drop table if exists India_Cars_Cleaned;
 -- selectare coloane necesare
 create table India_Cars_Cleaned as
     select
+        id,
     oem as brand,
     model,
     color,

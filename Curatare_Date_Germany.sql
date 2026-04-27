@@ -221,6 +221,9 @@ SELECT DISTINCT fuel_type, COUNT(*) as nr FROM Germany_Cars GROUP BY fuel_type O
 --exista atat diesel hybrid cat si hybrid, le unificam
 UPDATE Germany_Cars SET fuel_type = 'Hybrid' WHERE fuel_type = 'Diesel Hybrid';
 
+ SELECT DISTINCT model, COUNT(*) as nr
+  FROM Germany_Cars_Cleaned GROUP BY model ORDER BY model;
+
 drop table if exists Germany_Cars_Cleaned;
 create table Germany_Cars_Cleaned as
     select id, brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type,km,engine_type

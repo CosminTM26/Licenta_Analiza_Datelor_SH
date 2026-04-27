@@ -13,51 +13,63 @@ SELECT DISTINCT brand, COUNT(*) as nr FROM
   India_Cars_Cleaned GROUP BY model ORDER BY
   model;
 --modificam modelele cu denumiri diferite
-update India_Cars_Cleaned set model = 'Audi A3' where model like 'Audi A3%';
-update India_Cars_Cleaned set model = 'BMW 3 Series' where model like 'BMW 3 Series%';
-update India_Cars_Cleaned set model = 'Chevrolet Aveo' where model like 'Chevrolet Aveo%';
-update India_Cars_Cleaned set model = 'Chevrolet Sail' where model like 'Chevrolet Sail%';
-update India_Cars_Cleaned set model = 'Fiat Avventura' where model like 'Fiat Avventura%';
-update India_Cars_Cleaned set model = 'Fiat Linea' where model like 'Fiat Linea%';
-update India_Cars_Cleaned set model = 'Fiat Punto' where model like 'Fiat Punto%';
-update India_Cars_Cleaned set model = 'Hyundai Grand i10' where model like 'Hyundai Grand i10%';
-update India_Cars_Cleaned set model = 'Hyundai Santro' where model like 'Hyundai Santro%';
-update India_Cars_Cleaned set model = 'Hyundai i20' where model like 'Hyundai i20%';
-update India_Cars_Cleaned set model = 'Jeep Compass' where model like 'Jeep Compass%';
-update India_Cars_Cleaned set model = 'Lamborghini Huracan' where model like 'Lamborghini Huracan%';
-update India_Cars_Cleaned set model = 'Land Rover Discovery' where model like 'Land Rover Discovery%';
-update India_Cars_Cleaned set model = 'Land Rover Range Rover' where model like 'Land Rover Range Rover%';
-update India_Cars_Cleaned set model = 'Mahindra Bolero' where model like 'Mahindra Bolero%';
-update India_Cars_Cleaned set model = 'Mahindra Bolero' where model like 'Mahindra BOLERO PIK UP Extra Strong%';
-update India_Cars_Cleaned set model = 'Mahindra KUV 100' where model like 'Mahindra KUV 100%';
-update India_Cars_Cleaned set model = 'Mahindra Scorpio' where model like 'Mahindra Scorpio%';
-update India_Cars_Cleaned set model = 'Mahindra TUV 300' where model like 'Mahindra TUV 300%';
-update India_Cars_Cleaned set model = 'Mahindra Verito' where model like 'Mahindra Verito%';
-update India_Cars_Cleaned set model = 'Maruti Alto' where model like 'Maruti Alto%';
-update India_Cars_Cleaned set model = 'Maruti Baleno' where model like 'Maruti Baleno%';
-update India_Cars_Cleaned set model = 'Maruti Celerio' where model like 'Maruti Celerio%';
-update India_Cars_Cleaned set model = 'Maruti Ciaz' where model like 'Maruti Ciaz%';
-update India_Cars_Cleaned set model = 'Maruti Eeco' where model like 'Maruti Eeco%';
-update India_Cars_Cleaned set model = 'Maruti Ertiga' where model like 'Maruti Ertiga%';
-update India_Cars_Cleaned set model = 'Maruti Swift Dzire' where model like 'Maruti Swift Dzire%';
-update India_Cars_Cleaned set model = 'Maruti Wagon R' where model like 'Maruti Wagon R%';
-update India_Cars_Cleaned set model = 'Maruti Zen' where model like 'Maruti Zen%';
-update India_Cars_Cleaned set model = 'Mercedes-Benz A Class' where model like 'Mercedes-Benz A Class%';
-update India_Cars_Cleaned set model = 'Mercedes-Benz E-Class' where model like 'Mercedes-Benz E-Class%';
-update India_Cars_Cleaned set model = 'Mercedes-Benz GLA' where model like 'Mercedes-Benz GLA%';
-update India_Cars_Cleaned set model = 'Mercedes-Benz GLC' where model like 'Mercedes-Benz GLC%';
-update India_Cars_Cleaned set model = 'Tata Indica' where model like 'Tata Indica%';
-update India_Cars_Cleaned set model = 'Tata Indigo' where model like 'Tata Indigo%';
-update India_Cars_Cleaned set model = 'Tata Nexon' where model like 'Tata Nexon%';
-update India_Cars_Cleaned set model = 'Tata Sumo' where model like 'Tata Sumo%';
-update India_Cars_Cleaned set model = 'Tata Tiago' where model like 'Tata Tiago%';
-update India_Cars_Cleaned set model = 'Tata Tigor' where model like 'Tata Tigor%';
-update India_Cars_Cleaned set model = 'Toyota Corolla' where model like 'Toyota Corolla%';
-update India_Cars_Cleaned set model = 'Toyota Etios' where model like 'Toyota Etios%';
-update India_Cars_Cleaned set model = 'Toyota Fortuner' where model like 'Toyota Fortuner%';
-update India_Cars_Cleaned set model = 'Toyota Innova' where model like 'Toyota Innova%';
-update India_Cars_Cleaned set model = 'Volvo S60' where model like 'Volvo S60%';
-update India_Cars_Cleaned set model = 'Volvo V40' where model like 'Volvo V40%';
+-- AUDI
+UPDATE India_Cars_Cleaned SET model = 'Audi A3' WHERE model LIKE 'Audi A3 %' AND model NOT LIKE 'Audi A3 cabriolet%';
+
+-- BMW
+UPDATE India_Cars_Cleaned SET model = 'BMW 3 Series' WHERE model LIKE 'BMW 3 Series %' AND model NOT LIKE '%GT%' AND model NOT LIKE '%Gran Limousine%';
+
+-- CHEVROLET
+UPDATE India_Cars_Cleaned SET model = 'Chevrolet Aveo' WHERE model LIKE 'Chevrolet Aveo %' AND model NOT LIKE '%U-VA%';
+UPDATE India_Cars_Cleaned SET model = 'Chevrolet Sail' WHERE model LIKE 'Chevrolet Sail %' AND model NOT LIKE '%Hatchback%';
+
+-- FIAT
+UPDATE India_Cars_Cleaned SET model = 'Fiat Avventura' WHERE model LIKE 'Fiat Avventura %' AND model NOT LIKE '%Urban Cross%';
+UPDATE India_Cars_Cleaned SET model = 'Fiat Linea' WHERE model LIKE 'Fiat Linea %' AND model NOT LIKE '%Classic%';
+UPDATE India_Cars_Cleaned SET model = 'Fiat Punto' WHERE model LIKE 'Fiat Punto %' AND model NOT LIKE '%Abarth%' AND model NOT LIKE '%EVO%' AND model NOT LIKE '%Pure%';
+
+-- HYUNDAI
+UPDATE India_Cars_Cleaned SET model = 'Hyundai Grand i10' WHERE model LIKE 'Hyundai Grand i10 %' AND model NOT LIKE '%Nios%';
+UPDATE India_Cars_Cleaned SET model = 'Hyundai Santro' WHERE model LIKE 'Hyundai Santro %' AND model NOT LIKE '%Xing%';
+UPDATE India_Cars_Cleaned SET model = 'Hyundai i20' WHERE model LIKE 'Hyundai i20 %' AND model NOT LIKE '%Active%' AND model NOT LIKE '%N Line%';
+
+-- JEEP & LAMBORGHINI
+UPDATE India_Cars_Cleaned SET model = 'Jeep Compass' WHERE model LIKE 'Jeep Compass %' AND model NOT LIKE '%Trailhawk%';
+UPDATE India_Cars_Cleaned SET model = 'Lamborghini Huracan' WHERE model LIKE 'Lamborghini Huracan %' AND model NOT LIKE '%EVO%';
+
+-- MAHINDRA
+UPDATE India_Cars_Cleaned SET model = 'Mahindra KUV 100' WHERE model LIKE 'Mahindra KUV 100 %' AND model NOT LIKE '%NXT%';
+UPDATE India_Cars_Cleaned SET model = 'Mahindra Scorpio' WHERE model LIKE 'Mahindra Scorpio %' AND model NOT LIKE '%Classic%' AND model NOT LIKE '%N%';
+UPDATE India_Cars_Cleaned SET model = 'Mahindra TUV 300' WHERE model LIKE 'Mahindra TUV 300 %' AND model NOT LIKE '%Plus%';
+UPDATE India_Cars_Cleaned SET model = 'Mahindra Verito' WHERE model LIKE 'Mahindra Verito %' AND model NOT LIKE '%Vibe%';
+
+-- MARUTI
+UPDATE India_Cars_Cleaned SET model = 'Maruti Celerio' WHERE model LIKE 'Maruti Celerio %' AND model NOT LIKE '%Tour%' AND model NOT LIKE '%X%';
+UPDATE India_Cars_Cleaned SET model = 'Maruti Ciaz' WHERE model LIKE 'Maruti Ciaz %' AND model NOT LIKE '%S%';
+UPDATE India_Cars_Cleaned SET model = 'Maruti Eeco' WHERE model LIKE 'Maruti Eeco %' AND model NOT LIKE '%Cargo%';
+UPDATE India_Cars_Cleaned SET model = 'Maruti Ertiga' WHERE model LIKE 'Maruti Ertiga %' AND model NOT LIKE '%Tour%';
+UPDATE India_Cars_Cleaned SET model = 'Maruti Swift Dzire' WHERE model LIKE 'Maruti Swift Dzire %' AND model NOT LIKE '%Tour%';
+UPDATE India_Cars_Cleaned SET model = 'Maruti Wagon R' WHERE model LIKE 'Maruti Wagon R %' AND model NOT LIKE '%Stingray%';
+UPDATE India_Cars_Cleaned SET model = 'Maruti Zen' WHERE model LIKE 'Maruti Zen %' AND model NOT LIKE '%Estilo%';
+
+-- MERCEDES-BENZ
+UPDATE India_Cars_Cleaned SET model = 'Mercedes-Benz GLA' WHERE model LIKE 'Mercedes-Benz GLA%'; -- (Acesta e sigur de lăsat normal)
+UPDATE India_Cars_Cleaned SET model = 'Mercedes-Benz E-Class' WHERE model LIKE 'Mercedes-Benz E-Class %' AND model NOT LIKE '%All-Terrain%';
+UPDATE India_Cars_Cleaned SET model = 'Mercedes-Benz GLC' WHERE model LIKE 'Mercedes-Benz GLC %' AND model NOT LIKE '%Coupe%';
+
+-- TATA
+UPDATE India_Cars_Cleaned SET model = 'Tata Indica' WHERE model LIKE 'Tata Indica %' AND model NOT LIKE '%Xeta%' AND model NOT LIKE '%eV2%';
+UPDATE India_Cars_Cleaned SET model = 'Tata Indigo' WHERE model LIKE 'Tata Indigo %' AND model NOT LIKE '%Marina%';
+UPDATE India_Cars_Cleaned SET model = 'Tata Nexon' WHERE model LIKE 'Tata Nexon %' AND model NOT LIKE '%EV%';
+UPDATE India_Cars_Cleaned SET model = 'Tata Sumo' WHERE model LIKE 'Tata Sumo %' AND model NOT LIKE '%Victa%';
+UPDATE India_Cars_Cleaned SET model = 'Tata Tiago' WHERE model LIKE 'Tata Tiago %' AND model NOT LIKE '%NRG%';
+UPDATE India_Cars_Cleaned SET model = 'Tata Tigor' WHERE model LIKE 'Tata Tigor %' AND model NOT LIKE '%EV%';
+
+-- TOYOTA & VOLVO
+UPDATE India_Cars_Cleaned SET model = 'Toyota Corolla' WHERE model LIKE 'Toyota Corolla %' AND model NOT LIKE '%Altis%';
+UPDATE India_Cars_Cleaned SET model = 'Toyota Fortuner' WHERE model LIKE 'Toyota Fortuner %' AND model NOT LIKE '%Legender%';
+UPDATE India_Cars_Cleaned SET model = 'Volvo S60' WHERE model LIKE 'Volvo S60 %' AND model NOT LIKE '%Cross Country%';
+UPDATE India_Cars_Cleaned SET model = 'Volvo V40' WHERE model LIKE 'Volvo V40 %' AND model NOT LIKE '%Cross Country%';
 
   SELECT DISTINCT color, COUNT(*) as nr FROM
   India_Cars_Cleaned GROUP BY color ORDER BY
@@ -87,6 +99,7 @@ update India_Cars_Cleaned set color = 'Brown' where color like '%Beige%';
 update India_Cars_Cleaned set color = 'Grey' where color like '%Steel%';
 update India_Cars_Cleaned set color = 'Grey' where color like '%Star%';
 update India_Cars_Cleaned set color = 'Grey' where color like '%Metal%';
+
 update India_Cars_Cleaned set color = 'Unknown' where color not in (select India_Cars_Cleaned.Color
 from India_Cars_Cleaned
 group by Color
@@ -145,8 +158,8 @@ UPDATE India_Cars_Cleaned SET body_type = 'Minivan' WHERE body_type = 'Minivans'
  UPDATE India_Cars_Cleaned SET drivetrain = '4*4'
   WHERE drivetrain IN ('4 WD','4WD','4X4','4x4','Four Whell Drive');
  UPDATE India_Cars_Cleaned SET drivetrain = 'AWD'
-  WHERE drivetrain IN ('AWD','All Wheel Drive','All-wheel drive with Electronic Traction','Permanent all-wheel drive quattro')
-update India_Cars_Cleaned SET drivetrain = 'Unknown' where drivetrain='3' or drivetrain is null
+  WHERE drivetrain IN ('AWD','All Wheel Drive','All-wheel drive with Electronic Traction','Permanent all-wheel drive quattro');
+update India_Cars_Cleaned SET drivetrain = 'Unknown' where drivetrain='3' or drivetrain is null;
 
 
 
@@ -158,28 +171,5 @@ add column id integer;
 
 update India_Cars_Cleaned set id = rowid;
 
-drop table if exists India_Cars_Cleaned1;
-create table India_Cars_Cleaned1 as
-    select
-        id,
-   brand,
-    model,
-    color,
-    year,
-    price_in_euro,
-    power_ps,
-    transmission_type,
-    fuel_type,
-    km,
-    variant_name,
-    max_engine_capacity_new,
-    one_owner,
-    drivetrain,
-    body_type
-    from India_Cars_Cleaned;
-
-drop table if exists India_Cars_Cleaned;
-alter table India_Cars_Cleaned1
-rename to India_Cars_Cleaned;
 
 
