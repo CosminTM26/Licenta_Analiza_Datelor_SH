@@ -86,7 +86,8 @@ SELECT DISTINCT model, COUNT(*) as nr
 
   -- RS series
   UPDATE SUA_Cars_Cleaned SET model = 'RS 3' WHERE model LIKE 'RS 3%' AND brand = 'Audi';
-  UPDATE SUA_Cars_Cleaned SET model = 'RS 4' WHERE model LIKE 'RS 4%' AND brand = 'Audi';
+  UPDATE SUA_Cars_Cleaned SET model =
+      'RS 4' WHERE model LIKE 'RS 4%' AND brand = 'Audi';
   UPDATE SUA_Cars_Cleaned SET model = 'RS 5' WHERE model LIKE 'RS 5%' AND brand = 'Audi';
   UPDATE SUA_Cars_Cleaned SET model = 'RS 7' WHERE model LIKE 'RS 7%' AND brand = 'Audi';
   UPDATE SUA_Cars_Cleaned SET model = 'RS Q8' WHERE model LIKE 'RS Q8%' AND brand = 'Audi';
@@ -466,8 +467,1146 @@ SELECT DISTINCT model, COUNT(*) as nr
   UPDATE SUA_Cars_Cleaned SET model = 'Newport' WHERE model LIKE 'Newport%' AND brand = 'Chrysler';
   UPDATE SUA_Cars_Cleaned SET model = 'TC by Maserati' WHERE model LIKE 'TC by Maserati%' AND brand = 'Chrysler';
 
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Dodge'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Muscle Cars și Sedanuri
+
+  -- Challenger SRT/Hellcat/Demon (PRIMUL - înainte de Challenger general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Challenger SRT/Hellcat/Demon' WHERE model LIKE 'Challenger%'
+  AND (model LIKE '%SRT%' OR model LIKE '%Hellcat%' OR model LIKE '%Demon%') AND brand IN ('Dodge', 'Ram');
+  -- Challenger (restul - exclude SRT, Hellcat, Demon)
+  UPDATE SUA_Cars_Cleaned SET model = 'Challenger' WHERE model LIKE 'Challenger%' AND model NOT LIKE '%SRT%'
+  AND model NOT LIKE '%Hellcat%' AND model NOT LIKE '%Demon%' AND brand IN ('Dodge', 'Ram');
+
+  -- Charger SRT/Hellcat (PRIMUL - înainte de Charger general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Charger SRT/Hellcat' WHERE model LIKE 'Charger%'
+  AND (model LIKE '%SRT%' OR model LIKE '%Hellcat%') AND brand IN ('Dodge', 'Ram');
+  -- Charger (restul - exclude SRT, Hellcat)
+  UPDATE SUA_Cars_Cleaned SET model = 'Charger' WHERE model LIKE 'Charger%' AND model NOT LIKE '%SRT%'
+  AND model NOT LIKE '%Hellcat%' AND brand IN ('Dodge', 'Ram');
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Avenger' WHERE model LIKE 'Avenger%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Dart' WHERE model LIKE 'Dart%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Neon' WHERE model LIKE 'Neon%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Stratus' WHERE model LIKE 'Stratus%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Stealth' WHERE model LIKE 'Stealth%' AND brand IN ('Dodge', 'Ram');
+
+  -- SUV-uri, Crossovere și Minivan-uri
+
+  -- Durango SRT/Hellcat (PRIMUL - înainte de Durango general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Durango SRT/Hellcat' WHERE model LIKE 'Durango%'
+  AND (model LIKE '%SRT%' OR model LIKE '%Hellcat%') AND brand IN ('Dodge', 'Ram');
+  -- Durango (restul - exclude SRT, Hellcat)
+  UPDATE SUA_Cars_Cleaned SET model = 'Durango' WHERE model LIKE 'Durango%' AND model NOT LIKE '%SRT%'
+  AND model NOT LIKE '%Hellcat%' AND brand IN ('Dodge', 'Ram');
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Journey' WHERE model LIKE 'Journey%' AND brand IN ('Dodge', 'Ram');
+  -- Grand Caravan (ÎNAINTE de Caravan general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Grand Caravan' WHERE model LIKE 'Grand Caravan%' AND brand IN ('Dodge', 'Ram');
+  -- Caravan (restul - exclude Grand Caravan)
+  UPDATE SUA_Cars_Cleaned SET model = 'Caravan' WHERE model LIKE 'Caravan%' AND model NOT LIKE 'Grand Caravan%'
+  AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Nitro' WHERE model LIKE 'Nitro%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Caliber' WHERE model LIKE 'Caliber%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Magnum' WHERE model LIKE 'Magnum%' AND brand IN ('Dodge', 'Ram');
+
+  -- Pick-up-uri
+
+  -- Ram Van și Ram Wagon (ÎNAINTE de Ram 1500/2500/3500 - altfel "Ram Van 1500" ar fi prins de Ram 1500)
+  UPDATE SUA_Cars_Cleaned SET model = 'Ram Van' WHERE model LIKE 'Ram Van%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Ram Wagon' WHERE model LIKE 'Ram Wagon%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Ram 1500' WHERE model LIKE '%Ram 1500%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Ram 2500' WHERE model LIKE '%Ram 2500%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Ram 3500' WHERE model LIKE '%Ram 3500%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Dakota' WHERE model LIKE 'Dakota%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Ramcharger' WHERE model LIKE 'Ramcharger%' AND brand IN ('Dodge', 'Ram');
+  -- D-Series (D150, D250) și W-Series (W250) - modele clasice
+  UPDATE SUA_Cars_Cleaned SET model = 'D-Series' WHERE (model LIKE 'D150%' OR model LIKE 'D250%')
+  AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'W-Series' WHERE model LIKE 'W250%' AND brand IN ('Dodge', 'Ram');
+
+  -- Dubițe / Vans
+  UPDATE SUA_Cars_Cleaned SET model = 'Sprinter' WHERE model LIKE 'Sprinter%' AND brand IN ('Dodge', 'Ram');
+
+  -- Supercar-uri și Clasice
+
+  -- Viper (include SRT Viper - același model, rebranded)
+  UPDATE SUA_Cars_Cleaned SET model = 'Viper' WHERE (model LIKE 'Viper%' OR model LIKE 'SRT Viper%')
+  AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Coronet' WHERE model LIKE 'Coronet%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Polara' WHERE model LIKE 'Polara%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Diplomat' WHERE model LIKE 'Diplomat%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Shadow' WHERE model LIKE 'Shadow%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = 'Aspen' WHERE model LIKE 'Aspen%' AND brand IN ('Dodge', 'Ram');
+  -- Seria numerică (400, 600, 880)
+  UPDATE SUA_Cars_Cleaned SET model = '400' WHERE model LIKE '400%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = '600' WHERE model LIKE '600%' AND brand IN ('Dodge', 'Ram');
+  UPDATE SUA_Cars_Cleaned SET model = '880' WHERE model LIKE '880%' AND brand IN ('Dodge', 'Ram');
+  -- Intrepid (model Dodge prezent în date, nemenționate în reguli)
+  UPDATE SUA_Cars_Cleaned SET model = 'Intrepid' WHERE model LIKE 'Intrepid%' AND brand IN ('Dodge', 'Ram');
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Ford'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Familia Mustang
+
+  -- Mustang Mach-E (PRIMUL - model electric distinct)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mustang Mach-E' WHERE model LIKE '%Mach-E%' AND brand = 'Ford';
+  -- Mustang Shelby / SVT Cobra (PRIMUL față de Mustang general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mustang Shelby/SVT Cobra' WHERE
+  (model LIKE '%Shelby%' OR model LIKE '%GT350%' OR model LIKE '%GT500%' OR model LIKE '%SVT Cobra%')
+  AND brand = 'Ford';
+  -- Mustang (restul - exclude Mach-E, Shelby, GT350, GT500, SVT)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mustang' WHERE model LIKE 'Mustang%'
+  AND model NOT LIKE '%Mach-E%' AND model NOT LIKE '%Shelby%' AND model NOT LIKE '%GT350%'
+  AND model NOT LIKE '%GT500%' AND model NOT LIKE '%SVT%' AND brand = 'Ford';
+  -- Ford GT (include GT40)
+  UPDATE SUA_Cars_Cleaned SET model = 'Ford GT' WHERE model LIKE 'GT%' AND brand = 'Ford';
+
+  -- Pick-up-uri
+
+  -- F-150 Lightning (PRIMUL - model electric distinct)
+  UPDATE SUA_Cars_Cleaned SET model = 'F-150 Lightning' WHERE model LIKE '%F-150 Lightning%' AND brand = 'Ford';
+  -- F-150 (restul - exclude Lightning)
+  UPDATE SUA_Cars_Cleaned SET model = 'F-150' WHERE model LIKE '%F-150%'
+  AND model NOT LIKE '%Lightning%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'F-250' WHERE model LIKE '%F-250%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'F-350' WHERE model LIKE '%F-350%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'F-450' WHERE model LIKE '%F-450%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'F100' WHERE model LIKE 'F100%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Ranger' WHERE model LIKE 'Ranger%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Maverick' WHERE model LIKE 'Maverick%' AND brand = 'Ford';
+  -- Explorer Sport Trac (pick-up, nu SUV - ÎNAINTE de Explorer)
+  UPDATE SUA_Cars_Cleaned SET model = 'Explorer Sport Trac' WHERE model LIKE '%Sport Trac%' AND brand = 'Ford';
+
+  -- SUV-uri și Crossovere
+
+  -- Bronco Sport (PRIMUL - platformă crossover, diferită de Bronco)
+  UPDATE SUA_Cars_Cleaned SET model = 'Bronco Sport' WHERE model LIKE 'Bronco Sport%' AND brand = 'Ford';
+  -- Bronco II (PRIMUL - model clasic, diferit de Bronco modern)
+  UPDATE SUA_Cars_Cleaned SET model = 'Bronco II' WHERE model LIKE 'Bronco II%' AND brand = 'Ford';
+  -- Bronco (restul - exclude Sport, II)
+  UPDATE SUA_Cars_Cleaned SET model = 'Bronco' WHERE model LIKE 'Bronco%'
+  AND model NOT LIKE 'Bronco Sport%' AND model NOT LIKE 'Bronco II%' AND brand = 'Ford';
+  -- Expedition MAX/EL (șasiu alungit - ÎNAINTE de Expedition general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Expedition MAX/EL' WHERE model LIKE 'Expedition%'
+  AND (model LIKE '%EL%' OR model LIKE '%MAX%' OR model LIKE '%Max%') AND brand = 'Ford';
+  -- Expedition (restul - exclude MAX, EL)
+  UPDATE SUA_Cars_Cleaned SET model = 'Expedition' WHERE model LIKE 'Expedition%'
+  AND model NOT LIKE '%EL%' AND model NOT LIKE '%MAX%' AND model NOT LIKE '%Max%' AND brand = 'Ford';
+  -- Explorer (exclude Sport Trac)
+  UPDATE SUA_Cars_Cleaned SET model = 'Explorer' WHERE model LIKE 'Explorer%'
+  AND model NOT LIKE '%Sport Trac%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Escape' WHERE model LIKE 'Escape%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Edge' WHERE model LIKE 'Edge%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'EcoSport' WHERE model LIKE 'EcoSport%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Excursion' WHERE model LIKE 'Excursion%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Flex' WHERE model LIKE 'Flex%' AND brand = 'Ford';
+
+  -- Autoutilitare și Dubițe
+
+  -- E-Transit (PRIMUL - van electric)
+  UPDATE SUA_Cars_Cleaned SET model = 'E-Transit' WHERE model LIKE 'E-Transit%' AND brand = 'Ford';
+  -- Transit Connect (PRIMUL - van compact)
+  UPDATE SUA_Cars_Cleaned SET model = 'Transit Connect' WHERE model LIKE 'Transit Connect%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Transit-150' WHERE model LIKE '%Transit-150%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Transit-250' WHERE model LIKE '%Transit-250%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Transit-350' WHERE model LIKE '%Transit-350%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'E-150' WHERE model LIKE 'E150%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'E-250' WHERE model LIKE 'E250%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'E-350' WHERE model LIKE 'E350%' AND brand = 'Ford';
+  -- MPV-uri
+  UPDATE SUA_Cars_Cleaned SET model = 'Aerostar' WHERE model LIKE 'Aerostar%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Freestar' WHERE model LIKE 'Freestar%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Windstar' WHERE model LIKE 'Windstar%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Club Wagon' WHERE model LIKE 'Club Wagon%' AND brand = 'Ford';
+
+  -- Autoturisme Moderne
+
+  UPDATE SUA_Cars_Cleaned SET model = 'C-Max' WHERE model LIKE 'C-Max%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Focus' WHERE model LIKE 'Focus%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Fiesta' WHERE model LIKE 'Fiesta%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Fusion' WHERE model LIKE 'Fusion%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Taurus' WHERE model LIKE 'Taurus%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Crown Victoria' WHERE model LIKE 'Crown Victoria%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Five Hundred' WHERE model LIKE 'Five Hundred%' AND brand = 'Ford';
+
+  -- Vehicule Speciale de Poliție
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Police Interceptor Utility' WHERE model LIKE 'Utility Police Interceptor%'
+  AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Police Interceptor Sedan' WHERE model LIKE 'Sedan Police Interceptor%'
+  AND brand = 'Ford';
+
+  -- Modele Clasice
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Fairlane' WHERE model LIKE 'Fairlane%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Falcon' WHERE model LIKE 'Falcon%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Galaxie' WHERE model LIKE 'Galaxie%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Model A' WHERE model LIKE 'Model A%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Model T' WHERE model LIKE 'Model T%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Ranchero' WHERE model LIKE 'Ranchero%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Thunderbird' WHERE model LIKE 'Thunderbird%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Torino' WHERE model LIKE 'Torino%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Pinto' WHERE model LIKE 'Pinto%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Probe' WHERE model LIKE 'Probe%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Granada' WHERE model LIKE 'Granada%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'LTD' WHERE model LIKE 'LTD%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Customline' WHERE model LIKE 'Customline%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Crestline' WHERE model LIKE 'Crestline%' AND brand = 'Ford';
+  -- Modele prezente în date, nemenționate în reguli
+  UPDATE SUA_Cars_Cleaned SET model = 'Escort' WHERE model LIKE 'Escort%' AND brand = 'Ford';
+  UPDATE SUA_Cars_Cleaned SET model = 'Freestyle' WHERE model LIKE 'Freestyle%' AND brand = 'Ford';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'GMC'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Seria Sierra (Pick-up-uri Full-Size)
+
+  -- Sierra 1500 (include intrările generice 1500)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sierra 1500' WHERE (model LIKE 'Sierra 1500%' OR model LIKE '1500%')
+  AND brand = 'GMC';
+  -- Sierra 2500 (include intrările generice 2500)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sierra 2500' WHERE (model LIKE 'Sierra 2500%' OR model LIKE '2500%')
+  AND brand = 'GMC';
+  -- Sierra 3500 (include intrările generice 3500)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sierra 3500' WHERE (model LIKE 'Sierra 3500%' OR model LIKE '3500%')
+  AND brand = 'GMC';
+
+  -- Pick-up-uri Mid-size și Clasice
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Canyon' WHERE model LIKE 'Canyon%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Sonoma' WHERE model LIKE 'Sonoma%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Caballero' WHERE model LIKE 'Caballero%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Sprint' WHERE model LIKE 'Sprint%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Pickup Truck' WHERE model LIKE 'Pickup Truck%' AND brand = 'GMC';
+
+  -- Familia Yukon
+
+  -- Yukon XL (PRIMUL - înainte de Yukon general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Yukon XL' WHERE model LIKE 'Yukon XL%' AND brand = 'GMC';
+  -- Yukon (restul - exclude XL)
+  UPDATE SUA_Cars_Cleaned SET model = 'Yukon' WHERE model LIKE 'Yukon%'
+  AND model NOT LIKE 'Yukon XL%' AND brand = 'GMC';
+
+  -- SUV-uri și Crossovere
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Acadia' WHERE model LIKE 'Acadia%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Terrain' WHERE model LIKE 'Terrain%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Envoy' WHERE model LIKE 'Envoy%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Suburban' WHERE model LIKE 'Suburban%' AND brand = 'GMC';
+  -- Typhoon (PRIMUL - model de performanță distinct față de Jimmy)
+  UPDATE SUA_Cars_Cleaned SET model = 'Typhoon' WHERE model LIKE '%Typhoon%' AND brand = 'GMC';
+  -- Jimmy (restul - exclude Typhoon)
+  UPDATE SUA_Cars_Cleaned SET model = 'Jimmy' WHERE model LIKE 'Jimmy%'
+  AND model NOT LIKE '%Typhoon%' AND brand = 'GMC';
+
+  -- Seria Savana (Vans)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Savana 1500' WHERE model LIKE '%Savana 1500%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Savana 2500' WHERE model LIKE '%Savana 2500%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Savana 3500' WHERE model LIKE '%Savana 3500%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Safari' WHERE model LIKE 'Safari%' AND brand = 'GMC';
+  UPDATE SUA_Cars_Cleaned SET model = 'Vandura' WHERE model LIKE 'Vandura%' AND brand = 'GMC';
+
+  -- Modele Noi / Electrice
+
+  UPDATE SUA_Cars_Cleaned SET model = 'HUMMER EV' WHERE model LIKE 'HUMMER EV%' AND brand = 'GMC';
 
 
+
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Honda'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Familia Civic
+
+  -- Civic Type R (PRIMUL - versiune de performanță distinctă)
+  UPDATE SUA_Cars_Cleaned SET model = 'Civic Type R' WHERE model LIKE '%Type R%' AND brand = 'Honda';
+  -- Civic Si (PRIMUL - versiune sport distinctă)
+  UPDATE SUA_Cars_Cleaned SET model = 'Civic Si' WHERE model LIKE '%Civic Si%' AND brand = 'Honda';
+  -- Civic Hybrid (PRIMUL - versiune electrificată distinctă)
+  UPDATE SUA_Cars_Cleaned SET model = 'Civic Hybrid' WHERE model LIKE '%Civic Hybrid%' AND brand = 'Honda';
+  -- Civic Natural Gas / GX
+  UPDATE SUA_Cars_Cleaned SET model = 'Civic Natural Gas/GX' WHERE (model LIKE '%Natural Gas%'
+  OR model LIKE 'Civic GX%') AND brand = 'Honda';
+  -- Civic (restul - exclude Type R, Si, Hybrid, Natural Gas, GX)
+  UPDATE SUA_Cars_Cleaned SET model = 'Civic' WHERE model LIKE 'Civic%'
+  AND model NOT LIKE '%Type R%' AND model NOT LIKE '%Civic Si%' AND model NOT LIKE '%Hybrid%'
+  AND model NOT LIKE '%Natural Gas%' AND model NOT LIKE '%GX%' AND brand = 'Honda';
+
+  -- Familia Accord și Crosstour
+
+  -- Accord Hybrid (PRIMUL - versiune electrificată distinctă)
+  UPDATE SUA_Cars_Cleaned SET model = 'Accord Hybrid' WHERE model LIKE '%Accord Hybrid%' AND brand = 'Honda';
+  -- Crosstour (acoperă atât Accord Crosstour, cât și Crosstour independent - aceeași mașină)
+  UPDATE SUA_Cars_Cleaned SET model = 'Crosstour' WHERE model LIKE '%Crosstour%' AND brand = 'Honda';
+  -- Accord (restul - exclude Hybrid, Crosstour)
+  UPDATE SUA_Cars_Cleaned SET model = 'Accord' WHERE model LIKE 'Accord%'
+  AND model NOT LIKE '%Hybrid%' AND model NOT LIKE '%Crosstour%' AND brand = 'Honda';
+
+  -- Familia CR-V
+
+  -- CR-V Hybrid (PRIMUL - versiune electrificată distinctă)
+  UPDATE SUA_Cars_Cleaned SET model = 'CR-V Hybrid' WHERE model LIKE '%CR-V Hybrid%' AND brand = 'Honda';
+  -- CR-V (restul - exclude Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'CR-V' WHERE model LIKE 'CR-V%'
+  AND model NOT LIKE '%Hybrid%' AND brand = 'Honda';
+
+  -- SUV-uri, Crossovere, Minivan și Pick-up
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Pilot' WHERE model LIKE 'Pilot%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Passport' WHERE model LIKE 'Passport%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'HR-V' WHERE model LIKE 'HR-V%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Element' WHERE model LIKE 'Element%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Odyssey' WHERE model LIKE 'Odyssey%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Ridgeline' WHERE model LIKE 'Ridgeline%' AND brand = 'Honda';
+
+  -- Modele Compacte și Subcompacte
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Fit' WHERE model LIKE 'Fit%' AND brand = 'Honda';
+
+  -- Vehicule Dedicate (Hibride, Electrice sau Plug-In)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Insight' WHERE model LIKE 'Insight%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'CR-Z' WHERE model LIKE 'CR-Z%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Clarity' WHERE model LIKE 'Clarity%' AND brand = 'Honda';
+
+  -- Modele Sport și Clasice
+
+  UPDATE SUA_Cars_Cleaned SET model = 'S2000' WHERE model LIKE 'S2000%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Prelude' WHERE model LIKE 'Prelude%' AND brand = 'Honda';
+  UPDATE SUA_Cars_Cleaned SET model = 'del Sol' WHERE model LIKE '%del Sol%' AND brand = 'Honda';
+
+
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Hyundai'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Familia Elantra
+
+  -- Elantra Hybrid (PRIMUL - conține HEV)
+  UPDATE SUA_Cars_Cleaned SET model = 'Elantra Hybrid' WHERE model LIKE '%Elantra HEV%' AND brand = 'Hyundai';
+  -- Elantra GT (PRIMUL - hatchback distinct față de sedan)
+  UPDATE SUA_Cars_Cleaned SET model = 'Elantra GT' WHERE model LIKE '%Elantra GT%' AND brand = 'Hyundai';
+  -- Elantra (restul - exclude Hybrid, GT)
+  UPDATE SUA_Cars_Cleaned SET model = 'Elantra' WHERE model LIKE 'Elantra%'
+  AND model NOT LIKE '%HEV%' AND model NOT LIKE '%Elantra GT%' AND brand = 'Hyundai';
+
+  -- Familia IONIQ
+
+  -- IONIQ 5 (SUV electric - distinct față de hatchback-ul IONIQ original)
+  UPDATE SUA_Cars_Cleaned SET model = 'IONIQ 5' WHERE model LIKE '%IONIQ 5%' AND brand = 'Hyundai';
+  -- IONIQ EV / Hybrid (hatchback-ul original)
+  UPDATE SUA_Cars_Cleaned SET model = 'IONIQ EV/Hybrid' WHERE (model LIKE '%IONIQ EV%'
+  OR model LIKE '%IONIQ Hybrid%') AND brand = 'Hyundai';
+
+  -- Familia Sonata
+
+  -- Sonata Hybrid / PHEV (PRIMUL - conține Sonata Hybrid sau Sonata Plug-In Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sonata Hybrid/PHEV' WHERE (model LIKE '%Sonata Hybrid%'
+  OR model LIKE '%Sonata Plug-In Hybrid%') AND brand = 'Hyundai';
+  -- Sonata (restul - exclude Hybrid, Plug-In)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sonata' WHERE model LIKE 'Sonata%'
+  AND model NOT LIKE '%Hybrid%' AND model NOT LIKE '%Plug-In%' AND brand = 'Hyundai';
+
+  -- Familia Santa Fe (Divide pe șasiu)
+
+  -- Santa Fe Hybrid / PHEV (PRIMUL - conține HEV sau Plug-In Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'Santa Fe Hybrid/PHEV' WHERE (model LIKE '%Santa Fe HEV%'
+  OR model LIKE '%Santa Fe Plug-In Hybrid%') AND brand = 'Hyundai';
+  -- Santa Fe Sport (model scurt - platformă diferită)
+  UPDATE SUA_Cars_Cleaned SET model = 'Santa Fe Sport' WHERE model LIKE '%Santa Fe Sport%' AND brand = 'Hyundai';
+  -- Santa Fe XL (model lung cu 3 rânduri)
+  UPDATE SUA_Cars_Cleaned SET model = 'Santa Fe XL' WHERE model LIKE '%Santa Fe XL%' AND brand = 'Hyundai';
+  -- Santa Fe (restul - exclude Hybrid, PHEV, Sport, XL)
+  UPDATE SUA_Cars_Cleaned SET model = 'Santa Fe' WHERE model LIKE 'Santa Fe%'
+  AND model NOT LIKE '%HEV%' AND model NOT LIKE '%Plug-In%'
+  AND model NOT LIKE '%Santa Fe Sport%' AND model NOT LIKE '%Santa Fe XL%' AND brand = 'Hyundai';
+
+  -- SUV-uri și Crossovere
+
+  -- Tucson Hybrid (PRIMUL)
+  UPDATE SUA_Cars_Cleaned SET model = 'Tucson Hybrid' WHERE model LIKE '%Tucson Hybrid%' AND brand = 'Hyundai';
+  -- Tucson (restul - exclude Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'Tucson' WHERE model LIKE 'Tucson%'
+  AND model NOT LIKE '%Hybrid%' AND brand = 'Hyundai';
+  -- Kona EV (PRIMUL - model electric distinct)
+  UPDATE SUA_Cars_Cleaned SET model = 'Kona EV' WHERE model LIKE '%Kona EV%' AND brand = 'Hyundai';
+  -- Kona N (PRIMUL față de Kona general - exclude N Line care rămâne Kona)
+  UPDATE SUA_Cars_Cleaned SET model = 'Kona N' WHERE model LIKE 'Kona N%'
+  AND model NOT LIKE 'Kona N Line%' AND brand = 'Hyundai';
+  -- Kona (restul - exclude Kona EV; Kona N Line rămâne prins aici)
+  UPDATE SUA_Cars_Cleaned SET model = 'Kona' WHERE model LIKE 'Kona%'
+  AND model NOT LIKE '%Kona EV%' AND model != 'Kona N' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'Palisade' WHERE model LIKE 'Palisade%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'Venue' WHERE model LIKE 'Venue%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'Veracruz' WHERE model LIKE 'Veracruz%' AND brand = 'Hyundai';
+
+  -- Familia Veloster
+
+  -- Veloster N (PRIMUL - versiune de performanță distinctă)
+  UPDATE SUA_Cars_Cleaned SET model = 'Veloster N' WHERE model LIKE '%Veloster N%' AND brand = 'Hyundai';
+  -- Veloster (restul - exclude N, include Turbo)
+  UPDATE SUA_Cars_Cleaned SET model = 'Veloster' WHERE model LIKE 'Veloster%'
+  AND model NOT LIKE '%Veloster N%' AND brand = 'Hyundai';
+
+  -- Modele de Lux și Sportive (era pre-Genesis brand)
+
+  -- Genesis Coupe (PRIMUL - model sport cu platformă diferită față de sedan)
+  UPDATE SUA_Cars_Cleaned SET model = 'Genesis Coupe' WHERE model LIKE '%Genesis Coupe%' AND brand = 'Hyundai';
+  -- Genesis sedan (restul - exclude Coupe)
+  UPDATE SUA_Cars_Cleaned SET model = 'Genesis' WHERE model LIKE 'Genesis%'
+  AND model NOT LIKE '%Genesis Coupe%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'Equus' WHERE model LIKE 'Equus%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'Azera' WHERE model LIKE 'Azera%' AND brand = 'Hyundai';
+
+  -- Pick-up și Modele Speciale
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Santa Cruz' WHERE model LIKE 'Santa Cruz%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'NEXO' WHERE model LIKE 'NEXO%' AND brand = 'Hyundai';
+
+  -- Modele Compacte și Legacy
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Accent' WHERE model LIKE 'Accent%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'Tiburon' WHERE model LIKE 'Tiburon%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'Entourage' WHERE model LIKE 'Entourage%' AND brand = 'Hyundai';
+  UPDATE SUA_Cars_Cleaned SET model = 'XG350' WHERE model LIKE 'XG350%' AND brand = 'Hyundai';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'INFINITI'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Familia Q50
+
+  -- Q50 Red Sport 400 (PRIMUL - înainte de Q50 Hybrid și Q50 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Q50 Red Sport 400'
+  WHERE ((model LIKE '%Q50%' AND model LIKE '%Red Sport%') OR model LIKE 'Q50 400%')
+  AND brand = 'INFINITI';
+  -- Q50 Hybrid (PRIMUL față de Q50 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Q50 Hybrid' WHERE model LIKE '%Q50 Hybrid%' AND brand = 'INFINITI';
+  -- Q50 (restul - exclude Red Sport și Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'Q50' WHERE model LIKE 'Q50%'
+  AND model NOT LIKE '%Red Sport%' AND model NOT LIKE '%Hybrid%' AND brand = 'INFINITI';
+
+  -- Familia Q60
+
+  -- Q60 Red Sport 400 (PRIMUL - înainte de Q60 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Q60 Red Sport 400'
+  WHERE ((model LIKE '%Q60%' AND model LIKE '%Red Sport%') OR model LIKE 'Q60 400%')
+  AND brand = 'INFINITI';
+  -- Q60 (restul - exclude Red Sport)
+  UPDATE SUA_Cars_Cleaned SET model = 'Q60' WHERE model LIKE 'Q60%'
+  AND model NOT LIKE '%Red Sport%' AND brand = 'INFINITI';
+
+  -- Familia Q70
+
+  -- Q70L (PRIMUL - versiune alungită, înainte de Q70 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Q70L' WHERE model LIKE 'Q70L%' AND brand = 'INFINITI';
+  -- Q70 (restul - exclude Q70L)
+  UPDATE SUA_Cars_Cleaned SET model = 'Q70' WHERE model LIKE 'Q70%'
+  AND model NOT LIKE 'Q70L%' AND brand = 'INFINITI';
+
+  -- Seria Q (Q40, Q45)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Q40' WHERE model LIKE 'Q40%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'Q45' WHERE model LIKE 'Q45%' AND brand = 'INFINITI';
+
+  -- Familia G37
+
+  -- G37 IPL (PRIMUL - versiune de performanță, înainte de G37 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'G37 IPL'
+  WHERE (model LIKE '%G37 IPL%' OR model LIKE '%IPL G%') AND brand = 'INFINITI';
+  -- G37 (restul - exclude IPL)
+  UPDATE SUA_Cars_Cleaned SET model = 'G37' WHERE model LIKE 'G37%'
+  AND model NOT LIKE '%IPL%' AND brand = 'INFINITI';
+
+  -- Seria G (G20, G25, G35)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'G35' WHERE model LIKE 'G35%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'G25' WHERE model LIKE 'G25%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'G20' WHERE model LIKE 'G20%' AND brand = 'INFINITI';
+
+  -- Seria M (M30–M56)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'M56' WHERE model LIKE 'M56%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'M45' WHERE model LIKE 'M45%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'M37' WHERE model LIKE 'M37%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'M35' WHERE model LIKE 'M35%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'M30' WHERE model LIKE 'M30%' AND brand = 'INFINITI';
+
+  -- Seria I și J (modele vechi)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'I30' WHERE model LIKE 'I30%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'I35' WHERE model LIKE 'I35%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'J30' WHERE model LIKE 'J30%' AND brand = 'INFINITI';
+
+  -- Familia QX modernă (QX30–QX80)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'QX80' WHERE model LIKE 'QX80%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'QX70' WHERE model LIKE 'QX70%' AND brand = 'INFINITI';
+  -- QX60 Hybrid (PRIMUL - înainte de QX60 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'QX60 Hybrid' WHERE model LIKE 'QX60%'
+  AND model LIKE '%Hybrid%' AND brand = 'INFINITI';
+  -- QX60 (restul - exclude Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'QX60' WHERE model LIKE 'QX60%'
+  AND model NOT LIKE '%Hybrid%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'QX55' WHERE model LIKE 'QX55%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'QX50' WHERE model LIKE 'QX50%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'QX30' WHERE model LIKE 'QX30%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'QX56' WHERE model LIKE 'QX56%' AND brand = 'INFINITI';
+
+  -- Seria FX (SUV-uri clasice)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'FX35' WHERE model LIKE 'FX35%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'FX37' WHERE model LIKE 'FX37%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'FX45' WHERE model LIKE 'FX45%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'FX50' WHERE model LIKE 'FX50%' AND brand = 'INFINITI';
+
+  -- EX, JX și QX4
+
+  UPDATE SUA_Cars_Cleaned SET model = 'EX35' WHERE model LIKE 'EX35%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'EX37' WHERE model LIKE 'EX37%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'JX35' WHERE model LIKE 'JX35%' AND brand = 'INFINITI';
+  UPDATE SUA_Cars_Cleaned SET model = 'QX4' WHERE model LIKE 'QX4%' AND brand = 'INFINITI';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Jaguar'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- SUV-uri (Seria PACE)
+
+  -- F-PACE SVR (PRIMUL - înaintea F-PACE general)
+  UPDATE SUA_Cars_Cleaned SET model = 'F-PACE SVR'
+  WHERE model LIKE '%F-PACE%' AND model LIKE '%SVR%'
+  AND brand = 'Jaguar';
+  -- F-PACE (restul - exclude SVR)
+  UPDATE SUA_Cars_Cleaned SET model = 'F-PACE' WHERE model LIKE 'F-PACE%'
+  AND model NOT LIKE '%SVR%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'E-PACE' WHERE model LIKE 'E-PACE%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'I-PACE' WHERE model LIKE 'I-PACE%' AND brand = 'Jaguar';
+
+  -- Sedane Moderne (XE, XF, XJ)
+
+  -- XE SV Project 8 (PRIMUL - ediție specială, înaintea XE general)
+  UPDATE SUA_Cars_Cleaned SET model = 'XE SV Project 8'
+  WHERE (model LIKE '%XE SV%' OR model LIKE '%Project 8%')
+  AND brand = 'Jaguar';
+  -- XE (restul - exclude SV)
+  UPDATE SUA_Cars_Cleaned SET model = 'XE' WHERE model LIKE 'XE%'
+  AND model NOT LIKE '%SV%' AND brand = 'Jaguar';
+  -- XF Sportbrake (PRIMUL - variantă break, înaintea XF general)
+  UPDATE SUA_Cars_Cleaned SET model = 'XF Sportbrake'
+  WHERE model LIKE '%XF Sportbrake%' AND brand = 'Jaguar';
+  -- XF (restul - exclude Sportbrake; include XFR, XFR-S)
+  UPDATE SUA_Cars_Cleaned SET model = 'XF' WHERE model LIKE 'XF%'
+  AND model NOT LIKE '%Sportbrake%' AND brand = 'Jaguar';
+  -- XJ6, XJ8, XJR (PRIMELE - generații anterioare, înaintea XJ general)
+  UPDATE SUA_Cars_Cleaned SET model = 'XJ6' WHERE model LIKE 'XJ6%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'XJ8' WHERE model LIKE '%XJ8%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'XJR' WHERE model LIKE '%XJR%' AND brand = 'Jaguar';
+  -- XJ (restul - exclude XJ6, XJ8, XJR)
+  UPDATE SUA_Cars_Cleaned SET model = 'XJ' WHERE model LIKE 'XJ%'
+  AND model NOT LIKE 'XJ6%' AND model NOT LIKE 'XJ8%' AND model NOT LIKE 'XJR%'
+  AND brand = 'Jaguar';
+
+  -- Mașini Sport (F-TYPE și Seria XK)
+
+  -- F-TYPE SVR (PRIMUL - înaintea F-TYPE general)
+  UPDATE SUA_Cars_Cleaned SET model = 'F-TYPE SVR'
+  WHERE model LIKE '%F-TYPE%' AND model LIKE '%SVR%'
+  AND brand = 'Jaguar';
+  -- F-TYPE (restul - exclude SVR)
+  UPDATE SUA_Cars_Cleaned SET model = 'F-TYPE' WHERE model LIKE 'F-TYPE%'
+  AND model NOT LIKE '%SVR%' AND brand = 'Jaguar';
+  -- XKR-S (PRIMUL - versiunea extremă, înaintea XKR și XK general)
+  UPDATE SUA_Cars_Cleaned SET model = 'XKR-S'
+  WHERE model LIKE '%XK%' AND model LIKE '%R-S%'
+  AND brand = 'Jaguar';
+  -- XKE (PRIMUL față de XK general - cunoscut și ca E-Type clasic)
+  UPDATE SUA_Cars_Cleaned SET model = 'XKE' WHERE model LIKE 'XKE%' AND brand = 'Jaguar';
+  -- XKR (PRIMUL față de XK general - include XK R; exclude R-S)
+  UPDATE SUA_Cars_Cleaned SET model = 'XKR'
+  WHERE (model LIKE '%XKR%' OR model LIKE 'XK R%')
+  AND model NOT LIKE '%R-S%' AND brand = 'Jaguar';
+  -- XK8 (PRIMUL față de XK general)
+  UPDATE SUA_Cars_Cleaned SET model = 'XK8' WHERE model LIKE '%XK8%' AND brand = 'Jaguar';
+  -- XK 120, 140, 150 (PRIMELE față de XK general - modele clasice)
+  UPDATE SUA_Cars_Cleaned SET model = 'XK 120' WHERE model LIKE 'XK 120%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'XK 140' WHERE model LIKE 'XK 140%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'XK 150' WHERE model LIKE 'XK 150%' AND brand = 'Jaguar';
+  -- XK (restul - exclude XKE, XKR/XKR-S, XK8, XK 120/140/150)
+  UPDATE SUA_Cars_Cleaned SET model = 'XK' WHERE model LIKE 'XK%'
+  AND model NOT LIKE 'XKE%' AND model NOT LIKE '%XKR%'
+  AND model NOT LIKE '%XK8%' AND model NOT LIKE 'XK 1%'
+  AND brand = 'Jaguar';
+
+  -- Modele Legacy
+
+  UPDATE SUA_Cars_Cleaned SET model = 'S-Type' WHERE model LIKE 'S-Type%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'X-Type' WHERE model LIKE 'X-Type%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'XJS' WHERE model LIKE 'XJS%' AND brand = 'Jaguar';
+
+  -- Clasice și Heritage
+
+  -- Mark VIII (PRIMUL - altfel LIKE 'Mark V%' prinde și Mark VIII)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark VIII' WHERE model LIKE 'Mark VIII%' AND brand = 'Jaguar';
+  -- Mark V (restul - exclude Mark VIII)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark V' WHERE model LIKE 'Mark V%'
+  AND model NOT LIKE 'Mark VIII%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark II' WHERE model LIKE 'Mark II%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = '420' WHERE model LIKE '420%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'D-Type' WHERE model LIKE 'D-Type%' AND brand = 'Jaguar';
+  UPDATE SUA_Cars_Cleaned SET model = 'Vanden Plas' WHERE model LIKE 'Vanden Plas%' AND brand = 'Jaguar';
+
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Jeep'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Familia Grand Cherokee
+
+  -- Grand Cherokee 4xe (PRIMUL - PHEV, înaintea celorlalte variante Grand Cherokee)
+  UPDATE SUA_Cars_Cleaned SET model = 'Grand Cherokee 4xe'
+  WHERE model LIKE '%Grand Cherokee%' AND model LIKE '%4xe%'
+  AND brand = 'Jeep';
+  -- Grand Cherokee SRT/Trackhawk (PRIMUL - versiuni de performanță)
+  UPDATE SUA_Cars_Cleaned SET model = 'Grand Cherokee SRT/Trackhawk'
+  WHERE model LIKE '%Grand Cherokee%'
+  AND (model LIKE '%SRT%' OR model LIKE '%Trackhawk%')
+  AND brand = 'Jeep';
+  -- Grand Cherokee L (PRIMUL - versiunea cu 3 rânduri, înaintea Grand Cherokee general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Grand Cherokee L'
+  WHERE model LIKE 'Grand Cherokee L %' AND brand = 'Jeep';
+  -- Grand Cherokee (restul - include WK; exclude 4xe, SRT/Trackhawk, L)
+  UPDATE SUA_Cars_Cleaned SET model = 'Grand Cherokee' WHERE model LIKE 'Grand Cherokee%'
+  AND model NOT LIKE '%4xe%' AND model NOT LIKE '%SRT%' AND model NOT LIKE '%Trackhawk%'
+  AND model != 'Grand Cherokee L' AND brand = 'Jeep';
+
+  -- Familia Wrangler
+
+  -- Wrangler 4xe (PRIMUL - hibrid plug-in, înaintea Unlimited și general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Wrangler 4xe'
+  WHERE model LIKE '%Wrangler%' AND model LIKE '%4xe%'
+  AND brand = 'Jeep';
+  -- Wrangler Rubicon 392 (PRIMUL - motorizare V8, înaintea Unlimited)
+  UPDATE SUA_Cars_Cleaned SET model = 'Wrangler Rubicon 392'
+  WHERE model LIKE '%Wrangler%' AND model LIKE '%392%'
+  AND brand = 'Jeep';
+  -- Wrangler Unlimited (PRIMUL față de Wrangler general - 4 uși; exclude 4xe)
+  UPDATE SUA_Cars_Cleaned SET model = 'Wrangler Unlimited'
+  WHERE model LIKE '%Wrangler%'
+  AND (model LIKE '%Unlimited%' OR model LIKE '%4-Door%')
+  AND model NOT LIKE '%4xe%' AND brand = 'Jeep';
+  -- Wrangler (restul - modele cu 2 uși/base)
+  UPDATE SUA_Cars_Cleaned SET model = 'Wrangler' WHERE model LIKE 'Wrangler%'
+  AND model NOT LIKE '%4xe%' AND model NOT LIKE '%392%' AND model NOT LIKE '%Unlimited%'
+  AND brand = 'Jeep';
+
+  -- SUV-uri și Crossovere Moderne
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Gladiator' WHERE model LIKE 'Gladiator%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'Cherokee' WHERE model LIKE 'Cherokee%' AND brand = 'Jeep';
+  -- Compass (include intrările cu prefix 'New Compass' din perioada de reînnoire model)
+  UPDATE SUA_Cars_Cleaned SET model = 'Compass'
+  WHERE (model LIKE 'Compass%' OR model LIKE 'New Compass%') AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'Renegade' WHERE model LIKE 'Renegade%' AND brand = 'Jeep';
+
+  -- Noile Modele Premium (Wagoneer)
+
+  -- Grand Wagoneer (PRIMUL - înaintea Wagoneer general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Grand Wagoneer' WHERE model LIKE 'Grand Wagoneer%' AND brand = 'Jeep';
+  -- Wagoneer (restul - LIKE 'Wagoneer%' nu prinde 'Grand Wagoneer' deoarece începe cu 'Grand')
+  UPDATE SUA_Cars_Cleaned SET model = 'Wagoneer' WHERE model LIKE 'Wagoneer%' AND brand = 'Jeep';
+
+  -- Modele Legacy
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Liberty' WHERE model LIKE 'Liberty%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'Patriot' WHERE model LIKE 'Patriot%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'Commander' WHERE model LIKE 'Commander%' AND brand = 'Jeep';
+
+  -- Clasice și Heritage
+
+  UPDATE SUA_Cars_Cleaned SET model = 'CJ-5' WHERE model LIKE 'CJ-5%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'CJ-7' WHERE model LIKE 'CJ-7%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'Scrambler' WHERE model LIKE '%Scrambler%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'Comanche' WHERE model LIKE 'Comanche%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'J10' WHERE model LIKE 'J10%' AND brand = 'Jeep';
+  UPDATE SUA_Cars_Cleaned SET model = 'Jeepster' WHERE model LIKE 'Jeepster%' AND brand = 'Jeep';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Kia'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Modele Electrice și Hibride
+
+  -- EV6 GT/GT-Line (PRIMUL - înaintea EV6 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'EV6 GT/GT-Line'
+  WHERE model LIKE 'EV6%' AND model LIKE '%GT%'
+  AND brand = 'Kia';
+  -- EV6 (restul - Wind, Light etc.)
+  UPDATE SUA_Cars_Cleaned SET model = 'EV6' WHERE model LIKE 'EV6%'
+  AND model NOT LIKE '%GT%' AND brand = 'Kia';
+  -- Niro EV (PRIMUL față de Niro Plug-In și Niro Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'Niro EV' WHERE model LIKE 'Niro EV%' AND brand = 'Kia';
+  -- Niro Plug-In Hybrid (PRIMUL față de Niro Hybrid general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Niro Plug-In Hybrid'
+  WHERE model LIKE 'Niro Plug-In%' AND brand = 'Kia';
+  -- Niro Hybrid (restul - LX, EX, FE, Touring; toate Niro-urile de bază sunt hibride)
+  UPDATE SUA_Cars_Cleaned SET model = 'Niro Hybrid' WHERE model LIKE 'Niro%'
+  AND model NOT LIKE 'Niro EV%' AND model NOT LIKE 'Niro Plug-In%'
+  AND brand = 'Kia';
+  -- Sorento Hybrid/PHEV (PRIMUL față de Sorento general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sorento Hybrid/PHEV'
+  WHERE model LIKE '%Sorento%'
+  AND (model LIKE '%Hybrid%' OR model LIKE '%Plug-In%')
+  AND brand = 'Kia';
+  -- Sportage Hybrid/PHEV (PRIMUL față de Sportage general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sportage Hybrid/PHEV'
+  WHERE model LIKE '%Sportage%'
+  AND (model LIKE '%Hybrid%' OR model LIKE '%Plug-In%')
+  AND brand = 'Kia';
+  -- Optima Hybrid/PHEV (PRIMUL față de Optima general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Optima Hybrid/PHEV'
+  WHERE model LIKE '%Optima%'
+  AND (model LIKE '%Hybrid%' OR model LIKE '%Plug-In%')
+  AND brand = 'Kia';
+  -- Soul EV (PRIMUL față de Soul general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Soul EV' WHERE model LIKE 'Soul EV%' AND brand = 'Kia';
+
+  -- Sedane și Performance
+
+  -- Stinger GT (PRIMUL - include GT, GT1, GT2, GTS; exclude GT-Line)
+  UPDATE SUA_Cars_Cleaned SET model = 'Stinger GT'
+  WHERE model LIKE 'Stinger%' AND model LIKE '%GT%'
+  AND model NOT LIKE '%GT-Line%' AND brand = 'Kia';
+  -- Stinger (restul - Base, Premium, GT-Line)
+  UPDATE SUA_Cars_Cleaned SET model = 'Stinger' WHERE model LIKE 'Stinger%'
+  AND model != 'Stinger GT' AND brand = 'Kia';
+  -- K5 GT/GT-Line (PRIMUL față de K5 general)
+  UPDATE SUA_Cars_Cleaned SET model = 'K5 GT/GT-Line'
+  WHERE model LIKE 'K5%' AND model LIKE '%GT%'
+  AND brand = 'Kia';
+  -- K5 (restul - LX, EX, LXS)
+  UPDATE SUA_Cars_Cleaned SET model = 'K5' WHERE model LIKE 'K5%'
+  AND model NOT LIKE '%GT%' AND brand = 'Kia';
+  -- Forte GT/GT-Line (PRIMUL față de Forte general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Forte GT/GT-Line'
+  WHERE model LIKE 'Forte%' AND model LIKE '%GT%'
+  AND brand = 'Kia';
+  -- Forte (restul - include Koup, LXS, FE, S, SX)
+  UPDATE SUA_Cars_Cleaned SET model = 'Forte' WHERE model LIKE 'Forte%'
+  AND model NOT LIKE '%GT%' AND brand = 'Kia';
+  -- Optima (restul - exclude Hybrid și Plug-In deja procesate)
+  UPDATE SUA_Cars_Cleaned SET model = 'Optima' WHERE model LIKE 'Optima%'
+  AND model NOT LIKE '%Hybrid%' AND model NOT LIKE '%Plug-In%'
+  AND brand = 'Kia';
+
+  -- SUV-uri și Crossovere
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Telluride' WHERE model LIKE 'Telluride%' AND brand = 'Kia';
+  -- Sorento (restul - exclude Hybrid/PHEV deja procesate)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sorento' WHERE model LIKE 'Sorento%'
+  AND model NOT LIKE '%Hybrid%' AND model NOT LIKE '%Plug-In%'
+  AND brand = 'Kia';
+  -- Sportage (restul - exclude Hybrid/PHEV deja procesate)
+  UPDATE SUA_Cars_Cleaned SET model = 'Sportage' WHERE model LIKE 'Sportage%'
+  AND model NOT LIKE '%Hybrid%' AND model NOT LIKE '%Plug-In%'
+  AND brand = 'Kia';
+  UPDATE SUA_Cars_Cleaned SET model = 'Seltos' WHERE model LIKE 'Seltos%' AND brand = 'Kia';
+  -- Soul (restul - exclude Soul EV deja procesat)
+  UPDATE SUA_Cars_Cleaned SET model = 'Soul' WHERE model LIKE 'Soul%'
+  AND model NOT LIKE '%EV%' AND brand = 'Kia';
+  UPDATE SUA_Cars_Cleaned SET model = 'Borrego' WHERE model LIKE 'Borrego%' AND brand = 'Kia';
+
+  -- Modele Compacte și Subcompacte
+
+  -- Rio5 (PRIMUL - variantă hatchback, înaintea Rio sedan)
+  UPDATE SUA_Cars_Cleaned SET model = 'Rio5' WHERE model LIKE '%Rio5%' AND brand = 'Kia';
+  -- Rio (restul - sedan)
+  UPDATE SUA_Cars_Cleaned SET model = 'Rio' WHERE model LIKE 'Rio%'
+  AND model NOT LIKE '%Rio5%' AND brand = 'Kia';
+  -- Spectra5 (PRIMUL - hatchback, înaintea Spectra)
+  UPDATE SUA_Cars_Cleaned SET model = 'Spectra5' WHERE model LIKE '%Spectra5%' AND brand = 'Kia';
+  -- Spectra (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'Spectra' WHERE model LIKE 'Spectra%'
+  AND model NOT LIKE '%Spectra5%' AND brand = 'Kia';
+
+  -- Minivan și MPV
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Carnival' WHERE model LIKE 'Carnival%' AND brand = 'Kia';
+  UPDATE SUA_Cars_Cleaned SET model = 'Sedona' WHERE model LIKE 'Sedona%' AND brand = 'Kia';
+  UPDATE SUA_Cars_Cleaned SET model = 'Rondo' WHERE model LIKE 'Rondo%' AND brand = 'Kia';
+
+  -- Modele de Lux și Legacy
+
+  UPDATE SUA_Cars_Cleaned SET model = 'K900' WHERE model LIKE 'K900%' AND brand = 'Kia';
+  UPDATE SUA_Cars_Cleaned SET model = 'Cadenza' WHERE model LIKE 'Cadenza%' AND brand = 'Kia';
+  UPDATE SUA_Cars_Cleaned SET model = 'Amanti' WHERE model LIKE 'Amanti%' AND brand = 'Kia';
+  UPDATE SUA_Cars_Cleaned SET model = 'Sephia' WHERE model LIKE 'Sephia%' AND brand = 'Kia';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Land Rover'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Familia Defender
+
+  -- Defender 90, 110, 130 (PRIMELE - pe dimensiunea șasiului)
+  UPDATE SUA_Cars_Cleaned SET model = 'Defender 90' WHERE model LIKE 'Defender 90%' AND brand = 'Land Rover';
+  UPDATE SUA_Cars_Cleaned SET model = 'Defender 110' WHERE model LIKE 'Defender 110%' AND brand = 'Land Rover';
+  UPDATE SUA_Cars_Cleaned SET model = 'Defender 130' WHERE model LIKE 'Defender 130%' AND brand = 'Land Rover';
+  -- Defender Classic (TDI, COLLECTOR SERIES, ARKONIK - modele vechi/restaurate fără 90/110/130)
+  UPDATE SUA_Cars_Cleaned SET model = 'Defender Classic'
+  WHERE model LIKE 'Defender%'
+  AND (model LIKE '%TDI%' OR model LIKE '%COLLECTOR%' OR model LIKE '%ARKONIK%')
+  AND brand = 'Land Rover';
+  -- Defender (restul - modern 2020+; exclude 90/110/130/Classic)
+  UPDATE SUA_Cars_Cleaned SET model = 'Defender' WHERE model LIKE 'Defender%'
+  AND model != 'Defender 90' AND model != 'Defender 110' AND model != 'Defender 130'
+  AND model != 'Defender Classic' AND brand = 'Land Rover';
+
+  -- Familia Range Rover
+
+  -- Range Rover Sport SVR (PRIMUL - înaintea Range Rover Sport general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Range Rover Sport SVR'
+  WHERE model LIKE '%Range Rover Sport%' AND model LIKE '%SVR%'
+  AND brand = 'Land Rover';
+  -- Range Rover Sport (restul - exclude SVR)
+  UPDATE SUA_Cars_Cleaned SET model = 'Range Rover Sport'
+  WHERE model LIKE '%Range Rover Sport%'
+  AND model NOT LIKE '%SVR%' AND brand = 'Land Rover';
+  -- Range Rover Velar
+  UPDATE SUA_Cars_Cleaned SET model = 'Range Rover Velar'
+  WHERE model LIKE '%Range Rover Velar%' AND brand = 'Land Rover';
+  -- Range Rover Evoque
+  UPDATE SUA_Cars_Cleaned SET model = 'Range Rover Evoque'
+  WHERE model LIKE '%Range Rover Evoque%' AND brand = 'Land Rover';
+  -- Range Rover Classic (PRIMUL față de LWB și general - era County/Classic anii '70-'90)
+  UPDATE SUA_Cars_Cleaned SET model = 'Range Rover Classic'
+  WHERE model LIKE '%Range Rover%'
+  AND (model LIKE '%County%' OR model LIKE '%Classic%' OR model LIKE '%2.5DSE%')
+  AND brand = 'Land Rover';
+  -- Range Rover LWB (flagship lung - înaintea Range Rover general SWB)
+  UPDATE SUA_Cars_Cleaned SET model = 'Range Rover LWB'
+  WHERE model LIKE '%Range Rover%' AND model LIKE '%LWB%'
+  AND brand = 'Land Rover';
+  -- Range Rover (restul flagship SWB - exclude Sport, Velar, Evoque, Classic, LWB)
+  UPDATE SUA_Cars_Cleaned SET model = 'Range Rover' WHERE model LIKE 'Range Rover%'
+  AND model NOT LIKE '%Sport%' AND model NOT LIKE '%Velar%' AND model NOT LIKE '%Evoque%'
+  AND model != 'Range Rover Classic' AND model != 'Range Rover LWB'
+  AND brand = 'Land Rover';
+
+  -- Familia Discovery
+
+  -- Discovery Sport (PRIMUL - modelul compact, înaintea Discovery general)
+  UPDATE SUA_Cars_Cleaned SET model = 'Discovery Sport'
+  WHERE model LIKE '%Discovery Sport%' AND brand = 'Land Rover';
+  -- Discovery (restul - include Series II, HSE, Landmark)
+  UPDATE SUA_Cars_Cleaned SET model = 'Discovery' WHERE model LIKE 'Discovery%'
+  AND model NOT LIKE '%Discovery Sport%' AND brand = 'Land Rover';
+
+  -- Modelele Numerice
+
+  UPDATE SUA_Cars_Cleaned SET model = 'LR4' WHERE model LIKE 'LR4%' AND brand = 'Land Rover';
+  UPDATE SUA_Cars_Cleaned SET model = 'LR3' WHERE model LIKE 'LR3%' AND brand = 'Land Rover';
+  UPDATE SUA_Cars_Cleaned SET model = 'LR2' WHERE model LIKE 'LR2%' AND brand = 'Land Rover';
+
+  -- Clasice și Heritage
+
+  -- Series III (PRIMUL - altfel LIKE 'Series II%' prinde și Series III)
+  UPDATE SUA_Cars_Cleaned SET model = 'Series III' WHERE model LIKE 'Series III%' AND brand = 'Land Rover';
+  -- Series II (restul - exclude Series III)
+  UPDATE SUA_Cars_Cleaned SET model = 'Series II' WHERE model LIKE 'Series II%'
+  AND model NOT LIKE 'Series III%' AND brand = 'Land Rover';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Lexus'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Sedane și Coupe-uri
+
+  -- IS F / IS 500 (PRIMUL - V8 performanță, înaintea IS general; include IS-F cu liniuță)
+  UPDATE SUA_Cars_Cleaned SET model = 'IS F/IS 500'
+  WHERE model LIKE 'IS%'
+  AND (model LIKE '%IS-F%' OR model LIKE '%IS F%' OR model LIKE '%IS 500%')
+  AND brand = 'Lexus';
+  -- IS (restul - 200t, 250, 300, 350, SportCross)
+  UPDATE SUA_Cars_Cleaned SET model = 'IS' WHERE model LIKE 'IS%'
+  AND model NOT LIKE '%IS-F%' AND model NOT LIKE '%IS F%' AND model NOT LIKE '%IS 500%'
+  AND brand = 'Lexus';
+  -- ES Hybrid / ES 300h (PRIMUL față de ES general)
+  UPDATE SUA_Cars_Cleaned SET model = 'ES Hybrid'
+  WHERE model LIKE '%ES 300h%' AND brand = 'Lexus';
+  -- ES (restul - 250, 300, 330, 350)
+  UPDATE SUA_Cars_Cleaned SET model = 'ES' WHERE model LIKE 'ES%'
+  AND model NOT LIKE '%300h%' AND model NOT LIKE '%Hybrid%'
+  AND brand = 'Lexus';
+  -- GS F (PRIMUL față de GS Hybrid și GS general)
+  UPDATE SUA_Cars_Cleaned SET model = 'GS F'
+  WHERE model LIKE '%GS F%' AND brand = 'Lexus';
+  -- GS Hybrid / GS 450h (PRIMUL față de GS general)
+  UPDATE SUA_Cars_Cleaned SET model = 'GS Hybrid'
+  WHERE model LIKE '%GS 450h%' AND brand = 'Lexus';
+  -- GS (restul - 200t, 300, 350, 400, 430)
+  UPDATE SUA_Cars_Cleaned SET model = 'GS' WHERE model LIKE 'GS%'
+  AND model NOT LIKE '%GS F%' AND model NOT LIKE '%Hybrid%' AND model NOT LIKE '%450h%'
+  AND brand = 'Lexus';
+  -- LS L (PRIMUL - ampatament lung; include LS 460 L și LS 600h L)
+  UPDATE SUA_Cars_Cleaned SET model = 'LS L'
+  WHERE (model LIKE 'LS 460 L%' OR model LIKE 'LS 600h L%')
+  AND brand = 'Lexus';
+  -- LS Hybrid (PRIMUL față de LS general - LS 500h și LS 600h)
+  UPDATE SUA_Cars_Cleaned SET model = 'LS Hybrid'
+  WHERE model LIKE 'LS%'
+  AND (model LIKE '%LS 500h%' OR model LIKE '%LS 600h%')
+  AND brand = 'Lexus';
+  -- LS (restul - 400, 430, 460, 500)
+  UPDATE SUA_Cars_Cleaned SET model = 'LS' WHERE model LIKE 'LS%'
+  AND model NOT LIKE '%500h%' AND model NOT LIKE '%600h%'
+  AND model NOT LIKE '%Hybrid%' AND model != 'LS L'
+  AND brand = 'Lexus';
+  -- RC F (PRIMUL față de RC general)
+  UPDATE SUA_Cars_Cleaned SET model = 'RC F'
+  WHERE model LIKE '%RC F%' AND brand = 'Lexus';
+  -- RC (restul - 200t, 300, 350)
+  UPDATE SUA_Cars_Cleaned SET model = 'RC' WHERE model LIKE 'RC%'
+  AND model NOT LIKE '%RC F%' AND brand = 'Lexus';
+  -- LC Hybrid / LC 500h (PRIMUL față de LC general)
+  UPDATE SUA_Cars_Cleaned SET model = 'LC Hybrid'
+  WHERE model LIKE '%LC 500h%' AND brand = 'Lexus';
+  -- LC (restul - LC 500)
+  UPDATE SUA_Cars_Cleaned SET model = 'LC' WHERE model LIKE 'LC%'
+  AND model NOT LIKE '%500h%' AND model NOT LIKE '%Hybrid%'
+  AND brand = 'Lexus';
+
+  -- SUV-uri și Crossovere
+
+  -- RX L (PRIMUL - versiuni cu 3 rânduri: RX 350L și RX 450hL)
+  UPDATE SUA_Cars_Cleaned SET model = 'RX L'
+  WHERE (model LIKE 'RX 350L%' OR model LIKE 'RX 450hL%')
+  AND brand = 'Lexus';
+  -- RX Hybrid (PRIMUL față de RX general - 350h, 400h, 450h, 500h; exclude 450hL deja procesat)
+  UPDATE SUA_Cars_Cleaned SET model = 'RX Hybrid'
+  WHERE model LIKE 'RX%'
+  AND (model LIKE '%350h%' OR model LIKE '%400h%' OR model LIKE '%450h%' OR model LIKE '%500h%')
+  AND brand = 'Lexus';
+  -- RX (restul - 300, 330, 350)
+  UPDATE SUA_Cars_Cleaned SET model = 'RX' WHERE model LIKE 'RX%'
+  AND model NOT LIKE '%Hybrid%' AND model != 'RX L'
+  AND brand = 'Lexus';
+  -- NX Hybrid/PHEV (PRIMUL față de NX general - 300h, 350h, 450h+)
+  UPDATE SUA_Cars_Cleaned SET model = 'NX Hybrid/PHEV'
+  WHERE model LIKE 'NX%'
+  AND (model LIKE '%300h%' OR model LIKE '%350h%' OR model LIKE '%450h%')
+  AND brand = 'Lexus';
+  -- NX (restul - 200t, 250, 300, 350)
+  UPDATE SUA_Cars_Cleaned SET model = 'NX' WHERE model LIKE 'NX%'
+  AND model NOT LIKE '%Hybrid%' AND model NOT LIKE '%300h%'
+  AND model NOT LIKE '%350h%' AND model NOT LIKE '%450h%'
+  AND brand = 'Lexus';
+  -- UX Hybrid / UX 250h (PRIMUL față de UX general)
+  UPDATE SUA_Cars_Cleaned SET model = 'UX Hybrid'
+  WHERE model LIKE '%UX 250h%' AND brand = 'Lexus';
+  -- UX (restul - UX 200)
+  UPDATE SUA_Cars_Cleaned SET model = 'UX' WHERE model LIKE 'UX%'
+  AND model NOT LIKE '%250h%' AND model NOT LIKE '%Hybrid%'
+  AND brand = 'Lexus';
+  UPDATE SUA_Cars_Cleaned SET model = 'GX' WHERE model LIKE 'GX%' AND brand = 'Lexus';
+  UPDATE SUA_Cars_Cleaned SET model = 'LX' WHERE model LIKE 'LX%' AND brand = 'Lexus';
+
+  -- Modele Hibride dedicate și Legacy
+
+  UPDATE SUA_Cars_Cleaned SET model = 'CT Hybrid' WHERE model LIKE 'CT 200h%' AND brand = 'Lexus';
+  UPDATE SUA_Cars_Cleaned SET model = 'HS Hybrid' WHERE model LIKE 'HS 250h%' AND brand = 'Lexus';
+  UPDATE SUA_Cars_Cleaned SET model = 'SC' WHERE model LIKE 'SC%' AND brand = 'Lexus';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Lincoln'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- SUV-uri și Crossovere Moderne
+
+  -- Navigator L (PRIMUL - ampatament lung)
+  UPDATE SUA_Cars_Cleaned SET model = 'Navigator L'
+  WHERE model LIKE '%Navigator L%' AND brand = 'Lincoln';
+  -- Navigator (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'Navigator' WHERE model LIKE 'Navigator%'
+  AND model NOT LIKE '%Navigator L%' AND brand = 'Lincoln';
+
+  -- Aviator Grand Touring (PRIMUL - versiune Plug-In Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'Aviator Grand Touring'
+  WHERE model LIKE 'Aviator%' AND model LIKE '%Grand Touring%' AND brand = 'Lincoln';
+  -- Aviator (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'Aviator' WHERE model LIKE 'Aviator%'
+  AND model NOT LIKE '%Grand Touring%' AND brand = 'Lincoln';
+
+  -- Corsair Grand Touring (PRIMUL - versiune Plug-In Hybrid)
+  UPDATE SUA_Cars_Cleaned SET model = 'Corsair Grand Touring'
+  WHERE model LIKE 'Corsair%' AND model LIKE '%Grand Touring%' AND brand = 'Lincoln';
+  -- Corsair (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'Corsair' WHERE model LIKE 'Corsair%'
+  AND model NOT LIKE '%Grand Touring%' AND brand = 'Lincoln';
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Nautilus' WHERE model LIKE 'Nautilus%' AND brand = 'Lincoln';
+
+  -- Seria MK
+
+  -- MKZ Hybrid (PRIMUL față de MKZ general)
+  UPDATE SUA_Cars_Cleaned SET model = 'MKZ Hybrid'
+  WHERE model LIKE 'MKZ%' AND model LIKE '%Hybrid%' AND brand = 'Lincoln';
+  -- MKZ (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'MKZ' WHERE model LIKE 'MKZ%'
+  AND model NOT LIKE '%Hybrid%' AND brand = 'Lincoln';
+
+  UPDATE SUA_Cars_Cleaned SET model = 'MKC' WHERE model LIKE 'MKC%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'MKS' WHERE model LIKE 'MKS%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'MKT' WHERE model LIKE 'MKT%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'MKX' WHERE model LIKE 'MKX%' AND brand = 'Lincoln';
+
+  -- Seria clasică "Mark" (de la cel mai specific la cel mai general)
+
+  -- Mark VIII (PRIMUL - altfel LIKE '%Mark VII%' prinde și Mark VIII)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark VIII'
+  WHERE model LIKE '%Mark VIII%' AND brand = 'Lincoln';
+  -- Mark VII (NOT LIKE '%Mark VIII%' - altfel prinde și Mark VIII)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark VII'
+  WHERE model LIKE '%Mark VII%' AND model NOT LIKE '%Mark VIII%' AND brand = 'Lincoln';
+  -- Mark VI (NOT LIKE '%Mark VII%' AND NOT LIKE '%Mark VIII%')
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark VI'
+  WHERE model LIKE '%Mark VI%'
+  AND model NOT LIKE '%Mark VII%' AND model NOT LIKE '%Mark VIII%' AND brand = 'Lincoln';
+  -- Mark V (NOT LIKE '%Mark VI%' ... - prinde și Continental Mark V)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark V'
+  WHERE model LIKE '%Mark V%'
+  AND model NOT LIKE '%Mark VI%' AND model NOT LIKE '%Mark VII%' AND model NOT LIKE '%Mark VIII%'
+  AND brand = 'Lincoln';
+  -- Mark IV (safe - 'IV' nu se confundă cu 'V...'; prinde și Continental Mark IV)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark IV'
+  WHERE model LIKE '%Mark IV%' AND brand = 'Lincoln';
+  -- Mark III (PRIMUL față de Mark II - altfel LIKE '%Mark II%' prinde și Mark III)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark III'
+  WHERE model LIKE '%Mark III%' AND brand = 'Lincoln';
+  -- Mark II (NOT LIKE '%Mark III%')
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark II'
+  WHERE model LIKE '%Mark II%' AND model NOT LIKE '%Mark III%' AND brand = 'Lincoln';
+  -- Mark LT (pickup truck)
+  UPDATE SUA_Cars_Cleaned SET model = 'Mark LT' WHERE model LIKE 'Mark LT%' AND brand = 'Lincoln';
+
+  -- Sedane și modele legendare
+
+  -- Continental (exclude înregistrările de tip Mark, ex: Continental Mark IV/V)
+  UPDATE SUA_Cars_Cleaned SET model = 'Continental' WHERE model LIKE 'Continental%'
+  AND model NOT LIKE '%Mark%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'Town Car' WHERE model LIKE 'Town Car%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'LS' WHERE model LIKE 'LS%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'Zephyr' WHERE model LIKE 'Zephyr%' AND brand = 'Lincoln';
+
+  -- Modele istorice
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Blackwood' WHERE model LIKE 'Blackwood%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'Capri' WHERE model LIKE 'Capri%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'Cosmopolitan' WHERE model LIKE 'Cosmopolitan%' AND brand = 'Lincoln';
+  UPDATE SUA_Cars_Cleaned SET model = 'Versailles' WHERE model LIKE 'Versailles%' AND brand = 'Lincoln';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Mazda'
+  GROUP BY model
+  ORDER BY model ASC;
+
+  -- Familia CX (SUV-uri și Crossovere)
+
+  -- CX-90 (PRIMUL față de CX-9 - 'CX-9%' prinde și CX-90)
+  UPDATE SUA_Cars_Cleaned SET model = 'CX-90' WHERE model LIKE 'CX-90%' AND brand = 'Mazda';
+  -- CX-9 (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'CX-9' WHERE model LIKE 'CX-9%'
+  AND model NOT LIKE 'CX-90%' AND brand = 'Mazda';
+  -- CX-50 (PRIMUL față de CX-5 - 'CX-5%' prinde și CX-50)
+  UPDATE SUA_Cars_Cleaned SET model = 'CX-50' WHERE model LIKE 'CX-50%' AND brand = 'Mazda';
+  -- CX-5 (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'CX-5' WHERE model LIKE 'CX-5%'
+  AND model NOT LIKE 'CX-50%' AND brand = 'Mazda';
+  -- CX-30 (PRIMUL față de CX-3 - 'CX-3%' prinde și CX-30)
+  UPDATE SUA_Cars_Cleaned SET model = 'CX-30' WHERE model LIKE 'CX-30%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'CX-7' WHERE model LIKE 'CX-7%' AND brand = 'Mazda';
+  -- CX-3 (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'CX-3' WHERE model LIKE 'CX-3%'
+  AND model NOT LIKE 'CX-30%' AND brand = 'Mazda';
+
+  -- MazdaSpeed (PRIMELE - înaintea modelelor standard; versiuni de înaltă performanță)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'MazdaSpeed Miata' WHERE model LIKE 'MazdaSpeed Miata%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'MazdaSpeed3' WHERE model LIKE 'MazdaSpeed3%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'MazdaSpeed6' WHERE model LIKE 'MazdaSpeed6%' AND brand = 'Mazda';
+
+  -- Familia Mazda "Number" (Sedane și Hatchback-uri)
+
+  UPDATE SUA_Cars_Cleaned SET model = 'Mazda2' WHERE model LIKE 'Mazda2%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Mazda3' WHERE model LIKE 'Mazda3%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Mazda5' WHERE model LIKE 'Mazda5%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Mazda6' WHERE model LIKE 'Mazda6%' AND brand = 'Mazda';
+
+  -- Sport și Rotary
+
+  -- MX-5 Miata (NOT LIKE '%MazdaSpeed%' - '%Miata%' ar prinde și MazdaSpeed Miata)
+  UPDATE SUA_Cars_Cleaned SET model = 'MX-5 Miata'
+  WHERE (model LIKE 'MX-5%' OR model LIKE '%Miata%')
+  AND model NOT LIKE '%MazdaSpeed%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'RX-7' WHERE model LIKE 'RX-7%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'RX-8' WHERE model LIKE 'RX-8%' AND brand = 'Mazda';
+
+  -- Modele Legacy / Clasice
+
+  -- MX-30 (PRIMUL față de MX-3 - 'MX-3%' prinde și MX-30)
+  UPDATE SUA_Cars_Cleaned SET model = 'MX-30' WHERE model LIKE 'MX-30%' AND brand = 'Mazda';
+  -- MX-3 (NOT LIKE 'MX-30%')
+  UPDATE SUA_Cars_Cleaned SET model = 'MX-3' WHERE model LIKE 'MX-3%'
+  AND model NOT LIKE 'MX-30%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'B2000' WHERE model LIKE 'B2000%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'B2200' WHERE model LIKE 'B2200%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'B2300' WHERE model LIKE 'B2300%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'B3000' WHERE model LIKE 'B3000%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'B4000' WHERE model LIKE 'B4000%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = '626' WHERE model LIKE '626%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = '929' WHERE model LIKE '929%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Millenia' WHERE model LIKE 'Millenia%' AND brand = 'Mazda';
+  -- Protege5 (PRIMUL față de Protege - 'Protege%' prinde și Protege5)
+  UPDATE SUA_Cars_Cleaned SET model = 'Protege5' WHERE model LIKE 'Protege5%' AND brand = 'Mazda';
+  -- Protege (restul)
+  UPDATE SUA_Cars_Cleaned SET model = 'Protege' WHERE model LIKE 'Protege%'
+  AND model NOT LIKE 'Protege5%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'Tribute' WHERE model LIKE 'Tribute%' AND brand = 'Mazda';
+  UPDATE SUA_Cars_Cleaned SET model = 'MPV' WHERE model LIKE 'MPV%' AND brand = 'Mazda';
 
   SELECT DISTINCT color, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY color ORDER BY color;
 
