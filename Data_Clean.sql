@@ -46,7 +46,7 @@ create table India_Cars_Cleaned as
 drop table if exists Germany_Cars_Cleaned;
 
 create table Germany_Cars_Cleaned as
-    select brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, mileage_in_km as km, offer_description as engine_type
+    select id, brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type,km, engine_type
     from Germany_Cars;
 
 drop table if exists SUA_cars_Cleaned;

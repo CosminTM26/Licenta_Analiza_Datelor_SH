@@ -4,7 +4,7 @@
 
   SELECT distinct brand as nr FROM SUA_Cars_Cleaned ORDER BY brand;
 
-  SELECT DISTINCT model, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY model ORDER BY model;
+  SELECT DISTINCT model, COUNT(*) as nr, brand FROM SUA_Cars_Cleaned GROUP BY model ORDER BY model;
 
   SELECT DISTINCT model, COUNT(*) as nr
   FROM SUA_Cars_Cleaned
@@ -1608,14 +1608,1104 @@ SELECT DISTINCT model, COUNT(*) as nr
   UPDATE SUA_Cars_Cleaned SET model = 'Tribute' WHERE model LIKE 'Tribute%' AND brand = 'Mazda';
   UPDATE SUA_Cars_Cleaned SET model = 'MPV' WHERE model LIKE 'MPV%' AND brand = 'Mazda';
 
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Mercedes-Benz'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. MAYBACH & SUPERCARS
+UPDATE SUA_Cars_Cleaned SET model = 'Maybach S-Class' WHERE model LIKE 'Maybach S%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'Maybach GLS' WHERE model LIKE 'Maybach GLS%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'SLR McLaren' WHERE model LIKE '%SLR McLaren%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'SLS AMG' WHERE model LIKE '%SLS AMG%' AND brand = 'Mercedes-Benz';
+
+-- 2. AMG GT (Supercar) — specific înainte de generic
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GT 43' WHERE model LIKE 'AMG GT 43%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GT 53' WHERE model LIKE 'AMG GT 53%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GT 63' WHERE model LIKE 'AMG GT 63%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GT' WHERE model LIKE 'AMG GT%' AND model NOT LIKE 'AMG GT 43%' AND model NOT LIKE 'AMG GT 53%' AND model NOT LIKE 'AMG GT 63%' AND brand = 'Mercedes-Benz';
+
+-- 3. AMG PERFORMANCE MODELS (rulează ÎNAINTE de modelele de bază)
+UPDATE SUA_Cars_Cleaned SET model = 'AMG A 35' WHERE (model LIKE 'AMG A 35%' OR model LIKE 'A-Class AMG A 35%') AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG C 43' WHERE (model LIKE 'AMG C 43%' OR (model LIKE 'C-Class%' AND (model LIKE '%C 43%' OR model LIKE '%C450%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG C 63' WHERE (model LIKE 'AMG C 63%' OR model LIKE 'AMG C AMG C 63%' OR model LIKE 'AMG C S%' OR (model LIKE 'C-Class%' AND (model LIKE '%C 63 AMG%' OR model LIKE '%AMG C 63%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLA 35' WHERE model LIKE 'AMG CLA 35%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLA 45' WHERE (model LIKE 'AMG CLA 45%' OR (model LIKE 'CLA-Class%' AND model LIKE '%CLA 45 AMG%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLS 53' WHERE model LIKE 'AMG CLS 53%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLS 63' WHERE (model LIKE 'AMG CLS 63%' OR model LIKE 'AMG CLS AMG CLS 63%' OR (model LIKE 'CLS-Class%' AND (model LIKE '%CLS 63%' OR model LIKE '%CLS55 AMG%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG E 43' WHERE (model LIKE 'AMG E 43%' OR (model LIKE 'E-Class%' AND model LIKE '%AMG E 43%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG E 53' WHERE (model LIKE 'AMG E 53%' OR (model LIKE 'E-Class%' AND model LIKE '%AMG E 53%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG E 63' WHERE (model LIKE 'AMG E 63%' OR (model LIKE 'E-Class%' AND (model LIKE '%E 63 AMG%' OR model LIKE '%AMG E 63%' OR model LIKE '%E55 AMG%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG EQS' WHERE model LIKE 'AMG EQS%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG G 63' WHERE (model LIKE 'AMG G 63%' OR model LIKE 'AMG G 4MATIC%' OR model LIKE 'AMG G AMG G 63%' OR (model LIKE 'G-Class%' AND (model LIKE '%G 63 AMG%' OR model LIKE '%AMG G 63%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG G 65' WHERE (model LIKE 'AMG G AMG G 65%' OR (model LIKE 'G-Class%' AND model LIKE '%G 65%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLA 35' WHERE model LIKE 'AMG GLA 35%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLA 45' WHERE (model LIKE 'AMG GLA 45%' OR model LIKE 'AMG GLA AMG GLA 45%' OR (model LIKE 'GLA-Class%' AND model LIKE '%GLA 45 AMG%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLB 35' WHERE model LIKE 'AMG GLB 35%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLC 43' WHERE model LIKE 'AMG GLC 43%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLC 63' WHERE model LIKE 'AMG GLC 63%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLE 43' WHERE model LIKE 'AMG GLE 43%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLE 53' WHERE model LIKE 'AMG GLE 53%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLE 63' WHERE (model LIKE 'AMG GLE 63%' OR model LIKE 'AMG GLE AMG GLE 63%' OR (model LIKE 'M-Class%' AND (model LIKE '%ML 63 AMG%' OR model LIKE '%ML63 AMG%' OR model LIKE '%ML55 AMG%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG GLS 63' WHERE (model LIKE 'AMG GLS 63%' OR (model LIKE 'GL-Class%' AND model LIKE '%GL 63 AMG%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG S 63' WHERE (model LIKE 'AMG S 63%' OR model LIKE 'AMG S AMG S 63%' OR (model LIKE 'S-Class%' AND (model LIKE '%AMG S 63%' OR model LIKE '%S 63 AMG%' OR model LIKE '%S55 AMG%' OR model LIKE '%6.0L V12 AMG%' OR model LIKE '%6.3L V8 AMG%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG S 65' WHERE (model LIKE 'AMG S 65%' OR model LIKE 'AMG S AMG S 65%' OR (model LIKE 'S-Class%' AND (model LIKE '%S 65 AMG%' OR model LIKE '%S65 AMG%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG SL 55' WHERE (model LIKE 'AMG SL 55%' OR (model LIKE 'SL-Class%' AND (model LIKE '%SL55 AMG%' OR model LIKE '%SL 55 AMG%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG SL 63' WHERE (model LIKE 'AMG SL 63%' OR (model LIKE 'SL-Class%' AND (model LIKE '%SL63 AMG%' OR model LIKE '%SL 63 AMG%'))) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG SL 65' WHERE (model LIKE 'SL-Class%' AND (model LIKE '%SL65 AMG%' OR model LIKE '%SL 65 AMG%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG SLC 43' WHERE (model LIKE 'AMG SLC 43%' OR (model LIKE 'SLK-Class%' AND model LIKE '%SLK32 AMG%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CL 63' WHERE (model LIKE 'CL-Class%' AND (model LIKE '%CL 63 AMG%' OR model LIKE '%CL63 AMG%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CL 65' WHERE (model LIKE 'CL-Class%' AND (model LIKE '%CL 65 AMG%' OR model LIKE '%CL65 AMG%')) AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLK 63' WHERE (model LIKE 'CLK-Class%' AND (model LIKE '%CLK 63 AMG%' OR model LIKE '%CLK63 AMG%')) AND brand = 'Mercedes-Benz';
+
+-- 4. ELECTRIC SERIES (EQ)
+UPDATE SUA_Cars_Cleaned SET model = 'AMG EQS' WHERE model LIKE 'AMG EQS%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'EQS' WHERE model LIKE 'EQS%' AND model NOT LIKE 'AMG EQS%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'EQE' WHERE model LIKE 'EQE%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'EQB' WHERE model LIKE 'EQB%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'B-Class Electric' WHERE (model LIKE 'B-Class%' OR model LIKE '%B 250e%') AND brand = 'Mercedes-Benz';
+
+-- 5. SUVs
+UPDATE SUA_Cars_Cleaned SET model = 'G-Class' WHERE (model LIKE 'G-Class%' OR model LIKE 'G 550%' OR model LIKE '%G500%' OR model LIKE '%G 550%') AND model NOT LIKE '%AMG G 63%' AND model NOT LIKE '%AMG G 65%' AND model NOT LIKE '%G 63 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'GLS / GL-Class' WHERE (model LIKE 'GLS%' OR model LIKE 'GL-Class%') AND model NOT LIKE '%AMG GLS%' AND model NOT LIKE '%GL 63 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'GLE / M-Class' WHERE (model LIKE 'GLE%' OR model LIKE 'GLE-Class%' OR model LIKE 'M-Class%') AND model NOT LIKE '%AMG GLE%' AND model NOT LIKE '%ML 63 AMG%' AND model NOT LIKE '%ML55 AMG%' AND model NOT LIKE '%ML63 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'GLC / GLK' WHERE (model LIKE 'GLC%' OR model LIKE 'GLK-Class%' OR model LIKE 'GLC-Class%') AND model NOT LIKE '%AMG GLC%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'GLB' WHERE model LIKE 'GLB%' AND model NOT LIKE '%AMG GLB%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'GLA' WHERE (model LIKE 'GLA%' OR model LIKE 'GLA-Class%') AND model NOT LIKE '%AMG GLA%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'R-Class' WHERE model LIKE 'R-Class%' AND brand = 'Mercedes-Benz';
+
+-- 6. SEDANS, COUPES & CABRIOS
+UPDATE SUA_Cars_Cleaned SET model = 'S-Class' WHERE (model LIKE 'S-Class%' OR model LIKE 'S %') AND model NOT LIKE '%Maybach%' AND model NOT LIKE '%AMG S%' AND model NOT LIKE '%S 63 AMG%' AND model NOT LIKE '%S 65 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'E-Class' WHERE (model LIKE 'E-Class%' OR model LIKE 'E %') AND model NOT LIKE '%AMG E%' AND model NOT LIKE '%E 63 AMG%' AND model NOT LIKE '%E55 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'C-Class' WHERE (model LIKE 'C-Class%' OR model LIKE 'C30%' OR model LIKE 'C2%' OR model LIKE 'C3%' OR model LIKE 'C4%') AND model NOT LIKE '%AMG C%' AND model NOT LIKE '%C 63 AMG%' AND model NOT LIKE '%C55 AMG%' AND model NOT LIKE '%C450 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'CLS' WHERE (model LIKE 'CLS%' OR model LIKE 'CLS-Class%') AND model NOT LIKE '%AMG CLS%' AND model NOT LIKE '%CLS 63%' AND model NOT LIKE '%CLS55 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'CLA' WHERE (model LIKE 'CLA%' OR model LIKE 'CLA-Class%') AND model NOT LIKE '%AMG CLA%' AND model NOT LIKE '%CLA 45 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'CL-Class' WHERE model LIKE 'CL-Class%' AND model NOT LIKE '%AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'CLK-Class' WHERE model LIKE 'CLK-Class%' AND model NOT LIKE '%AMG%' AND model NOT LIKE '%CLK63 AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'A-Class' WHERE model LIKE 'A-Class%' AND model NOT LIKE '%AMG A%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'SL-Class' WHERE (model LIKE 'SL-Class%' OR model LIKE 'SL 4%' OR model LIKE 'SL 5%') AND model NOT LIKE '%AMG SL%' AND model NOT LIKE '%SL55 AMG%' AND model NOT LIKE '%SL63 AMG%' AND model NOT LIKE '%SL65 AMG%' AND model NOT LIKE '%SLR McLaren%' AND model NOT LIKE '%SLS AMG%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'SLC' WHERE model LIKE 'SLC%' AND model NOT LIKE '%AMG SLC%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'SLK-Class' WHERE model LIKE 'SLK-Class%' AND model NOT LIKE '%SLK32 AMG%' AND model NOT LIKE '%SLK55 AMG%' AND brand = 'Mercedes-Benz';
+
+-- 7. COMMERCIAL VEHICLES (Sprinter specific → generic)
+UPDATE SUA_Cars_Cleaned SET model = 'Sprinter 4500' WHERE model LIKE 'Sprinter 4500%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'Sprinter 3500XD' WHERE model LIKE 'Sprinter 3500XD%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'Sprinter 3500' WHERE model LIKE 'Sprinter 3500%' AND model NOT LIKE 'Sprinter 3500XD%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'Sprinter 2500' WHERE model LIKE 'Sprinter 2500%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'Sprinter 1500' WHERE model LIKE 'Sprinter 1500%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'Sprinter' WHERE model LIKE 'Sprinter%' AND model NOT LIKE 'Sprinter 1500%' AND model NOT LIKE 'Sprinter 2500%' AND model NOT LIKE 'Sprinter 3500%' AND model NOT LIKE 'Sprinter 4500%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = 'Metris' WHERE model LIKE 'Metris%' AND brand = 'Mercedes-Benz';
+
+-- 8. CLASICE (anii '60-'80)
+UPDATE SUA_Cars_Cleaned SET model = '190SL' WHERE model LIKE '190SL%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = '230SL' WHERE model LIKE '230SL%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = '240' WHERE model LIKE '240%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = '280SE' WHERE model LIKE '280SE%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = '280SL' WHERE model LIKE '280SL%' AND brand = 'Mercedes-Benz';
+UPDATE SUA_Cars_Cleaned SET model = '450SL' WHERE model LIKE '450SL%' AND brand = 'Mercedes-Benz';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Mitsubishi'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. SUV-uri și Crossovere (ordinea contează!)
+
+-- Eclipse Cross (înainte de Eclipse)
+UPDATE SUA_Cars_Cleaned SET model = 'Eclipse Cross' WHERE model LIKE 'Eclipse Cross%' AND brand = 'Mitsubishi';
+
+-- Outlander PHEV (înainte de Outlander Sport și Outlander)
+UPDATE SUA_Cars_Cleaned SET model = 'Outlander PHEV' WHERE model LIKE 'Outlander PHEV%' AND brand = 'Mitsubishi';
+
+-- Outlander Sport (înainte de Outlander generic)
+UPDATE SUA_Cars_Cleaned SET model = 'Outlander Sport' WHERE model LIKE 'Outlander Sport%' AND brand = 'Mitsubishi';
+
+-- Outlander (restul)
+UPDATE SUA_Cars_Cleaned SET model = 'Outlander' WHERE model LIKE 'Outlander%' AND model NOT LIKE 'Outlander PHEV%' AND model NOT LIKE 'Outlander Sport%' AND brand = 'Mitsubishi';
+
+-- Montero Sport (înainte de Montero)
+UPDATE SUA_Cars_Cleaned SET model = 'Montero Sport' WHERE model LIKE 'Montero Sport%' AND brand = 'Mitsubishi';
+
+-- Montero (restul)
+UPDATE SUA_Cars_Cleaned SET model = 'Montero' WHERE model LIKE 'Montero%' AND model NOT LIKE 'Montero Sport%' AND brand = 'Mitsubishi';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Endeavor' WHERE model LIKE 'Endeavor%' AND brand = 'Mitsubishi';
+
+-- 2. Mașini Sport și de Înaltă Performanță
+
+UPDATE SUA_Cars_Cleaned SET model = 'Lancer Evolution' WHERE model LIKE 'Lancer Evolution%' AND brand = 'Mitsubishi';
+UPDATE SUA_Cars_Cleaned SET model = '3000GT' WHERE model LIKE '3000GT%' AND brand = 'Mitsubishi';
+
+-- Eclipse (după Eclipse Cross)
+UPDATE SUA_Cars_Cleaned SET model = 'Eclipse' WHERE model LIKE 'Eclipse%' AND model NOT LIKE 'Eclipse Cross%' AND brand = 'Mitsubishi';
+
+-- 3. Autoturisme
+
+-- Lancer Sportback (înainte de Lancer)
+UPDATE SUA_Cars_Cleaned SET model = 'Lancer Sportback' WHERE model LIKE 'Lancer Sportback%' AND brand = 'Mitsubishi';
+
+-- Lancer (restul)
+UPDATE SUA_Cars_Cleaned SET model = 'Lancer' WHERE model LIKE 'Lancer%' AND model NOT LIKE 'Lancer Evolution%' AND model NOT LIKE 'Lancer Sportback%' AND brand = 'Mitsubishi';
+
+-- Mirage G4 (înainte de Mirage)
+UPDATE SUA_Cars_Cleaned SET model = 'Mirage G4' WHERE model LIKE 'Mirage G4%' AND brand = 'Mitsubishi';
+
+-- Mirage (restul)
+UPDATE SUA_Cars_Cleaned SET model = 'Mirage' WHERE model LIKE 'Mirage%' AND model NOT LIKE 'Mirage G4%' AND brand = 'Mitsubishi';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Galant' WHERE model LIKE 'Galant%' AND brand = 'Mitsubishi';
+UPDATE SUA_Cars_Cleaned SET model = 'Diamante' WHERE model LIKE 'Diamante%' AND brand = 'Mitsubishi';
+
+-- 4. Electrice
+UPDATE SUA_Cars_Cleaned SET model = 'i-MiEV' WHERE model LIKE 'i-MiEV%' AND brand = 'Mitsubishi';
+
+-- 5. Pick-up-uri și Clasice
+UPDATE SUA_Cars_Cleaned SET model = 'Raider' WHERE model LIKE 'Raider%' AND brand = 'Mitsubishi';
+UPDATE SUA_Cars_Cleaned SET model = 'Sigma' WHERE model LIKE 'Sigma%' AND brand = 'Mitsubishi';
+UPDATE SUA_Cars_Cleaned SET model = 'Pickup Truck' WHERE model LIKE 'Pickup Truck%' AND brand = 'Mitsubishi';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Nissan'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. MAȘINI SPORT & PERFORMANCE
+
+UPDATE SUA_Cars_Cleaned SET model = 'GT-R' WHERE model LIKE 'GT-R%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = '370Z' WHERE model LIKE '370Z%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = '350Z' WHERE model LIKE '350Z%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = '300ZX' WHERE model LIKE '300ZX%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Z' WHERE (model LIKE 'Z Performance%' OR model LIKE 'Z Proto%' OR model LIKE 'Z Sport%') AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = '280ZX' WHERE model LIKE '280ZX%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = '240' WHERE model LIKE '240%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = '200SX' WHERE model LIKE '200SX%' AND brand = 'Nissan';
+
+-- 2. SUV-uri & CROSSOVERE (Rogue Sport înainte de Rogue, Pathfinder Hybrid înainte de Pathfinder)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Rogue Sport' WHERE model LIKE 'Rogue Sport%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Rogue' WHERE model LIKE 'Rogue%' AND model NOT LIKE 'Rogue Sport%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Pathfinder Hybrid' WHERE model LIKE 'Pathfinder Hybrid%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Pathfinder' WHERE model LIKE 'Pathfinder%' AND model NOT LIKE 'Pathfinder Hybrid%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Murano' WHERE model LIKE 'Murano%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Armada' WHERE model LIKE 'Armada%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Kicks' WHERE model LIKE 'Kicks%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Juke' WHERE model LIKE 'Juke%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Xterra' WHERE model LIKE 'Xterra%' AND brand = 'Nissan';
+
+-- 3. AUTOTURISME (Altima Hybrid înainte de Altima, Versa Note înainte de Versa)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Altima Hybrid' WHERE model LIKE 'Altima Hybrid%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Altima' WHERE model LIKE 'Altima%' AND model NOT LIKE 'Altima Hybrid%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Maxima' WHERE model LIKE 'Maxima%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Sentra' WHERE model LIKE 'Sentra%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Versa Note' WHERE model LIKE 'Versa Note%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Versa' WHERE model LIKE 'Versa%' AND model NOT LIKE 'Versa Note%' AND brand = 'Nissan';
+
+-- 4. ELECTRICE
+
+UPDATE SUA_Cars_Cleaned SET model = 'Leaf' WHERE model LIKE 'Leaf%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Ariya' WHERE model LIKE 'ARIYA%' AND brand = 'Nissan';
+
+-- 5. PICK-UP-URI (Titan XD înainte de Titan)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Titan XD' WHERE model LIKE 'Titan XD%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Titan' WHERE model LIKE 'Titan%' AND model NOT LIKE 'Titan XD%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Frontier' WHERE model LIKE 'Frontier%' AND brand = 'Nissan';
+
+-- 6. COMERCIALE & UTILITARE (NV Passenger și NV Cargo înainte de NV200)
+
+UPDATE SUA_Cars_Cleaned SET model = 'NV Passenger' WHERE model LIKE 'NV Passenger%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'NV Cargo' WHERE model LIKE 'NV Cargo%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'NV200' WHERE model LIKE 'NV200%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Quest' WHERE model LIKE 'Quest%' AND brand = 'Nissan';
+UPDATE SUA_Cars_Cleaned SET model = 'Cube' WHERE model LIKE 'Cube%' AND brand = 'Nissan';
+
+-- 7. CLASICE / DIVERSE
+
+UPDATE SUA_Cars_Cleaned SET model = 'NX' WHERE model LIKE 'NX%' AND brand = 'Nissan';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Porsche'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. FAMILIA 911
+
+-- 911 GT/RS (cel mai specific - primul)
+UPDATE SUA_Cars_Cleaned SET model = '911 GT' WHERE model LIKE '911%' AND (model LIKE '%GT2%' OR model LIKE '%GT3%' OR model LIKE '%GT4%' OR model LIKE '%Cup%' OR model LIKE '%RSR%') AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '911 Turbo' WHERE model LIKE '911%' AND model LIKE '%Turbo%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '911 Targa' WHERE model LIKE '911%' AND model LIKE '%Targa%' AND brand = 'Porsche';
+-- 911 Carrera (restul)
+UPDATE SUA_Cars_Cleaned SET model = '911 Carrera' WHERE model LIKE '911%' AND model NOT LIKE '%GT2%' AND model NOT LIKE '%GT3%' AND model NOT LIKE '%GT4%' AND model NOT LIKE '%Cup%' AND model NOT LIKE '%RSR%' AND model NOT LIKE '%Turbo%' AND model NOT LIKE '%Targa%' AND brand = 'Porsche';
+
+-- 2. FAMILIA 718
+
+UPDATE SUA_Cars_Cleaned SET model = '718 Spyder' WHERE model LIKE '718 Spyder%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '718 Cayman' WHERE model LIKE '718 Cayman%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '718 Boxster' WHERE model LIKE '718 Boxster%' AND brand = 'Porsche';
+
+-- Boxster și Cayman pre-718 (rămân simple)
+UPDATE SUA_Cars_Cleaned SET model = 'Boxster' WHERE model LIKE 'Boxster%' AND model NOT LIKE '718%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Cayman' WHERE model LIKE 'Cayman%' AND model NOT LIKE '718%' AND brand = 'Porsche';
+
+-- 3. PANAMERA (Sport Turismo și Executive înainte de Hybrid și generic)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Panamera Sport Turismo' WHERE model LIKE 'Panamera%' AND model LIKE '%Sport Turismo%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Panamera Executive' WHERE model LIKE 'Panamera%' AND model LIKE '%Executive%' AND model NOT LIKE '%Sport Turismo%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Panamera Hybrid' WHERE model LIKE 'Panamera%' AND (model LIKE '%E-Hybrid%' OR model LIKE '%Hybrid S%') AND model NOT LIKE '%Sport Turismo%' AND model NOT LIKE '%Executive%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Panamera' WHERE model LIKE 'Panamera%' AND model NOT LIKE '%Sport Turismo%' AND model NOT LIKE '%Executive%' AND model NOT LIKE '%E-Hybrid%' AND model NOT LIKE '%Hybrid S%' AND brand = 'Porsche';
+
+-- 4. TAYCAN
+
+UPDATE SUA_Cars_Cleaned SET model = 'Taycan Cross Turismo' WHERE model LIKE 'Taycan%' AND model LIKE '%Cross Turismo%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Taycan' WHERE model LIKE 'Taycan%' AND model NOT LIKE '%Cross Turismo%' AND brand = 'Porsche';
+
+-- 5. SUV-uri
+
+-- Cayenne Coupe și Hybrid înainte de generic
+UPDATE SUA_Cars_Cleaned SET model = 'Cayenne Coupe' WHERE model LIKE 'Cayenne%' AND model LIKE '%Coupe%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Cayenne Hybrid' WHERE model LIKE 'Cayenne%' AND (model LIKE '%E-Hybrid%' OR model LIKE '%Hybrid S%') AND model NOT LIKE '%Coupe%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Cayenne' WHERE model LIKE 'Cayenne%' AND model NOT LIKE '%Coupe%' AND model NOT LIKE '%E-Hybrid%' AND model NOT LIKE '%Hybrid S%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = 'Macan' WHERE model LIKE 'Macan%' AND brand = 'Porsche';
+
+-- 6. SUPERCAR-uri & CLASICE
+
+UPDATE SUA_Cars_Cleaned SET model = 'Carrera GT' WHERE model LIKE 'Carrera GT%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '918 Spyder' WHERE model LIKE '918%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '356' WHERE model LIKE '356%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '912' WHERE model LIKE '912%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '914' WHERE model LIKE '914%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '924' WHERE model LIKE '924%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '928' WHERE model LIKE '928%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '930' WHERE model LIKE '930%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '944' WHERE model LIKE '944%' AND brand = 'Porsche';
+UPDATE SUA_Cars_Cleaned SET model = '968' WHERE model LIKE '968%' AND brand = 'Porsche';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'RAM'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. FAMILIA 1500
+
+-- 1500 Classic (înainte de 1500 generic)
+UPDATE SUA_Cars_Cleaned SET model = '1500 Classic' WHERE (model LIKE '1500 Classic%' OR model LIKE '1500 Warlock%') AND brand = 'RAM';
+
+-- 1500 TRX
+UPDATE SUA_Cars_Cleaned SET model = '1500 TRX' WHERE model LIKE '1500 TRX%' AND brand = 'RAM';
+
+-- 1500 (restul)
+UPDATE SUA_Cars_Cleaned SET model = '1500' WHERE model LIKE '1500%' AND model NOT LIKE '1500 Classic%' AND model NOT LIKE '1500 Warlock%' AND model NOT LIKE '1500 TRX%' AND brand = 'RAM';
+
+-- 2. HEAVY DUTY
+
+UPDATE SUA_Cars_Cleaned SET model = '2500' WHERE model LIKE '2500%' AND brand = 'RAM';
+UPDATE SUA_Cars_Cleaned SET model = '3500' WHERE model LIKE '3500%' AND brand = 'RAM';
+
+-- 3. PROMASTER & VANS
+
+-- ProMaster City (înainte de ProMaster generic)
+UPDATE SUA_Cars_Cleaned SET model = 'ProMaster City' WHERE model LIKE 'ProMaster City%' AND brand = 'RAM';
+
+UPDATE SUA_Cars_Cleaned SET model = 'ProMaster 1500' WHERE model LIKE 'ProMaster 1500%' AND brand = 'RAM';
+UPDATE SUA_Cars_Cleaned SET model = 'ProMaster 2500' WHERE model LIKE 'ProMaster 2500%' AND brand = 'RAM';
+UPDATE SUA_Cars_Cleaned SET model = 'ProMaster 3500' WHERE model LIKE 'ProMaster 3500%' AND brand = 'RAM';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Cargo C/V' WHERE (model LIKE 'Cargo C/V%' OR model LIKE 'Cargo Tradesman%') AND brand = 'RAM';
+
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Subaru'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. PERFORMANCE (WRX/STI - primul, înainte de Impreza)
+
+UPDATE SUA_Cars_Cleaned SET model = 'WRX STI' WHERE (model LIKE '%WRX STI%' OR model LIKE '%WRX STi%' OR model LIKE '%STI S209%' OR model LIKE '%WRX S209%' OR model LIKE 'STI S209%') AND brand = 'Subaru';
+UPDATE SUA_Cars_Cleaned SET model = 'WRX' WHERE (model LIKE 'WRX%' OR model LIKE 'Impreza WRX%') AND model NOT LIKE '%STI%' AND model NOT LIKE '%STi%' AND model NOT LIKE '%S209%' AND brand = 'Subaru';
+
+-- 2. SUV-uri
+
+-- Outback (include Legacy Outback și Impreza Outback Sport)
+UPDATE SUA_Cars_Cleaned SET model = 'Outback' WHERE (model LIKE 'Outback%' OR model LIKE 'Legacy Outback%' OR model LIKE 'Impreza Outback%') AND brand = 'Subaru';
+
+-- Crosstrek (include XV Crosstrek)
+UPDATE SUA_Cars_Cleaned SET model = 'Crosstrek' WHERE (model LIKE 'Crosstrek%' OR model LIKE 'XV Crosstrek%') AND brand = 'Subaru';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Forester' WHERE model LIKE 'Forester%' AND brand = 'Subaru';
+UPDATE SUA_Cars_Cleaned SET model = 'Ascent' WHERE model LIKE 'Ascent%' AND brand = 'Subaru';
+
+-- Tribeca (include B9 Tribeca)
+UPDATE SUA_Cars_Cleaned SET model = 'Tribeca' WHERE (model LIKE 'Tribeca%' OR model LIKE 'B9 Tribeca%') AND brand = 'Subaru';
+
+-- 3. SEDANE & HATCHBACK
+
+-- Impreza (exclude WRX/STI deja mapate)
+UPDATE SUA_Cars_Cleaned SET model = 'Impreza' WHERE model LIKE 'Impreza%' AND model NOT LIKE '%WRX%' AND model NOT LIKE '%STI%' AND model NOT LIKE '%STi%' AND model NOT LIKE '%Outback%' AND brand = 'Subaru';
+
+-- Legacy (exclude Legacy Outback deja mapat)
+UPDATE SUA_Cars_Cleaned SET model = 'Legacy' WHERE model LIKE 'Legacy%' AND model NOT LIKE 'Legacy Outback%' AND brand = 'Subaru';
+
+-- 4. SPORT, EV & CLASICE
+
+UPDATE SUA_Cars_Cleaned SET model = 'BRZ' WHERE model LIKE 'BRZ%' AND brand = 'Subaru';
+UPDATE SUA_Cars_Cleaned SET model = 'Solterra' WHERE model LIKE 'Solterra%' AND brand = 'Subaru';
+UPDATE SUA_Cars_Cleaned SET model = 'Baja' WHERE model LIKE 'Baja%' AND brand = 'Subaru';
+UPDATE SUA_Cars_Cleaned SET model = 'Brat' WHERE model LIKE 'Brat%' AND brand = 'Subaru';
+UPDATE SUA_Cars_Cleaned SET model = 'SVX' WHERE model LIKE 'SVX%' AND brand = 'Subaru';
+UPDATE SUA_Cars_Cleaned SET model = 'DL' WHERE model LIKE 'DL%' AND brand = 'Subaru';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Tesla'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- TESLA (mapare simplă - primele două cuvinte)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Model 3' WHERE model LIKE 'Model 3%' AND brand = 'Tesla';
+UPDATE SUA_Cars_Cleaned SET model = 'Model S' WHERE model LIKE 'Model S%' AND brand = 'Tesla';
+UPDATE SUA_Cars_Cleaned SET model = 'Model X' WHERE model LIKE 'Model X%' AND brand = 'Tesla';
+UPDATE SUA_Cars_Cleaned SET model = 'Model Y' WHERE model LIKE 'Model Y%' AND brand = 'Tesla';
+UPDATE SUA_Cars_Cleaned SET model = 'Roadster' WHERE model LIKE 'Roadster%' AND brand = 'Tesla';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Toyota'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. FAMILIA PRIUS (ordinea contează!)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Prius Prime' WHERE (model LIKE 'Prius Prime%' OR model LIKE 'Prius Plug-in%') AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Prius c' WHERE model LIKE 'Prius c%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Prius v' WHERE model LIKE 'Prius v%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Prius' WHERE model LIKE 'Prius%' AND model NOT LIKE 'Prius Prime%' AND model NOT LIKE 'Prius Plug-in%' AND model NOT LIKE 'Prius c%' AND model NOT LIKE 'Prius v%' AND brand = 'Toyota';
+
+-- 2. FAMILIA COROLLA (ordinea contează!)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Corolla Cross' WHERE model LIKE 'Corolla Cross%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'GR Corolla' WHERE model LIKE 'GR Corolla%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Corolla Hatchback' WHERE (model LIKE 'Corolla Hatchback%' OR model LIKE 'Corolla iM%') AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Corolla Hybrid' WHERE model LIKE 'Corolla Hybrid%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Corolla' WHERE model LIKE 'Corolla%' AND model NOT LIKE 'Corolla Cross%' AND model NOT LIKE 'Corolla Hatchback%' AND model NOT LIKE 'Corolla iM%' AND model NOT LIKE 'Corolla Hybrid%' AND brand = 'Toyota';
+
+-- FAMILIA CAMRY (ordinea contează!)
+
+UPDATE SUA_Cars_Cleaned SET model = 'Camry Solara' WHERE model LIKE 'Camry Solara%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Camry Hybrid' WHERE model LIKE 'Camry Hybrid%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Camry' WHERE model LIKE 'Camry%' AND model NOT LIKE 'Camry Solara%' AND model NOT LIKE 'Camry Hybrid%' AND brand = 'Toyota';
+
+-- 3. SUV-uri & CROSSOVERE
+
+-- RAV4 (ordinea contează!)
+UPDATE SUA_Cars_Cleaned SET model = 'RAV4 Prime' WHERE model LIKE 'RAV4 Prime%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'RAV4 Hybrid' WHERE (model LIKE 'RAV4 Hybrid%' OR model LIKE 'RAV4 EV%') AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'RAV4' WHERE model LIKE 'RAV4%' AND model NOT LIKE 'RAV4 Prime%' AND model NOT LIKE 'RAV4 Hybrid%' AND model NOT LIKE 'RAV4 EV%' AND brand = 'Toyota';
+
+-- Highlander (ordinea contează!)
+UPDATE SUA_Cars_Cleaned SET model = 'Highlander Hybrid' WHERE model LIKE 'Highlander Hybrid%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Highlander' WHERE model LIKE 'Highlander%' AND model NOT LIKE 'Highlander Hybrid%' AND brand = 'Toyota';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Land Cruiser' WHERE model LIKE 'Land Cruiser%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'bZ4X' WHERE model LIKE 'bZ4X%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'C-HR' WHERE model LIKE 'C-HR%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Venza' WHERE model LIKE 'Venza%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Sequoia' WHERE model LIKE 'Sequoia%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = '4Runner' WHERE model LIKE '4Runner%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'FJ Cruiser' WHERE model LIKE 'FJ Cruiser%' AND brand = 'Toyota';
+
+-- 4. PICK-UP-URI
+
+-- Tundra Hybrid (înainte de Tundra)
+UPDATE SUA_Cars_Cleaned SET model = 'Tundra Hybrid' WHERE model LIKE 'Tundra Hybrid%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Tundra' WHERE model LIKE 'Tundra%' AND model NOT LIKE 'Tundra Hybrid%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Tacoma' WHERE model LIKE 'Tacoma%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'T100' WHERE model LIKE 'T100%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Pickup Truck' WHERE model LIKE 'Pickup Truck%' AND brand = 'Toyota';
+
+-- 5. SPORT & GAZOO RACING
+
+UPDATE SUA_Cars_Cleaned SET model = 'Supra' WHERE model LIKE 'Supra%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'GR86' WHERE model LIKE 'GR86%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = '86' WHERE model LIKE '86%' AND model NOT LIKE 'GR86%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Celica' WHERE model LIKE 'Celica%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'MR2' WHERE model LIKE 'MR2%' AND brand = 'Toyota';
+
+-- 6. SEDANE, HATCHBACK-uri & MINIVAN-uri
+
+-- Avalon Hybrid (înainte de Avalon)
+UPDATE SUA_Cars_Cleaned SET model = 'Avalon Hybrid' WHERE model LIKE 'Avalon Hybrid%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Avalon' WHERE model LIKE 'Avalon%' AND model NOT LIKE 'Avalon Hybrid%' AND brand = 'Toyota';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Crown' WHERE model LIKE 'Crown%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Mirai' WHERE model LIKE 'Mirai%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Matrix' WHERE model LIKE 'Matrix%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Sienna' WHERE model LIKE 'Sienna%' AND brand = 'Toyota';
+
+-- Yaris (include Yaris iA și Yaris Sedan)
+UPDATE SUA_Cars_Cleaned SET model = 'Yaris' WHERE (model LIKE 'Yaris%' OR model LIKE 'ECHO%') AND brand = 'Toyota';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Tercel' WHERE model LIKE 'Tercel%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Corona' WHERE model LIKE 'Corona%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Cressida' WHERE model LIKE 'Cressida%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Previa' WHERE model LIKE 'Previa%' AND brand = 'Toyota';
+UPDATE SUA_Cars_Cleaned SET model = 'Paseo' WHERE model LIKE 'Paseo%' AND brand = 'Toyota';
+
+SELECT DISTINCT model, COUNT(*) as nr
+  FROM SUA_Cars_Cleaned
+  WHERE brand = 'Volkswagen'
+  GROUP BY model
+  ORDER BY model ASC;
+
+-- 1. SUV & CROSSOVER
+
+-- Atlas Cross Sport (înainte de Atlas)
+UPDATE SUA_Cars_Cleaned SET model = 'Atlas Cross Sport' WHERE model LIKE 'Atlas Cross Sport%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Atlas' WHERE model LIKE 'Atlas%' AND model NOT LIKE 'Atlas Cross Sport%' AND brand = 'Volkswagen';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Tiguan' WHERE model LIKE 'Tiguan%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Taos' WHERE model LIKE 'Taos%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Touareg' WHERE model LIKE 'Touareg%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'ID.4' WHERE model LIKE 'ID.4%' AND brand = 'Volkswagen';
+
+-- 2. FAMILIA GOLF (ordinea contează!)
+
+-- GTI (Golf GTI + GTI standalone)
+UPDATE SUA_Cars_Cleaned SET model = 'GTI' WHERE (model LIKE 'Golf GTI%' OR model LIKE 'GTI%') AND brand = 'Volkswagen';
+
+-- Golf R + R32 (înainte de Golf generic)
+UPDATE SUA_Cars_Cleaned SET model = 'Golf R' WHERE (model LIKE 'Golf R%' OR model LIKE 'R32%') AND brand = 'Volkswagen';
+
+-- Golf SportWagen + Alltrack
+UPDATE SUA_Cars_Cleaned SET model = 'Golf Wagon' WHERE (model LIKE 'Golf SportWagen%' OR model LIKE 'Golf Alltrack%') AND brand = 'Volkswagen';
+
+-- e-Golf
+UPDATE SUA_Cars_Cleaned SET model = 'e-Golf' WHERE model LIKE 'e-Golf%' AND brand = 'Volkswagen';
+
+-- Golf (restul)
+UPDATE SUA_Cars_Cleaned SET model = 'Golf' WHERE model LIKE 'Golf%' AND model NOT LIKE 'Golf GTI%' AND model NOT LIKE 'Golf R%' AND model NOT LIKE 'Golf SportWagen%' AND model NOT LIKE 'Golf Alltrack%' AND brand = 'Volkswagen';
+
+-- Rabbit (versiune veche Golf)
+UPDATE SUA_Cars_Cleaned SET model = 'Golf' WHERE model LIKE 'Rabbit%' AND brand = 'Volkswagen';
+
+-- 3. SEDANE
+
+-- Jetta GLI (înainte de Jetta)
+UPDATE SUA_Cars_Cleaned SET model = 'Jetta GLI' WHERE (model LIKE 'Jetta GLI%' OR model LIKE 'Jetta 2.0T GLI%') AND brand = 'Volkswagen';
+
+-- Jetta SportWagen → sub Jetta
+UPDATE SUA_Cars_Cleaned SET model = 'Jetta' WHERE model LIKE 'Jetta%' AND model NOT LIKE 'Jetta GLI%' AND model NOT LIKE 'Jetta 2.0T GLI%' AND brand = 'Volkswagen';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Passat' WHERE model LIKE 'Passat%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Arteon' WHERE model LIKE 'Arteon%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'CC' WHERE model LIKE 'CC%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Phaeton' WHERE model LIKE 'Phaeton%' AND brand = 'Volkswagen';
+
+-- 4. LIFESTYLE & HERITAGE
+
+-- Beetle (New Beetle + Super Beetle + clasic)
+UPDATE SUA_Cars_Cleaned SET model = 'Beetle' WHERE (model LIKE 'Beetle%' OR model LIKE 'New Beetle%' OR model LIKE 'Super Beetle%' OR model LIKE '1600 Squareback%') AND brand = 'Volkswagen';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Eos' WHERE model LIKE 'Eos%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Karmann Ghia' WHERE (model LIKE 'Karmann Ghia%' OR model LIKE 'Cabrio%' OR model LIKE 'Cabriolet%') AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Thing' WHERE model LIKE 'Thing%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Corrado' WHERE model LIKE 'Corrado%' AND brand = 'Volkswagen';
+
+-- 5. VANS & UTILITARE
+
+UPDATE SUA_Cars_Cleaned SET model = 'Routan' WHERE model LIKE 'Routan%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Eurovan' WHERE model LIKE 'Eurovan%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Vanagon' WHERE model LIKE 'Vanagon%' AND brand = 'Volkswagen';
+UPDATE SUA_Cars_Cleaned SET model = 'Microbus' WHERE (model LIKE 'Microbus%') AND brand = 'Volkswagen';
+
+
+
+
+-- ============================================================
+-- 1. MERCEDES-BENZ AMG & MAYBACH (ascunse în modele vechi)
+-- ============================================================
+
+UPDATE SUA_Cars_Cleaned SET model = 'Maybach S-Class'
+    WHERE model LIKE '%S-Class Maybach%' AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG C 55'
+    WHERE model LIKE '%C-Class C55 AMG%' AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CL 55'
+    WHERE model LIKE '%CL-Class CL55 AMG%' AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CL 63'
+    WHERE model LIKE '%CL-Class 6.3L V8 AMG%' AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CL-Class'
+    WHERE model LIKE '%CL-Class AMG%'
+      AND model NOT LIKE '%CL55 AMG%'
+      AND model NOT LIKE '%6.3L V8 AMG%'
+      AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLK 55'
+    WHERE model LIKE '%CLK-Class CLK55 AMG%' AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLK 63'
+    WHERE model LIKE '%CLK-Class 63 AMG%' AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG CLK-Class'
+    WHERE model LIKE '%CLK-Class AMG%'
+      AND model NOT LIKE '%CLK55 AMG%'
+      AND model NOT LIKE '%63 AMG%'
+      AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG SL 63'
+    WHERE model LIKE '%SL-Class AMG SL 63%' AND brand = 'Mercedes-Benz';
+
+UPDATE SUA_Cars_Cleaned SET model = 'AMG SLK 55'
+    WHERE model LIKE '%SLK-Class SLK55 AMG%' AND brand = 'Mercedes-Benz';
+
+-- ============================================================
+-- 2. CHEVROLET — Sughițuri de text
+-- ============================================================
+
+UPDATE SUA_Cars_Cleaned SET model = '150'
+    WHERE model LIKE '150%' AND brand = 'Chevrolet';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Lumina'
+    WHERE model LIKE 'Lumina%' AND brand = 'Chevrolet';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Classic'
+    WHERE model LIKE 'Classic%' AND brand = 'Chevrolet';
+
+-- Chevrolet master series / clasice
+UPDATE SUA_Cars_Cleaned SET model = 'Master Series'
+    WHERE model IN (
+        'Master Deluxe', 'Master Series DA', 'Master Street Gasser',
+        'Panel CUSTOM', 'Independence Coupe'
+    ) AND brand = 'Chevrolet';
+
+UPDATE SUA_Cars_Cleaned SET model = 'Pickup Truck'
+    WHERE model LIKE 'Pickup Truck%' AND brand = 'Chevrolet';
+
+-- ============================================================
+-- 3. FORD — Sughițuri de text + Hot Rods clasice
+-- ============================================================
+
+-- F-150 Lightning (SVT Lightning → F-150 Lightning)
+UPDATE SUA_Cars_Cleaned SET model = 'F-150 Lightning'
+    WHERE model LIKE '%SVT Lightning%' AND brand = 'Ford';
+
+-- Sunliner
+UPDATE SUA_Cars_Cleaned SET model = 'Sunliner'
+    WHERE model LIKE 'Sunliner%' AND brand = 'Ford';
+
+-- Ford Early V8 / Hot Rod (Coupe, Roadster, Sedan Delivery, Model 18/48/B)
+UPDATE SUA_Cars_Cleaned SET model = 'Ford Early V8'
+    WHERE model LIKE 'Coupe%'
+       OR model LIKE 'Roadster%'
+       OR model LIKE 'Sedan Delivery%'
+       OR model LIKE 'Model 18%'
+       OR model LIKE 'Model 48%'
+       OR model LIKE 'Model B%'
+    AND brand = 'Ford';
+
+-- ============================================================
+-- 4. LAND ROVER — Range Rover 4dr → Range Rover
+-- ============================================================
+
+UPDATE SUA_Cars_Cleaned SET model = 'Range Rover'
+    WHERE model LIKE '%Range Rover 4dr%' AND brand = 'Land Rover';
+
+-- ============================================================
+-- 5. MAZDA — B-Series (B2000/B2200/B2300/B3000/B4000)
+-- ============================================================
+
+UPDATE SUA_Cars_Cleaned SET model = 'B-Series'
+    WHERE model LIKE 'B2000%'
+       OR model LIKE 'B2200%'
+       OR model LIKE 'B2300%'
+       OR model LIKE 'B3000%'
+       OR model LIKE 'B4000%'
+    AND brand = 'Mazda';
+
+-- ============================================================
+-- 6. BMW — Standardizare nomenclatură (Seria X → X Series)
+-- ============================================================
+
+UPDATE SUA_Cars_Cleaned SET model = '1 Series' WHERE model = 'Seria 1' AND brand = 'BMW';
+UPDATE SUA_Cars_Cleaned SET model = '2 Series' WHERE model = 'Seria 2' AND brand = 'BMW';
+UPDATE SUA_Cars_Cleaned SET model = '3 Series' WHERE model = 'Seria 3' AND brand = 'BMW';
+UPDATE SUA_Cars_Cleaned SET model = '4 Series' WHERE model = 'Seria 4' AND brand = 'BMW';
+UPDATE SUA_Cars_Cleaned SET model = '5 Series' WHERE model = 'Seria 5' AND brand = 'BMW';
+UPDATE SUA_Cars_Cleaned SET model = '6 Series' WHERE model = 'Seria 6' AND brand = 'BMW';
+UPDATE SUA_Cars_Cleaned SET model = '7 Series' WHERE model = 'Seria 7' AND brand = 'BMW';
+UPDATE SUA_Cars_Cleaned SET model = '8 Series' WHERE model = 'Seria 8' AND brand = 'BMW';
+
+-- ============================================================
+-- 7. TRANSFER BRAND Dodge → RAM (modele pre-2010)
+-- ============================================================
+
+UPDATE SUA_Cars_Cleaned SET brand = 'RAM', model = '1500'
+    WHERE model LIKE 'Ram 1500%' AND brand = 'Dodge';
+
+UPDATE SUA_Cars_Cleaned SET brand = 'RAM', model = '2500'
+    WHERE model LIKE 'Ram 2500%' AND brand = 'Dodge';
+
+UPDATE SUA_Cars_Cleaned SET brand = 'RAM', model = '3500'
+    WHERE model LIKE 'Ram 3500%' AND brand = 'Dodge';
+
+-- Ram Van, Ram Wagon, Ramcharger → rămân la Dodge (nu se modifică)
+
+-- 1. CORECTARE BRAND: Ford Early V8 (greșit atribuit lui Chevrolet)
+UPDATE SUA_Cars_Cleaned
+    SET brand = 'Ford'
+    WHERE model = 'Ford Early V8' AND brand = 'Chevrolet';
+
+-- 2. FORD — Pickup Truck Restomod → Ford Early V8
+UPDATE SUA_Cars_Cleaned
+    SET model = 'Ford Early V8'
+    WHERE brand = 'Ford'
+      AND (model LIKE '%Restomod%' OR model LIKE '%Bagged Show Truck%');
+
+-- 3. FORD — Van CUSTOM → E-150
+UPDATE SUA_Cars_Cleaned
+    SET model = 'E-150'
+    WHERE brand = 'Ford'
+      AND model LIKE '%Van CUSTOM%';
+
   SELECT DISTINCT color, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY color ORDER BY color;
 
+-- Backup recomandat:
+-- CREATE TABLE SUA_Cars_Cleaned_backup AS SELECT * FROM SUA_Cars_Cleaned;
+
+UPDATE SUA_Cars_Cleaned
+SET color = CASE
+    -- Two-Tone
+    WHEN UPPER(color) LIKE '%/%' OR UPPER(color) LIKE '% WITH %' OR UPPER(color) LIKE '% & %' OR UPPER(color) LIKE '%TWO TONE%' OR UPPER(color) LIKE '%TWO-TONE%' OR UPPER(color) LIKE '%2 TONE%' OR UPPER(color) LIKE '% ROOF%' OR UPPER(color) LIKE '% TOP%' THEN 'Two-Tone'
+
+    -- Purple / Pink
+    WHEN UPPER(color) LIKE '%PINK%' OR UPPER(color) LIKE '%PURPLE%' OR UPPER(color) LIKE '%VIOLET%' OR UPPER(color) LIKE '%AMETHYST%' OR UPPER(color) LIKE '%PLUM%' OR UPPER(color) LIKE '%FUCHSIA%' OR UPPER(color) LIKE '%LAVENDER%' OR UPPER(color) LIKE '%ORCHID%' THEN 'Purple / Pink'
+
+    -- Orange
+    WHEN UPPER(color) LIKE '%ORANGE%' OR UPPER(color) LIKE '%MANGO%' OR UPPER(color) LIKE '%TANGERINE%' OR UPPER(color) LIKE '%PAPAYA%' OR UPPER(color) LIKE '%VITAMIN C%' THEN 'Orange'
+
+    -- Yellow
+    WHEN UPPER(color) LIKE '%YELLOW%' OR UPPER(color) LIKE '%LEMON%' OR UPPER(color) LIKE '%MUSTARD%' THEN 'Yellow'
+
+    -- Gold
+    WHEN UPPER(color) LIKE '%GOLD%' OR UPPER(color) LIKE '%AURUM%' THEN 'Gold'
+
+    -- Bronze / Copper
+    WHEN UPPER(color) LIKE '%BRONZE%' OR UPPER(color) LIKE '%COPPER%' OR UPPER(color) LIKE '%CHESTNUT%' THEN 'Bronze / Copper'
+
+    -- Brown
+    WHEN UPPER(color) LIKE '%BROWN%' OR UPPER(color) LIKE '%ESPRESSO%' OR UPPER(color) LIKE '%MOCHA%' OR UPPER(color) LIKE '%CHOCOLATE%' OR UPPER(color) LIKE '%MAHOGANY%' OR UPPER(color) LIKE '%WALNUT%' OR UPPER(color) LIKE '%CARAMEL%' OR UPPER(color) LIKE '%TOFFEE%' OR UPPER(color) LIKE '%COCOA%' THEN 'Brown'
+
+    -- Beige / Tan
+    WHEN UPPER(color) LIKE '%BEIGE%' OR UPPER(color) LIKE '%SAND%' OR UPPER(color) LIKE '%KHAKI%' OR UPPER(color) LIKE '%CHAMPAGNE%' OR UPPER(color) LIKE '%PARCHMENT%' OR UPPER(color) LIKE '%DUNE%' OR UPPER(color) LIKE '%GOBI%' OR UPPER(color) = 'TAN' OR UPPER(color) LIKE '% TAN%' OR UPPER(color) LIKE 'TAN %' THEN 'Beige / Tan'
+
+    -- Green
+    WHEN UPPER(color) LIKE '%GREEN%' OR UPPER(color) LIKE '%EMERALD%' OR UPPER(color) LIKE '%OLIVE%' OR UPPER(color) LIKE '%TEAL%' OR UPPER(color) LIKE '%MINT%' OR UPPER(color) LIKE '%SAGE%' OR UPPER(color) LIKE '%LIME%' OR UPPER(color) LIKE '%CACTUS%' OR UPPER(color) LIKE '%SPRUCE%' OR UPPER(color) LIKE '%ALOE%' THEN 'Green'
+
+    -- Red
+    WHEN UPPER(color) LIKE '%RED%' OR UPPER(color) LIKE '%CRIMSON%' OR UPPER(color) LIKE '%BURGUNDY%' OR UPPER(color) LIKE '%MAROON%' OR UPPER(color) LIKE '%RUBY%' OR UPPER(color) LIKE '%GARNET%' OR UPPER(color) LIKE '%CHERRY%' OR UPPER(color) LIKE '%SCARLET%' OR UPPER(color) LIKE '%WINE%' OR UPPER(color) LIKE '%ROUGE%' OR UPPER(color) LIKE '%CARMINE%' OR UPPER(color) LIKE '%TORRED%' THEN 'Red'
+
+    -- Blue
+    WHEN UPPER(color) LIKE '%BLUE%' OR UPPER(color) LIKE '%NAVY%' OR UPPER(color) LIKE '%AZURE%' OR UPPER(color) LIKE '%SAPPHIRE%' OR UPPER(color) LIKE '%OCEAN%' OR UPPER(color) LIKE '%AQUA%' OR UPPER(color) LIKE '%BLAU%' OR UPPER(color) LIKE '%CAVALRY%' OR UPPER(color) LIKE '%BLUEPRINT%' THEN 'Blue'
+
+    -- Gray
+    WHEN UPPER(color) LIKE '%GRAY%' OR UPPER(color) LIKE '%GREY%' OR UPPER(color) LIKE '%CHARCOAL%' OR UPPER(color) LIKE '%GRAPHITE%' OR UPPER(color) LIKE '%GRANITE%' OR UPPER(color) LIKE '%GUNMETAL%' OR UPPER(color) LIKE '%SLATE%' OR UPPER(color) LIKE '%TITANIUM%' OR UPPER(color) LIKE '%CEMENT%' OR UPPER(color) LIKE '%NARDO%' OR UPPER(color) LIKE '%BOULDER%' OR UPPER(color) LIKE '%MAGNETIC%' OR UPPER(color) LIKE '%AREA 51%' OR UPPER(color) LIKE '%SMOKE%' OR UPPER(color) LIKE '%ANVIL%' OR UPPER(color) LIKE '%CARBON%' OR UPPER(color) LIKE '%TUNGSTEN%' OR UPPER(color) LIKE '%CELESTITE%' THEN 'Gray'
+
+    -- Silver
+    WHEN UPPER(color) LIKE '%SILVER%' OR UPPER(color) LIKE '%PLATINUM%' OR UPPER(color) LIKE '%BILLET%' OR UPPER(color) LIKE '%PEWTER%' OR UPPER(color) LIKE '%ALUMINUM%' OR UPPER(color) LIKE '%INGOT%' OR UPPER(color) LIKE '%QUICKSILVER%' THEN 'Silver'
+
+    -- Black
+    WHEN UPPER(color) LIKE '%BLACK%' OR UPPER(color) LIKE '%OBSIDIAN%' OR UPPER(color) LIKE '%EBONY%' OR UPPER(color) LIKE '%ONYX%' OR UPPER(color) LIKE '%MIDNIGHT%' OR UPPER(color) LIKE '%RAVEN%' OR UPPER(color) LIKE '%CAVIAR%' OR UPPER(color) LIKE '%SCHWARZ%' THEN 'Black'
+
+    -- White
+    WHEN UPPER(color) LIKE '%WHITE%' OR UPPER(color) LIKE '%IVORY%' OR UPPER(color) LIKE '%BLIZZARD%' OR UPPER(color) LIKE '%ALABASTER%' OR UPPER(color) LIKE '%FROST%' OR UPPER(color) LIKE '%CHALK%' OR UPPER(color) LIKE '%SNOW%' OR UPPER(color) LIKE '%WEISS%' OR UPPER(color) LIKE '%BLANC%' OR UPPER(color) LIKE '%STARFIRE%' OR UPPER(color) LIKE '%WIND CHILL%' THEN 'White'
+
+    -- Unknown / Custom
+    ELSE 'Unknown / Custom'
+END;
+
   SELECT DISTINCT year, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY year ORDER BY year;
+
+
   SELECT DISTINCT transmission_type, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY transmission_type
   ORDER BY transmission_type;
+
+UPDATE SUA_Cars_Cleaned
+SET transmission_type = CASE
+    -- 1. Lipsă de date / Erori
+    WHEN transmission_type IN ('-', '0', 'UNKNOWN', 'NOT SPECIFIED', 'OTHER') OR UPPER(transmission_type) LIKE '%UNKNOWN%' OR transmission_type IS NULL THEN 'Unknown'
+
+    -- 2. MANUALE
+    WHEN UPPER(transmission_type) LIKE '%M/T%'
+      OR UPPER(transmission_type) LIKE '%STICKSHIFT%'
+      OR UPPER(transmission_type) LIKE '%MUNCIE%'
+      OR UPPER(transmission_type) LIKE '%ROCK CRUSHER%'
+      OR UPPER(transmission_type) LIKE '%TREMEC%'
+      OR UPPER(transmission_type) LIKE '%ON THE TREE%'
+      OR UPPER(transmission_type) LIKE '%T-56%'
+      OR UPPER(transmission_type) LIKE '%T56%'
+      OR UPPER(transmission_type) LIKE '%TR6060%'
+      OR UPPER(transmission_type) LIKE '%NV3550%'
+      OR UPPER(transmission_type) LIKE '%TOP LOADER%'
+      OR UPPER(transmission_type) LIKE '%PISTOL GRIP%' THEN 'Manual'
+
+    WHEN UPPER(transmission_type) LIKE '%MANUAL%' AND UPPER(transmission_type) NOT LIKE '%AUTO%' THEN 'Manual'
+
+    -- 3. AUTOMATE
+    WHEN UPPER(transmission_type) LIKE '%AUTO%'
+      OR UPPER(transmission_type) LIKE '%A/T%'
+      OR UPPER(transmission_type) LIKE '%CVT%'
+      OR UPPER(transmission_type) LIKE '%IVT%'
+      OR UPPER(transmission_type) LIKE '%VARIABLE%'
+      OR UPPER(transmission_type) LIKE '%XTRONIC%'
+      OR UPPER(transmission_type) LIKE '%DUAL CLUTCH%'
+      OR UPPER(transmission_type) LIKE '%DOUBLE CLUTCH%'
+      OR UPPER(transmission_type) LIKE '%DCT%'
+      OR UPPER(transmission_type) LIKE '%DSG%'
+      OR UPPER(transmission_type) LIKE '%PDK%'
+      OR UPPER(transmission_type) LIKE '%DOPPELKUPPLUNG%'
+      OR UPPER(transmission_type) LIKE '%TIPTRONIC%'
+      OR UPPER(transmission_type) LIKE '%STEPTRONIC%'
+      OR UPPER(transmission_type) LIKE '%SHIFTRONIC%'
+      OR UPPER(transmission_type) LIKE '%SEQUENTIAL%'
+      OR UPPER(transmission_type) LIKE '%1-SPEED%'
+      OR UPPER(transmission_type) LIKE '%1 SPEED%'
+      OR UPPER(transmission_type) LIKE '%SINGLE SPEED%'
+      OR UPPER(transmission_type) LIKE '%REDUCER%'
+      OR UPPER(transmission_type) LIKE '%TH350%'
+      OR UPPER(transmission_type) LIKE '%TH400%'
+      OR UPPER(transmission_type) LIKE '%TURBO 350%'
+      OR UPPER(transmission_type) LIKE '%TURBO 400%'
+      OR UPPER(transmission_type) LIKE '%POWERGLIDE%'
+      OR UPPER(transmission_type) LIKE '%700R4%'
+      OR UPPER(transmission_type) LIKE '%700 R4%'
+      OR UPPER(transmission_type) LIKE '%4L60%'
+      OR UPPER(transmission_type) LIKE '%4L80%'
+      OR UPPER(transmission_type) LIKE '%AOD%'
+      OR UPPER(transmission_type) LIKE '%4R70%'
+      OR UPPER(transmission_type) LIKE '%727%'
+      OR UPPER(transmission_type) LIKE '%TORQUEFLITE%'
+      OR UPPER(transmission_type) LIKE '% C4%'
+      OR UPPER(transmission_type) LIKE '% C6%' THEN 'Automatic'
+
+    -- 4. FALLBACK SPEED/SPD
+    WHEN UPPER(transmission_type) LIKE '%SPEED%' OR UPPER(transmission_type) LIKE '%SPD%' THEN 'Automatic'
+
+    ELSE 'Unknown'
+END;
+
   SELECT DISTINCT fuel_type, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY fuel_type ORDER BY fuel_type;
+
+UPDATE SUA_Cars_Cleaned
+SET fuel_type = CASE
+    -- 1. Erori, Lipsă Date și Valori Ambigue
+    WHEN fuel_type IN ('', '-', '0', 'Unknown', 'Unspecified', 'Other', 'Automatic', 'B', 'Bi-Fuel') OR fuel_type IS NULL THEN 'Other'
+
+    -- 2. Hybrid (PHEV, MHEV, Gas/Electric)
+    -- Această regulă TREBUIE să fie prima pentru a prinde combinațiile "Electric/Gas" înainte să ajungă la secțiunile separate
+    WHEN UPPER(fuel_type) LIKE '%HYBRID%' OR UPPER(fuel_type) LIKE '%PHEV%' OR UPPER(fuel_type) LIKE '%PLUG-IN%' THEN 'Hybrid'
+
+    -- 3. Electric (100% BEV)
+    WHEN UPPER(fuel_type) LIKE '%ELECTRIC%' THEN 'Electric'
+
+    -- 4. Ethanol (E85 / Flex Fuel)
+    WHEN UPPER(fuel_type) LIKE '%E85%' OR UPPER(fuel_type) LIKE '%FLEX%' THEN 'Ethanol'
+
+    -- 5. Diesel & Biodiesel
+    WHEN UPPER(fuel_type) LIKE '%DIESEL%' THEN 'Diesel'
+
+    -- 6. CNG (Compressed Natural Gas)
+    -- Trebuie să fie deasupra categoriei Petrol pentru a nu fi prins de filtrul "%GAS%"
+    WHEN UPPER(fuel_type) LIKE '%NATURAL GAS%' OR UPPER(fuel_type) LIKE '%CNG%' OR UPPER(fuel_type) LIKE '%GASEOUS%' THEN 'CNG'
+
+    -- 7. Hydrogen (Fuel Cell)
+    WHEN UPPER(fuel_type) LIKE '%HYDROGEN%' OR UPPER(fuel_type) LIKE '%FUEL CELL%' THEN 'Hydrogen'
+
+    -- 8. LPG (Propane - Adăugat preventiv pentru robustețea bazei de date)
+    WHEN UPPER(fuel_type) LIKE '%LPG%' OR UPPER(fuel_type) LIKE '%PROPANE%' THEN 'LPG'
+
+    -- 9. Petrol / Gasoline
+    -- Prinde tot ce a mai rămas legat de benzină: Gas, Gasoline, Premium, Unleaded, sau doar "G"
+    WHEN UPPER(fuel_type) LIKE '%GAS%' OR UPPER(fuel_type) LIKE '%PREMIUM%' OR UPPER(fuel_type) LIKE '%UNLEADED%' OR fuel_type = 'G' THEN 'Petrol'
+
+    -- 10. Fallback
+    ELSE 'Other'
+END;
+
   SELECT DISTINCT drivetrain, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY drivetrain ORDER BY
   drivetrain;
+
+UPDATE SUA_Cars_Cleaned
+SET drivetrain = CASE
+    -- 1. Erori, Lipsă Date și zgomot de date (Informații despre motor trecute greșit aici)
+    WHEN drivetrain IN ('', '-', '0', 'Unknown') OR UPPER(drivetrain) LIKE '%ENGINE:%' OR drivetrain IS NULL THEN 'Unknown'
+
+    -- 2. AWD (All-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%AWD%' OR UPPER(drivetrain) LIKE '%ALL%WHEEL%' THEN 'AWD'
+
+    -- 3. 4x4 / 4WD (Four-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%4WD%' OR UPPER(drivetrain) LIKE '%4X4%' OR UPPER(drivetrain) LIKE '%FOUR%WHEEL%' THEN '4x4'
+
+    -- 4. FWD (Front-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%FWD%' OR UPPER(drivetrain) LIKE '%FRONT%WHEEL%' THEN 'FWD'
+
+    -- 5. RWD (Rear-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%RWD%' OR UPPER(drivetrain) LIKE '%REAR%WHEEL%' THEN 'RWD'
+
+    -- 6. 2WD (Generic 2-Wheel Drive / 4x2)
+    -- Aceasta trebuie să fie ultima dintre tracțiuni pentru a nu intercepta accidental alte valori.
+    WHEN UPPER(drivetrain) LIKE '%2WD%' OR UPPER(drivetrain) LIKE '%4X2%' THEN '2WD'
+
+    -- 7. Fallback pentru orice altceva
+    ELSE 'Unknown'
+END;
+
   SELECT DISTINCT one_owner, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY one_owner ORDER BY one_owner;
+
+UPDATE SUA_Cars_Cleaned
+SET one_owner = CASE
+    -- 1. Un singur proprietar (1.0 = True)
+    WHEN one_owner = '1.0' THEN 'Yes'
+
+    -- 2. Mai mulți proprietari (0.0 = False)
+    WHEN one_owner = '0.0' THEN 'No'
+
+    -- 3. Valori lipsă sau erori
+    ELSE 'Unknown'
+END;
+
   SELECT DISTINCT accidents_or_damage, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY accidents_or_damage
    ORDER BY accidents_or_damage;
+UPDATE SUA_Cars_Cleaned
+SET accidents_or_damage = CASE
+    -- 1. Fără accidente sau daune raportate (0.0 = False)
+    WHEN accidents_or_damage = '0.0' THEN 'No'
+
+
+    -- 2. Accidente sau daune înregistrate (1.0 = True)
+    WHEN accidents_or_damage = '1.0' THEN 'Yes'
+
+    -- 3. Valori lipsă sau erori
+    ELSE 'Unknown'
+END;
+
+select distinct engine_type from SUA_Cars_Cleaned group by engine_type order by engine_type;
+
+-- ============================================================
+-- EXTRAGERE LITRAJ -- SQLite, format date americane
+-- Coloana sursa: engine_type (inlocuieste cu numele real)
+-- Prinde: "1.4L", "1.4 L", "1.4L/85", "4.2 L/256" etc.
+-- ============================================================
+
+UPDATE SUA_cars_Cleaned
+SET engine_type = CASE
+
+  -- ===== Electric / fara motor termic =====
+  WHEN engine_type LIKE '%Electric Motor%'        THEN 'Electric'
+  WHEN engine_type LIKE '%AC Permanent Magnet%'   THEN 'Electric'
+  WHEN engine_type LIKE '%AC Induction%'          THEN 'Electric'
+  WHEN engine_type LIKE '%Battery%'               THEN 'Electric'
+
+  -- ===== Sub 1.0L (motoare mici/exotice) =====
+  WHEN engine_type LIKE '%0.65L%'  THEN '0.7'
+  WHEN engine_type LIKE '%0.8L%'   THEN '0.8'
+  WHEN engine_type LIKE '%0.9L%'   THEN '0.9'
+
+  -- ===== 1.0L =====
+  WHEN engine_type LIKE '%1.0L%'   THEN '1.0'
+  WHEN engine_type LIKE '%1.0 L%'  THEN '1.0'
+
+  -- ===== 1.1L =====
+  WHEN engine_type LIKE '%1.1L%'   THEN '1.1'
+  WHEN engine_type LIKE '%1.1 L%'  THEN '1.1'
+
+  -- ===== 1.2L =====
+  WHEN engine_type LIKE '%1.2L%'   THEN '1.2'
+  WHEN engine_type LIKE '%1.2 L%'  THEN '1.2'
+
+  -- ===== 1.3L =====
+  WHEN engine_type LIKE '%1.3L%'   THEN '1.3'
+  WHEN engine_type LIKE '%1.3 L%'  THEN '1.3'
+
+  -- ===== 1.4L =====
+  WHEN engine_type LIKE '%1.4L%'   THEN '1.4'
+  WHEN engine_type LIKE '%1.4 L%'  THEN '1.4'
+
+  -- ===== 1.5L =====
+  WHEN engine_type LIKE '%1.5L%'   THEN '1.5'
+  WHEN engine_type LIKE '%1.5 L%'  THEN '1.5'
+
+  -- ===== 1.6L =====
+  WHEN engine_type LIKE '%1.6L%'   THEN '1.6'
+  WHEN engine_type LIKE '%1.6 L%'  THEN '1.6'
+
+  -- ===== 1.7L =====
+  WHEN engine_type LIKE '%1.7L%'   THEN '1.7'
+  WHEN engine_type LIKE '%1.7 L%'  THEN '1.7'
+
+  -- ===== 1.8L =====
+  WHEN engine_type LIKE '%1.8L%'   THEN '1.8'
+  WHEN engine_type LIKE '%1.8 L%'  THEN '1.8'
+
+  -- ===== 1.9L =====
+  WHEN engine_type LIKE '%1.9L%'   THEN '1.9'
+  WHEN engine_type LIKE '%1.9 L%'  THEN '1.9'
+
+  -- ===== 2.0L =====
+  WHEN engine_type LIKE '%2.0L%'   THEN '2.0'
+  WHEN engine_type LIKE '%2.0 L%'  THEN '2.0'
+  WHEN engine_type LIKE '%2L %'    THEN '2.0'  -- ex: "MultiAir 2L I-4"
+
+  -- ===== 2.2L =====
+  WHEN engine_type LIKE '%2.2L%'   THEN '2.2'
+  WHEN engine_type LIKE '%2.2 L%'  THEN '2.2'
+
+  -- ===== 2.3L =====
+  WHEN engine_type LIKE '%2.3L%'   THEN '2.3'
+  WHEN engine_type LIKE '%2.3 L%'  THEN '2.3'
+
+  -- ===== 2.4L =====
+  WHEN engine_type LIKE '%2.4L%'   THEN '2.4'
+  WHEN engine_type LIKE '%2.4 L%'  THEN '2.4'
+
+  -- ===== 2.5L =====
+  WHEN engine_type LIKE '%2.5L%'   THEN '2.5'
+  WHEN engine_type LIKE '%2.5 L%'  THEN '2.5'
+
+  -- ===== 2.7L =====
+  WHEN engine_type LIKE '%2.7L%'   THEN '2.7'
+  WHEN engine_type LIKE '%2.7 L%'  THEN '2.7'
+
+  -- ===== 2.8L =====
+  WHEN engine_type LIKE '%2.8L%'   THEN '2.8'
+  WHEN engine_type LIKE '%2.8 L%'  THEN '2.8'
+
+  -- ===== 2.9L =====
+  WHEN engine_type LIKE '%2.9L%'   THEN '2.9'
+  WHEN engine_type LIKE '%2.9 L%'  THEN '2.9'
+
+  -- ===== 3.0L =====
+  WHEN engine_type LIKE '%3.0L%'   THEN '3.0'
+  WHEN engine_type LIKE '%3.0 L%'  THEN '3.0'
+
+  -- ===== 3.2L =====
+  WHEN engine_type LIKE '%3.2L%'   THEN '3.2'
+  WHEN engine_type LIKE '%3.2 L%'  THEN '3.2'
+
+  -- ===== 3.3L =====
+  WHEN engine_type LIKE '%3.3L%'   THEN '3.3'
+  WHEN engine_type LIKE '%3.3 L%'  THEN '3.3'
+
+  -- ===== 3.5L =====
+  WHEN engine_type LIKE '%3.5L%'   THEN '3.5'
+  WHEN engine_type LIKE '%3.5 L%'  THEN '3.5'
+
+  -- ===== 3.6L =====
+  WHEN engine_type LIKE '%3.6L%'   THEN '3.6'
+  WHEN engine_type LIKE '%3.6 L%'  THEN '3.6'
+
+  -- ===== 3.7L =====
+  WHEN engine_type LIKE '%3.7L%'   THEN '3.7'
+  WHEN engine_type LIKE '%3.7 L%'  THEN '3.7'
+
+  -- ===== 3.8L =====
+  WHEN engine_type LIKE '%3.8L%'   THEN '3.8'
+  WHEN engine_type LIKE '%3.8 L%'  THEN '3.8'
+
+  -- ===== 3.9L =====
+  WHEN engine_type LIKE '%3.9L%'   THEN '3.9'
+  WHEN engine_type LIKE '%3.9 L%'  THEN '3.9'
+
+  -- ===== 4.0L =====
+  WHEN engine_type LIKE '%4.0L%'   THEN '4.0'
+  WHEN engine_type LIKE '%4.0 L%'  THEN '4.0'
+
+  -- ===== 4.2L =====
+  WHEN engine_type LIKE '%4.2L%'   THEN '4.2'
+  WHEN engine_type LIKE '%4.2 L%'  THEN '4.2'
+
+  -- ===== 4.4L =====
+  WHEN engine_type LIKE '%4.4L%'   THEN '4.4'
+  WHEN engine_type LIKE '%4.4 L%'  THEN '4.4'
+
+  -- ===== 4.6L =====
+  WHEN engine_type LIKE '%4.6L%'   THEN '4.6'
+  WHEN engine_type LIKE '%4.6 L%'  THEN '4.6'
+
+  -- ===== 4.7L =====
+  WHEN engine_type LIKE '%4.7L%'   THEN '4.7'
+  WHEN engine_type LIKE '%4.7 L%'  THEN '4.7'
+
+  -- ===== 5.0L =====
+  WHEN engine_type LIKE '%5.0L%'   THEN '5.0'
+  WHEN engine_type LIKE '%5.0 L%'  THEN '5.0'
+
+  -- ===== 5.2L =====
+  WHEN engine_type LIKE '%5.2L%'   THEN '5.2'
+  WHEN engine_type LIKE '%5.2 L%'  THEN '5.2'
+
+  -- ===== 5.3L =====
+  WHEN engine_type LIKE '%5.3L%'   THEN '5.3'
+  WHEN engine_type LIKE '%5.3 L%'  THEN '5.3'
+
+  -- ===== 5.4L =====
+  WHEN engine_type LIKE '%5.4L%'   THEN '5.4'
+  WHEN engine_type LIKE '%5.4 L%'  THEN '5.4'
+
+  -- ===== 5.5L =====
+  WHEN engine_type LIKE '%5.5L%'   THEN '5.5'
+  WHEN engine_type LIKE '%5.5 L%'  THEN '5.5'
+
+  -- ===== 5.7L =====
+  WHEN engine_type LIKE '%5.7L%'   THEN '5.7'
+  WHEN engine_type LIKE '%5.7 L%'  THEN '5.7'
+
+  -- ===== 5.9L =====
+  WHEN engine_type LIKE '%5.9L%'   THEN '5.9'
+  WHEN engine_type LIKE '%5.9 L%'  THEN '5.9'
+
+  -- ===== 6.0L =====
+  WHEN engine_type LIKE '%6.0L%'   THEN '6.0'
+  WHEN engine_type LIKE '%6.0 L%'  THEN '6.0'
+
+  -- ===== 6.2L =====
+  WHEN engine_type LIKE '%6.2L%'   THEN '6.2'
+  WHEN engine_type LIKE '%6.2 L%'  THEN '6.2'
+
+  -- ===== 6.4L =====
+  WHEN engine_type LIKE '%6.4L%'   THEN '6.4'
+  WHEN engine_type LIKE '%6.4 L%'  THEN '6.4'
+
+  -- ===== 6.7L =====
+  WHEN engine_type LIKE '%6.7L%'   THEN '6.7'
+  WHEN engine_type LIKE '%6.7 L%'  THEN '6.7'
+
+  -- ===== 7.0L =====
+  WHEN engine_type LIKE '%7.0L%'   THEN '7.0'
+  WHEN engine_type LIKE '%7.0 L%'  THEN '7.0'
+
+  -- ===== 8.0L / V10 Viper =====
+  WHEN engine_type LIKE '%8.0L%'   THEN '8.0'
+  WHEN engine_type LIKE '%8.0 L%'  THEN '8.0'
+  WHEN engine_type LIKE '%8L V-10%' THEN '8.0'
+
+  ELSE 'Unknown'
+
+END;
+
+-- ============================================================
+-- VERIFICARE distributie
+-- ============================================================
+SELECT engine_type, COUNT(*) AS cnt
+FROM SUA_cars_Cleaned
+GROUP BY engine_type
+ORDER BY engine_type ASC;
