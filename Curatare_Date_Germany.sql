@@ -985,4 +985,45 @@ END;
 -- ============================================================
 SELECT engine_type, COUNT(*) AS cnt
 FROM Germany_Cars_Cleaned
-GROUP BY engine_type
+GROUP BY engine_type;
+
+
+select avg(price_in_euro) from SUA_cars_Cleaned;
+
+alter table Germany_Cars_Cleaned rename to rezerva;
+
+CREATE TABLE Germany_Cars_Cleaned
+(
+    id                INTEGER,
+    brand             TEXT,
+    model             TEXT,
+    color             TEXT,
+    year              INTEGER,        -- an => număr întreg
+    price_in_euro     REAL,           -- preț => număr cu zecimale
+    power_ps          INTEGER,        -- cai putere => număr întreg
+    transmission_type TEXT,
+    fuel_type         TEXT,
+    km                INTEGER,        -- kilometri => număr întreg
+    engine_type       TEXT
+);
+
+INSERT INTO Germany_Cars_Cleaned
+SELECT
+    id,
+    brand,
+    model,
+    color,
+    CAST(year AS INTEGER),
+    CAST(price_in_euro AS REAL),
+    CAST(power_ps AS INTEGER),
+    transmission_type,
+    fuel_type,
+    CAST(km AS INTEGER),
+    engine_type
+FROM rezerva
+WHERE price_in_euro != ''
+  AND km != ''
+  AND year != '';
+
+DROP TABLE rezerva;
+

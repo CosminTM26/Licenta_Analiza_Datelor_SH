@@ -4,44 +4,6 @@ alter table Germany_Cars rename column fuel_consumption_l_100km to fuel_consumpt
 select *
 from Germany_Cars
 where year in ('Automatic' , 'Manual');
---w5y
--- transformare din string in double
-update cars_details_merges
-set price=
-    CAST(
-        (REPLACE(REPLACE(price, '₹ ', ''), ' Lakh', ''))
-    AS double);
--- transformare din string in integer
-update cars_details_merges
-    set "Max Power" = round(CAST("Max Power" AS REAL),0);
-
-
-alter table cars_details_merges
-    add column id integer;
-
-update cars_details_merges
-    set id=rowid;
-
-drop table if exists India_Cars_Cleaned;
--- selectare coloane necesare
-create table India_Cars_Cleaned as
-    select
-        id,
-    oem as brand,
-    model,
-    color,
-    myear as year,
-    round(((dynx_totalvalue_x)*0.01119),-3) as price_in_euro,
-    "Max Power" as power_ps,
-    tt as transmision_type,
-    fuel_type,
-    km,
-    variant_name,
-    max_engine_capacity_new,
-    owner_type_new as one_owner,
-    "Drive Type" as drivetrain,
-    bt as body_type
-    from cars_details_merges;
 
 drop table if exists Germany_Cars_Cleaned;
 

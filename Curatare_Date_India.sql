@@ -1,4 +1,31 @@
- alter table India_Cars_Cleaned
+alter table cars_details_merges
+    add column id integer;
+
+update cars_details_merges
+    set id=rowid;
+
+drop table if exists India_Cars_Cleaned;
+-- selectare coloane necesare
+create table India_Cars_Cleaned as
+    select
+        id,
+    oem as brand,
+    model,
+    color,
+    myear as year,
+    round(((dynx_totalvalue_x)*0.01119),-3) as price_in_euro,
+    "Max Power" as power_ps,
+    tt as transmision_type,
+    fuel_type,
+    km_driven as km,
+    variant_name,
+    max_engine_capacity_new,
+    owner_type_new as one_owner,
+    "Drive Type" as drivetrain,
+    bt as body_type
+    from cars_details_merges;
+
+alter table India_Cars_Cleaned
  rename column transmision_type to transmission_type;
 
 SELECT DISTINCT brand, COUNT(*) as nr FROM
@@ -315,10 +342,125 @@ select distinct fuel_type from India_Cars_Cleaned group by fuel_type;
 select count()
 from India_Cars_Cleaned;
 
-alter table India_Cars_Cleaned
+alter table India_Cars
 add column id integer;
 
-update India_Cars_Cleaned set id = rowid;
+update India_Cars set id = rowid;
+
+alter table India_Cars_Cleaned rename to rezerva;
+
+-- test înainte să modifici
 
 
+update India_Cars_Cleaned
+    set power_ps=CAST(SUBSTR(power_ps, 1, INSTR(power_ps, 'bhp') - 3) as real);
+
+UPDATE India_Cars_Cleaned
+SET power_ps = ROUND(India_Cars_Cleaned.power_ps * 1.01387, 1);
+
+UPDATE India_Cars_Cleaned
+SET power_ps = ROUND (India_Cars_Cleaned.power_ps , 0);
+
+alter table  India_Cars_Cleaned rename to rezerva;
+
+CREATE TABLE India_Cars_Cleaned
+(
+    id                      INTEGER,
+    brand                   TEXT,
+    model                   TEXT,
+    color                   TEXT,
+    year                    INTEGER,    -- an fabricatie => intreg
+    price_in_euro           INTEGER,       -- pret => zecimale
+    power_ps                INTEGER,    -- cai putere => intreg
+    transmission_type       TEXT,
+    fuel_type               TEXT,
+    km                      INTEGER,    -- kilometraj => intreg
+    variant_name            TEXT,
+    max_engine_capacity_new INTEGER,       -- capacitate motor => zecimale (ex. 1.6, 2.0)
+    one_owner  \             text,    -- boolean: 0 sau 1
+    drivetrain              TEXT,
+    body_type               TEXT
+);
+
+INSERT INTO India_Cars_Cleaned
+SELECT
+    CAST(id AS INTEGER),
+    brand,
+    model,
+    color,
+    CAST(year AS INTEGER),
+    CAST(price_in_euro AS REAL),
+    CAST(power_ps AS INTEGER),
+    transmission_type,
+    fuel_type,
+    CAST(km AS INTEGER),
+    variant_name,
+    CAST(max_engine_capacity_new AS REAL),
+    one_owner,
+    drivetrain,
+    body_type
+FROM rezerva;
+
+drop table rezerva;
+
+SELECT
+    COUNT(*)                          AS total_randuri,
+    COUNT(*) - COUNT(brand)           AS null_brand,
+    COUNT(*) - COUNT(model)           AS null_model,
+    COUNT(*) - COUNT(Color)           AS null_color,
+    COUNT(*) - COUNT(year)            AS null_year,
+    COUNT(*) - COUNT(price_in_euro)   AS null_price,
+    COUNT(*) - COUNT(power_ps)        AS null_power_ps,
+    COUNT(*) - COUNT(transmission_type) AS null_transmission,
+    COUNT(*) - COUNT(fuel_type)       AS null_fuel_type,
+    COUNT(*) - COUNT(km)              AS null_km,
+    COUNT(*) - COUNT(variant_name)    AS null_variant,
+    COUNT(*) - COUNT(max_engine_capacity_new) AS null_engine_capacity,
+    COUNT(*) - COUNT(one_owner)       AS null_one_owner,
+    COUNT(*) - COUNT(drivetrain)      AS null_drivetrain,
+    COUNT(*) - COUNT(body_type)       AS null_body_type
+FROM India_Cars_Cleaned;
+
+-- power_ps per brand + model+body_type
+UPDATE India_Cars_Cleaned
+SET power_ps = (
+    SELECT ROUND(AVG(power_ps))
+    FROM India_Cars_Cleaned AS sub
+    WHERE sub.brand = India_Cars_Cleaned.brand
+      AND sub.model = India_Cars_Cleaned.model
+      and sub.body_type= India_Cars_Cleaned.body_type
+      AND sub.power_ps IS NOT NULL
+)
+WHERE power_ps IS NULL;
+
+delete from India_Cars_Cleaned where power_ps is null;
+
+-- max_engine_capacity_new per brand + model+body_type+year
+UPDATE India_Cars_Cleaned
+SET max_engine_capacity_new = (
+    SELECT ROUND(AVG(max_engine_capacity_new), 1)
+    FROM India_Cars_Cleaned AS sub
+    WHERE sub.brand = India_Cars_Cleaned.brand
+      AND sub.model = India_Cars_Cleaned.model
+        and sub.body_type= India_Cars_Cleaned.body_type
+      and sub.year= India_Cars_Cleaned.year
+      AND sub.max_engine_capacity_new IS NOT NULL
+
+)
+WHERE max_engine_capacity_new IS NULL;
+
+--cele ramase
+UPDATE India_Cars_Cleaned
+SET max_engine_capacity_new = (
+    SELECT ROUND(AVG(max_engine_capacity_new), 1)
+    FROM India_Cars_Cleaned AS sub
+    WHERE sub.brand = India_Cars_Cleaned.brand
+      AND sub.model = India_Cars_Cleaned.model
+        and sub.body_type= India_Cars_Cleaned.body_type
+      AND sub.max_engine_capacity_new IS NOT NULL
+
+)
+WHERE max_engine_capacity_new IS NULL;
+
+select * from India_Cars_Cleaned where max_engine_capacity_new is null;
 
