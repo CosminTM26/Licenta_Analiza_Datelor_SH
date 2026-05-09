@@ -7,7 +7,7 @@
 *.db-wal
 
 # JetBrains IDE
-.idea/
+../.idea/
 
 # Git directory
 .git/
