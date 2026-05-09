@@ -12,8 +12,8 @@
 # Git directory
 .git/
 
-identifier.sqlite
-identifier.db
+../identifier.sqlite
+../identifier.db
 *.xml
 
 .DS_Store

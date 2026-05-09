@@ -443,24 +443,28 @@ SET max_engine_capacity_new = (
     WHERE sub.brand = India_Cars_Cleaned.brand
       AND sub.model = India_Cars_Cleaned.model
         and sub.body_type= India_Cars_Cleaned.body_type
-      and sub.year= India_Cars_Cleaned.year
+      and sub.year between India_Cars_Cleaned.year-2 and India_Cars_Cleaned.year+2
       AND sub.max_engine_capacity_new IS NOT NULL
 
 )
-WHERE max_engine_capacity_new IS NULL;
+WHERE max_engine_capacity_new IS NULL or max_engine_capacity_new<500;
 
 --cele ramase
 UPDATE India_Cars_Cleaned
 SET max_engine_capacity_new = (
     SELECT ROUND(AVG(max_engine_capacity_new), 1)
     FROM India_Cars_Cleaned AS sub
-    WHERE sub.brand = India_Cars_Cleaned.brand
-      AND sub.model = India_Cars_Cleaned.model
-        and sub.body_type= India_Cars_Cleaned.body_type
+    WHERE sub.brand = sub.brand
+      AND sub.model = sub.model
+        and sub.body_type= sub.body_type
       AND sub.max_engine_capacity_new IS NOT NULL
+    and fuel_type<>'electric'
 
 )
-WHERE max_engine_capacity_new IS NULL;
+WHERE max_engine_capacity_new IS NULL or max_engine_capacity_new<500;
+
+update India_Cars_Cleaned set max_engine_capacity_new=null where max_engine_capacity_new<>0 and fuel_type='electric';
 
 select * from India_Cars_Cleaned where max_engine_capacity_new is null;
 
+select * from India_Cars_Cleaned where power_ps<20;

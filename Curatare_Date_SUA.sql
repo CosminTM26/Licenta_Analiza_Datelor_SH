@@ -2728,3 +2728,21 @@ SELECT engine_type, COUNT(*) AS cnt
 FROM SUA_cars_Cleaned
 GROUP BY engine_type
 ORDER BY engine_type ASC;
+
+select * from SUA_cars_Cleaned where engine_type = 'Electric' and fuel_type<>'Electric';
+
+update SUA_cars_Cleaned
+set fuel_type = 'Electric'
+where engine_type = 'Electric' and fuel_type<>'Electric';
+
+UPDATE SUA_cars_Cleaned
+SET engine_type = (
+    SELECT ROUND(AVG(engine_type), 1)
+    FROM SUA_cars_Cleaned AS sub
+    WHERE sub.brand = sub.brand
+      AND sub.model = sub.model
+        and sub.year between sub.year - 2 and sub.year + 2
+)
+WHERE engine_type='Unknown';
+
+select engine_type, count() from SUA_cars_Cleaned where engine_type = 'Unknown' group by engine_type;
