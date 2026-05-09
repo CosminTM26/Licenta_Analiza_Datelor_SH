@@ -862,52 +862,54 @@ select distinct Germany_Cars_Cleaned.engine_type from Germany_Cars_Cleaned group
 -- Aplica pe coloana engine_type (sau inlocuieste cu title)
 -- ============================================================
 
+alter table Germany_Cars rename column des;
+UPDATE Germany_Cars
+SET engine_type = CASE
+  WHEN engine_type LIKE '%0.6%' OR engine_type LIKE '%0,6%' THEN '0.6'
+  WHEN engine_type LIKE '%0.7%' OR engine_type LIKE '%0,7%' THEN '0.7'
+  WHEN engine_type LIKE '%0.8%' OR engine_type LIKE '%0,8%' THEN '0.8'
+  WHEN engine_type LIKE '%0.9%' OR engine_type LIKE '%0,9%' THEN '0.9'
+  WHEN engine_type LIKE '%1.0%' OR engine_type LIKE '%1,0%' THEN '1.0'
+  WHEN engine_type LIKE '%1.1%' OR engine_type LIKE '%1,1%' THEN '1.1'
+  WHEN engine_type LIKE '%1.2%' OR engine_type LIKE '%1,2%' THEN '1.2'
+  WHEN engine_type LIKE '%1.3%' OR engine_type LIKE '%1,3%' THEN '1.3'
+  WHEN engine_type LIKE '%1.4%' OR engine_type LIKE '%1,4%' THEN '1.4'
+  WHEN engine_type LIKE '%1.5%' OR engine_type LIKE '%1,5%' THEN '1.5'
+  WHEN engine_type LIKE '%1.6%' OR engine_type LIKE '%1,6%' THEN '1.6'
+  WHEN engine_type LIKE '%1.7%' OR engine_type LIKE '%1,7%' THEN '1.7'
+  WHEN engine_type LIKE '%1.8%' OR engine_type LIKE '%1,8%' THEN '1.8'
+  WHEN engine_type LIKE '%1.9%' OR engine_type LIKE '%1,9%' THEN '1.9'
+  WHEN engine_type LIKE '%2.0%' OR engine_type LIKE '%2,0%' THEN '2.0'
+  WHEN engine_type LIKE '%2.1%' OR engine_type LIKE '%2,1%' THEN '2.1' -- Adăugat pentru Mercedes
+WHEN engine_type LIKE '%2.2%' OR engine_type LIKE '%2,2%' THEN '2.2'
+  WHEN engine_type LIKE '%2.3%' OR engine_type LIKE '%2,3%' THEN '2.3'
+  WHEN engine_type LIKE '%2.4%' OR engine_type LIKE '%2,4%' THEN '2.4'
+  WHEN engine_type LIKE '%2.5%' OR engine_type LIKE '%2,5%' THEN '2.5'
+  WHEN engine_type LIKE '%2.7%' OR engine_type LIKE '%2,7%' THEN '2.7'
+  WHEN engine_type LIKE '%2.8%' OR engine_type LIKE '%2,8%' THEN '2.8'
+  WHEN engine_type LIKE '%2.9%' OR engine_type LIKE '%2,9%' THEN '2.9'
+  WHEN engine_type LIKE '%3.0%' OR engine_type LIKE '%3,0%' THEN '3.0'
+  WHEN engine_type LIKE '%3.2%' OR engine_type LIKE '%3,2%' THEN '3.2'
+  WHEN engine_type LIKE '%3.5%' OR engine_type LIKE '%3,5%' THEN '3.5'
+  WHEN engine_type LIKE '%3.6%' OR engine_type LIKE '%3,6%' THEN '3.6'
+  WHEN engine_type LIKE '%4.0%' OR engine_type LIKE '%4,0%' THEN '4.0'
+  WHEN engine_type LIKE '%4.2%' OR engine_type LIKE '%4,2%' THEN '4.2'
+  WHEN engine_type LIKE '%4.4%' OR engine_type LIKE '%4,4%' THEN '4.4'
+  WHEN engine_type LIKE '%4.7%' OR engine_type LIKE '%4,7%' THEN '4.7'
+  WHEN engine_type LIKE '%5.0%' OR engine_type LIKE '%5,0%' THEN '5.0'
+  WHEN engine_type LIKE '%5.2%' OR engine_type LIKE '%5,2%' THEN '5.2'
+  WHEN engine_type LIKE '%5.5%' OR engine_type LIKE '%5,5%' THEN '5.5'
+  WHEN engine_type LIKE '%6.0%' OR engine_type LIKE '%6,0%' THEN '6.0'
+  WHEN engine_type LIKE '%6.2%' OR engine_type LIKE '%6,2%' THEN '6.2'
 
-UPDATE Germany_Cars_Cleaned
-SET engine_type =CASE
-
-  WHEN engine_type LIKE '%0.8%' THEN '0.8'
-  WHEN engine_type LIKE '%1.0%' THEN '1.0'
-  WHEN engine_type LIKE '%1.1%' THEN '1.1'
-  WHEN engine_type LIKE '%1.2%' THEN '1.2'
-  WHEN engine_type LIKE '%1.3%' THEN '1.3'
-  WHEN engine_type LIKE '%1.4%' THEN '1.4'
-  WHEN engine_type LIKE '%1.5%' THEN '1.5'
-  WHEN engine_type LIKE '%1.6%' THEN '1.6'
-  WHEN engine_type LIKE '%1.7%' THEN '1.7'
-  WHEN engine_type LIKE '%1.8%' THEN '1.8'
-  WHEN engine_type LIKE '%1.9%' THEN '1.9'
-  WHEN engine_type LIKE '%2.0%' THEN '2.0'
-  WHEN engine_type LIKE '%2.2%' THEN '2.2'
-  WHEN engine_type LIKE '%2.3%' THEN '2.3'
-  WHEN engine_type LIKE '%2.4%' THEN '2.4'
-  WHEN engine_type LIKE '%2.5%' THEN '2.5'
-  WHEN engine_type LIKE '%2.7%' THEN '2.7'
-  WHEN engine_type LIKE '%2.8%' THEN '2.8'
-  WHEN engine_type LIKE '%2.9%' THEN '2.9'
-  WHEN engine_type LIKE '%3.0%' THEN '3.0'
-  WHEN engine_type LIKE '%3.2%' THEN '3.2'
-  WHEN engine_type LIKE '%3.5%' THEN '3.5'
-  WHEN engine_type LIKE '%3.6%' THEN '3.6'
-  WHEN engine_type LIKE '%4.0%' THEN '4.0'
-  WHEN engine_type LIKE '%4.2%' THEN '4.2'
-  WHEN engine_type LIKE '%4.4%' THEN '4.4'
-  WHEN engine_type LIKE '%4.7%' THEN '4.7'
-  WHEN engine_type LIKE '%5.0%' THEN '5.0'
-  WHEN engine_type LIKE '%5.2%' THEN '5.2'
-  WHEN engine_type LIKE '%5.5%' THEN '5.5'
-  WHEN engine_type LIKE '%6.0%' THEN '6.0'
-  WHEN engine_type LIKE '%6.2%' THEN '6.2'
-
-  WHEN engine_type LIKE '%ELECTRIC%'     THEN 'Electric'
-  WHEN engine_type LIKE '%ELEKTRO%'      THEN 'Electric'
-  WHEN engine_type LIKE '%E-TRON%'       THEN 'Electric'
-  WHEN engine_type LIKE '%ELEKTROMOTOR%' THEN 'Electric'
-  WHEN engine_type LIKE '%SKYACTIV-EV%'  THEN 'Electric'
-  WHEN engine_type LIKE '% EV %'         THEN 'Electric'
-
-  ELSE 'Unknown'
-
+WHEN engine_type LIKE '%ELECTRIC%' THEN 'Electric'
+WHEN engine_type LIKE '%ELEKTRO%' THEN 'Electric'
+WHEN engine_type LIKE '%E-TRON%' THEN 'Electric'
+WHEN engine_type LIKE '%ELEKTROMOTOR%' THEN 'Electric'
+WHEN engine_type LIKE '%SKYACTIV-EV%' THEN 'Electric'
+WHEN engine_type LIKE '% EV %' THEN 'Electric'
+  -- În loc de 'Unknown', lasă textul original la locul lui dacă nu găsești nimic!
+  ELSE engine_type is null
 END;
 
 -- ============================================================
@@ -917,8 +919,9 @@ SELECT engine_type, COUNT(*) AS cnt
 FROM Germany_Cars_Cleaned
 GROUP BY engine_type;
 
-alter table Germany_Cars_Cleaned rename to rezerva;
-drop table Germany_Cars_Cleaned;
+drop table if exists rezerva1;
+alter table Germany_Cars_Cleaned rename to rezerva1;
+drop table if exists Germany_Cars_Cleaned;;
 CREATE TABLE Germany_Cars_Cleaned
 (
     id                INTEGER,
@@ -948,7 +951,7 @@ SELECT
     fuel_type,
     CAST(km AS INTEGER),
     CAST(NULLIF(engine_type, 'Unknown') AS REAL)
-FROM rezerva
+FROM rezerva1
 WHERE price_in_euro != '' AND price_in_euro IS NOT NULL
   AND km != '' AND km IS NOT NULL
   AND year != '' AND year IS NOT NULL
@@ -962,3 +965,24 @@ select * from Germany_Cars_Cleaned where model = 'Unknown';
 
 DROP TABLE rezerva;
 
+UPDATE Germany_Cars_Cleaned
+SET engine_type = (
+    SELECT ROUND(AVG(sub.engine_type), 1)
+    FROM Germany_Cars_Cleaned AS sub
+    where power_ps between sub.power_ps-10 and sub.power_ps+10
+      and Germany_Cars_Cleaned.brand = sub.brand
+      AND Germany_Cars_Cleaned.model = sub.model
+      AND Germany_Cars_Cleaned.fuel_type = sub.fuel_type
+      AND sub.engine_type IS NOT NULL
+
+)
+where engine_type is null;
+
+select * from Germany_Cars where engine_type =0;
+SELECT engine_type, COUNT(*) as Numar_Aparitii
+FROM Germany_Cars
+WHERE length(engine_type) > 3 -- Excludem valorile de tip '2.0' care au 3 caractere și pe care deja le-am curățat
+GROUP BY engine_type
+ORDER BY Numar_Aparitii DESC
+LIMIT 20;
+select count(*) from Germany_Cars_Cleaned;
