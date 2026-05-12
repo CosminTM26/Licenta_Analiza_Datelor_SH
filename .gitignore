@@ -5,15 +5,22 @@
 *.db-journal
 *.db-shm
 *.db-wal
-
+*.md
 # JetBrains IDE
 ../.idea/
-
+.rdata
 # Git directory
 .git/
+.claude
+
+Utile/CLAUDE.md
+
+AGENTS.md
 
 ../identifier.sqlite
 ../identifier.db
 *.xml
-
+Utile/identifier.db
 .DS_Store
+
+identifier.sqlite
