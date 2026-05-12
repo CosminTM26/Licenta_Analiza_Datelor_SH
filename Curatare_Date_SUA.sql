@@ -1,3 +1,6 @@
+-- ============================================================
+-- PASUL 0: CREARE TABEL CURATAT
+-- ============================================================
 drop table if exists SUA_cars_Cleaned;
 
 create table SUA_cars_Cleaned as
@@ -13,7 +16,6 @@ create table SUA_cars_Cleaned as
     drivetrain,
     one_owner,
     accidents_or_damage
-
     from SUA_Cars;
 
 
@@ -21,11 +23,17 @@ create table SUA_cars_Cleaned as
   UPDATE SUA_Cars_Cleaned SET id = rowid;
 
 
+-- ============================================================
+-- PASUL 1: VERIFICARE INITIALA
+-- ============================================================
   SELECT distinct brand as nr FROM SUA_Cars_Cleaned ORDER BY brand;
 
   SELECT DISTINCT model, COUNT(*) as nr, brand FROM SUA_Cars_Cleaned GROUP BY model ORDER BY model;
 
-  SELECT DISTINCT model, COUNT(*) as nr
+  -- ============================================================
+-- PASUL 3: FIX MODEL
+-- ============================================================
+SELECT DISTINCT model, COUNT(*) as nr
   FROM SUA_Cars_Cleaned
   WHERE brand = 'Volvo'
   GROUP BY model
@@ -2296,6 +2304,9 @@ UPDATE SUA_Cars_Cleaned
     WHERE brand = 'Ford'
       AND model LIKE '%Van CUSTOM%';
 
+-- ============================================================
+-- PASUL 4: FIX COLOR
+-- ============================================================
   SELECT DISTINCT color, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY color ORDER BY color;
 
 -- Backup recomandat:
@@ -2348,13 +2359,24 @@ SET color = CASE
     -- White
     WHEN UPPER(color) LIKE '%WHITE%' OR UPPER(color) LIKE '%IVORY%' OR UPPER(color) LIKE '%BLIZZARD%' OR UPPER(color) LIKE '%ALABASTER%' OR UPPER(color) LIKE '%FROST%' OR UPPER(color) LIKE '%CHALK%' OR UPPER(color) LIKE '%SNOW%' OR UPPER(color) LIKE '%WEISS%' OR UPPER(color) LIKE '%BLANC%' OR UPPER(color) LIKE '%STARFIRE%' OR UPPER(color) LIKE '%WIND CHILL%' THEN 'White'
 
-    -- Unknown / Custom
-    ELSE 'Unknown / Custom'
+    -- Unknown
+    ELSE 'Unknown'
 END;
 
+update SUA_Cars_Cleaned set color = 'Unknown' where color not in (
+    select color from SUA_Cars_Cleaned
+    group by color order by count(color) desc LIMIT 14
+);
+
+-- ============================================================
+-- PASUL 5: FIX YEAR
+-- ============================================================
   SELECT DISTINCT year, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY year ORDER BY year;
 
 
+-- ============================================================
+-- PASUL 8: FIX TRANSMISSION_TYPE
+-- ============================================================
   SELECT DISTINCT transmission_type, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY transmission_type
   ORDER BY transmission_type;
 
@@ -2422,6 +2444,9 @@ SET transmission_type = CASE
     ELSE 'Unknown'
 END;
 
+-- ============================================================
+-- PASUL 9: FIX FUEL_TYPE
+-- ============================================================
   SELECT DISTINCT fuel_type, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY fuel_type ORDER BY fuel_type;
 
 UPDATE SUA_Cars_Cleaned
@@ -2460,63 +2485,9 @@ SET fuel_type = CASE
     ELSE 'Other'
 END;
 
-  SELECT DISTINCT drivetrain, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY drivetrain ORDER BY
-  drivetrain;
-
-UPDATE SUA_Cars_Cleaned
-SET drivetrain = CASE
-    -- 1. Erori, Lipsă Date și zgomot de date (Informații despre motor trecute greșit aici)
-    WHEN drivetrain IN ('', '-', '0', 'Unknown') OR UPPER(drivetrain) LIKE '%ENGINE:%' OR drivetrain IS NULL THEN 'Unknown'
-
-    -- 2. AWD (All-Wheel Drive)
-    WHEN UPPER(drivetrain) LIKE '%AWD%' OR UPPER(drivetrain) LIKE '%ALL%WHEEL%' THEN 'AWD'
-
-    -- 3. 4x4 / 4WD (Four-Wheel Drive)
-    WHEN UPPER(drivetrain) LIKE '%4WD%' OR UPPER(drivetrain) LIKE '%4X4%' OR UPPER(drivetrain) LIKE '%FOUR%WHEEL%' THEN '4x4'
-
-    -- 4. FWD (Front-Wheel Drive)
-    WHEN UPPER(drivetrain) LIKE '%FWD%' OR UPPER(drivetrain) LIKE '%FRONT%WHEEL%' THEN 'FWD'
-
-    -- 5. RWD (Rear-Wheel Drive)
-    WHEN UPPER(drivetrain) LIKE '%RWD%' OR UPPER(drivetrain) LIKE '%REAR%WHEEL%' THEN 'RWD'
-
-    -- 6. 2WD (Generic 2-Wheel Drive / 4x2)
-    -- Aceasta trebuie să fie ultima dintre tracțiuni pentru a nu intercepta accidental alte valori.
-    WHEN UPPER(drivetrain) LIKE '%2WD%' OR UPPER(drivetrain) LIKE '%4X2%' THEN '2WD'
-
-    -- 7. Fallback pentru orice altceva
-    ELSE 'Unknown'
-END;
-
-  SELECT DISTINCT one_owner, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY one_owner ORDER BY one_owner;
-
-UPDATE SUA_Cars_Cleaned
-SET one_owner = CASE
-    -- 1. Un singur proprietar (1.0 = True)
-    WHEN one_owner = '1.0' THEN 'Yes'
-
-    -- 2. Mai mulți proprietari (0.0 = False)
-    WHEN one_owner = '0.0' THEN 'No'
-
-    -- 3. Valori lipsă sau erori
-    ELSE 'Unknown'
-END;
-
-  SELECT DISTINCT accidents_or_damage, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY accidents_or_damage
-   ORDER BY accidents_or_damage;
-UPDATE SUA_Cars_Cleaned
-SET accidents_or_damage = CASE
-    -- 1. Fără accidente sau daune raportate (0.0 = False)
-    WHEN accidents_or_damage = '0.0' THEN 'No'
-
-
-    -- 2. Accidente sau daune înregistrate (1.0 = True)
-    WHEN accidents_or_damage = '1.0' THEN 'Yes'
-
-    -- 3. Valori lipsă sau erori
-    ELSE 'Unknown'
-END;
-
+-- ============================================================
+-- PASUL 11: FIX ENGINE_TYPE
+-- ============================================================
 select distinct engine_type from SUA_Cars_Cleaned group by engine_type order by engine_type;
 
 -- ============================================================
@@ -2735,14 +2706,105 @@ update SUA_cars_Cleaned
 set fuel_type = 'Electric'
 where engine_type = 'Electric' and fuel_type<>'Electric';
 
-UPDATE SUA_cars_Cleaned
-SET engine_type = (
-    SELECT ROUND(AVG(engine_type), 1)
-    FROM SUA_cars_Cleaned AS sub
-    WHERE sub.brand = sub.brand
-      AND sub.model = sub.model
-        and sub.year between sub.year - 2 and sub.year + 2
-)
-WHERE engine_type='Unknown';
+-- ============================================================
+-- PASUL 12: FIX DRIVETRAIN, ONE_OWNER, ACCIDENTS
+-- ============================================================
+  SELECT DISTINCT drivetrain, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY drivetrain ORDER BY
+  drivetrain;
 
-select engine_type, count() from SUA_cars_Cleaned where engine_type = 'Unknown' group by engine_type;
+UPDATE SUA_Cars_Cleaned
+SET drivetrain = CASE
+    -- 1. Erori, Lipsă Date și zgomot de date (Informații despre motor trecute greșit aici)
+    WHEN drivetrain IN ('', '-', '0', 'Unknown') OR UPPER(drivetrain) LIKE '%ENGINE:%' OR drivetrain IS NULL THEN 'Unknown'
+
+    -- 2. AWD (All-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%AWD%' OR UPPER(drivetrain) LIKE '%ALL%WHEEL%' THEN 'AWD'
+
+    -- 3. 4WD (Four-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%4WD%' OR UPPER(drivetrain) LIKE '%4X4%' OR UPPER(drivetrain) LIKE '%FOUR%WHEEL%' THEN '4WD'
+
+    -- 4. FWD (Front-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%FWD%' OR UPPER(drivetrain) LIKE '%FRONT%WHEEL%' THEN 'FWD'
+
+    -- 5. RWD (Rear-Wheel Drive)
+    WHEN UPPER(drivetrain) LIKE '%RWD%' OR UPPER(drivetrain) LIKE '%REAR%WHEEL%' THEN 'RWD'
+
+    -- 6. 2WD (Generic 2-Wheel Drive / 4x2)
+    -- Aceasta trebuie să fie ultima dintre tracțiuni pentru a nu intercepta accidental alte valori.
+    WHEN UPPER(drivetrain) LIKE '%2WD%' OR UPPER(drivetrain) LIKE '%4X2%' THEN '2WD'
+
+    -- 7. Fallback pentru orice altceva
+    ELSE 'Unknown'
+END;
+
+  SELECT DISTINCT one_owner, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY one_owner ORDER BY one_owner;
+
+UPDATE SUA_Cars_Cleaned
+SET one_owner = CASE
+    -- 1. Un singur proprietar (1.0 = True)
+    WHEN one_owner = '1.0' THEN 'Yes'
+
+    -- 2. Mai mulți proprietari (0.0 = False)
+    WHEN one_owner = '0.0' THEN 'No'
+
+    -- 3. Valori lipsă sau erori
+    ELSE 'Unknown'
+END;
+
+  SELECT DISTINCT accidents_or_damage, COUNT(*) as nr FROM SUA_Cars_Cleaned GROUP BY accidents_or_damage
+   ORDER BY accidents_or_damage;
+UPDATE SUA_Cars_Cleaned
+SET accidents_or_damage = CASE
+    -- 1. Fără accidente sau daune raportate (0.0 = False)
+    WHEN accidents_or_damage = '0.0' THEN 'No'
+
+
+    -- 2. Accidente sau daune înregistrate (1.0 = True)
+    WHEN accidents_or_damage = '1.0' THEN 'Yes'
+
+    -- 3. Valori lipsă sau erori
+    ELSE 'Unknown'
+END;
+
+-- ============================================================
+-- PASUL 15: IMPUTARE VALORI NULE
+--
+--
+--
+--
+-- ============================================================
+--
+--UPDATE SUA_cars_Cleaned
+--SET engine_type = (
+  --  SELECT ROUND(AVG(CAST(sub.engine_type AS REAL)), 1)
+    --FROM SUA_cars_Cleaned AS sub
+    --WHERE sub.brand = SUA_cars_Cleaned.brand
+     -- AND sub.model = SUA_cars_Cleaned.model
+     -- AND sub.year BETWEEN SUA_cars_Cleaned.year - 2 AND SUA_cars_Cleaned.year + 2
+     --* AND sub.engine_type != 'Unknown'
+     -- AND sub.engine_type IS NOT NULL
+--)
+--WHERE engine_type = 'Unknown';
+
+--select engine_type, count(*) from SUA_cars_Cleaned where engine_type = 'Unknown' group by engine_type;
+--
+-- ============================================================
+-- PASUL 16: DEDUPLICARE
+-- ============================================================
+SELECT *, COUNT(*) as nr
+FROM SUA_cars_Cleaned
+GROUP BY brand, model, color, year, price_in_euro, transmission_type, fuel_type, km, engine_type, drivetrain, one_owner, accidents_or_damage
+HAVING COUNT(*) > 1
+ORDER BY nr DESC;
+
+DELETE FROM SUA_cars_Cleaned
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM SUA_cars_Cleaned
+    GROUP BY brand, model, color, year, price_in_euro, transmission_type, fuel_type, km, engine_type, drivetrain, one_owner, accidents_or_damage
+);
+
+-- ============================================================
+-- PASUL 17: VERIFICARE FINALA
+-- ============================================================
+select count(*) from SUA_cars_Cleaned;

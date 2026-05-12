@@ -1,13 +1,161 @@
-
-
-
+﻿-- ============================================================
+-- PASUL 0: CREARE TABEL CURATAT
+-- ============================================================
 
 drop table if exists Germany_Cars_Cleaned;
 
 create table Germany_Cars_Cleaned as
-    select id, brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type,km, engine_type
+    select ROWID as id,
+           brand,
+           model,
+           color,
+          year,
+          registration_date,
+          price_in_euro,
+          power_kw,
+          power_ps,
+           transmission_type,
+           fuel_type,
+           fuel_consumption_l_100km,
+           mileage_in_km as km,
+           offer_description as engine_type,
+           fuel_consumption_g_km as co2_g
     from Germany_Cars;
 
+select *
+from Germany_Cars_Cleaned
+where price_in_euro is null or km is null;
+
+delete from Germany_Cars_Cleaned
+where price_in_euro is null or km is null;
+
+select *
+from Germany_Cars_Cleaned
+where Germany_Cars_Cleaned.fuel_type in ('Semi-automatic', 'Manual', 'Automatic');
+--verificam daca exista inregistrari care au inversate valoarea cu fuel_type
+delete from Germany_Cars_Cleaned
+where fuel_type in ('Semi-automatic', 'Manual', 'Automatic') ;
+
+--verificam
+select *
+from Germany_Cars_Cleaned
+where year in ('Petrol', 'Diesel','Electric', 'Hybrid', 'LPG','CNG','Hydrogen' , 'Other', 'Ethanol', 'Diesel Hybrid' );
+
+--pretul este inversat cu nr de km iar nr de km nu se regaseste nicaieri
+delete from Germany_Cars_Cleaned
+where year in ('Petrol', 'Diesel','Electric', 'Hybrid', 'LPG','CNG','Hydrogen' , 'Other', 'Ethanol', 'Diesel Hybrid' );
+
+
+select *
+from Germany_Cars_Cleaned
+where year in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown');
+
+delete from Germany_Cars_Cleaned
+where year in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown');
+
+--testam
+select year
+from Germany_Cars_Cleaned
+where year not between 1900 and 2026;
+
+delete from Germany_Cars_Cleaned
+where year not between 1900 and 2026;
+
+SELECT DISTINCT fuel_type, COUNT(*) as nr FROM Germany_Cars_Cleaned GROUP BY fuel_type ORDER BY fuel_type;
+
+--exista atat diesel hybrid cat si hybrid, le unificam
+UPDATE Germany_Cars_Cleaned SET fuel_type = 'Hybrid' WHERE fuel_type = 'Diesel Hybrid';
+
+UPDATE Germany_Cars_Cleaned
+SET engine_type = CASE
+  WHEN engine_type LIKE '%0.6%' OR engine_type LIKE '%0,6%' THEN '0.6'
+  WHEN engine_type LIKE '%0.7%' OR engine_type LIKE '%0,7%' THEN '0.7'
+  WHEN engine_type LIKE '%0.8%' OR engine_type LIKE '%0,8%' THEN '0.8'
+  WHEN engine_type LIKE '%0.9%' OR engine_type LIKE '%0,9%' THEN '0.9'
+  WHEN engine_type LIKE '%1.0%' OR engine_type LIKE '%1,0%' THEN '1.0'
+  WHEN engine_type LIKE '%1.1%' OR engine_type LIKE '%1,1%' THEN '1.1'
+  WHEN engine_type LIKE '%1.2%' OR engine_type LIKE '%1,2%' THEN '1.2'
+  WHEN engine_type LIKE '%1.3%' OR engine_type LIKE '%1,3%' THEN '1.3'
+  WHEN engine_type LIKE '%1.4%' OR engine_type LIKE '%1,4%' THEN '1.4'
+  WHEN engine_type LIKE '%1.5%' OR engine_type LIKE '%1,5%' THEN '1.5'
+  WHEN engine_type LIKE '%1.6%' OR engine_type LIKE '%1,6%' THEN '1.6'
+  WHEN engine_type LIKE '%1.7%' OR engine_type LIKE '%1,7%' THEN '1.7'
+  WHEN engine_type LIKE '%1.8%' OR engine_type LIKE '%1,8%' THEN '1.8'
+  WHEN engine_type LIKE '%1.9%' OR engine_type LIKE '%1,9%' THEN '1.9'
+  WHEN engine_type LIKE '%2.0%' OR engine_type LIKE '%2,0%' THEN '2.0'
+  WHEN engine_type LIKE '%2.1%' OR engine_type LIKE '%2,1%' THEN '2.1'
+  WHEN engine_type LIKE '%2.2%' OR engine_type LIKE '%2,2%' THEN '2.2'
+  WHEN engine_type LIKE '%2.3%' OR engine_type LIKE '%2,3%' THEN '2.3'
+  WHEN engine_type LIKE '%2.4%' OR engine_type LIKE '%2,4%' THEN '2.4'
+  WHEN engine_type LIKE '%2.5%' OR engine_type LIKE '%2,5%' THEN '2.5'
+  WHEN engine_type LIKE '%2.7%' OR engine_type LIKE '%2,7%' THEN '2.7'
+  WHEN engine_type LIKE '%2.8%' OR engine_type LIKE '%2,8%' THEN '2.8'
+  WHEN engine_type LIKE '%2.9%' OR engine_type LIKE '%2,9%' THEN '2.9'
+  WHEN engine_type LIKE '%3.0%' OR engine_type LIKE '%3,0%' THEN '3.0'
+  WHEN engine_type LIKE '%3.2%' OR engine_type LIKE '%3,2%' THEN '3.2'
+  WHEN engine_type LIKE '%3.5%' OR engine_type LIKE '%3,5%' THEN '3.5'
+  WHEN engine_type LIKE '%3.6%' OR engine_type LIKE '%3,6%' THEN '3.6'
+  WHEN engine_type LIKE '%4.0%' OR engine_type LIKE '%4,0%' THEN '4.0'
+  WHEN engine_type LIKE '%4.2%' OR engine_type LIKE '%4,2%' THEN '4.2'
+  WHEN engine_type LIKE '%4.4%' OR engine_type LIKE '%4,4%' THEN '4.4'
+  WHEN engine_type LIKE '%4.7%' OR engine_type LIKE '%4,7%' THEN '4.7'
+  WHEN engine_type LIKE '%5.0%' OR engine_type LIKE '%5,0%' THEN '5.0'
+  WHEN engine_type LIKE '%5.2%' OR engine_type LIKE '%5,2%' THEN '5.2'
+  WHEN engine_type LIKE '%5.5%' OR engine_type LIKE '%5,5%' THEN '5.5'
+  WHEN engine_type LIKE '%6.0%' OR engine_type LIKE '%6,0%' THEN '6.0'
+  WHEN engine_type LIKE '%6.2%' OR engine_type LIKE '%6,2%' THEN '6.2'
+  WHEN engine_type LIKE '%ELECTRIC%'    THEN 'Electric'
+  WHEN engine_type LIKE '%ELEKTRO%'     THEN 'Electric'
+  WHEN engine_type LIKE '%E-TRON%'      THEN 'Electric'
+  WHEN engine_type LIKE '%ELEKTROMOTOR%' THEN 'Electric'
+  WHEN engine_type LIKE '%SKYACTIV-EV%' THEN 'Electric'
+  WHEN engine_type LIKE '% EV %'        THEN 'Electric'
+  -- Daca nu se gaseste o valoare numerica, setam NULL
+  ELSE NULL
+END;
+
+select * from Germany_Cars_Cleaned
+where engine_type=0;
+
+update Germany_Cars_Cleaned set engine_type = NULL where engine_type = 0 or Germany_Cars_Cleaned.fuel_type='Electric';
+
+
+
+select distinct(Germany_Cars_Cleaned.co2_g), count() from Germany_Cars_Cleaned
+group by co2_g;
+
+update Germany_Cars_Cleaned
+  SET co2_g = NULL
+  WHERE co2_g LIKE '%-%';
+
+  UPDATE Germany_Cars_Cleaned
+  SET co2_g = trim(co2_g, ' g/km')
+  WHERE co2_g IS NOT NULL;
+
+
+
+drop table if exists Germany_Cars_Cleaned1;
+create table Germany_Cars_Cleaned1 as
+    select id,
+           brand,
+           model,
+           color,
+          cast((year) as integer) as year,
+          cast((price_in_euro) as integer) as price_in_euro,
+          cast((power_ps) as integer) as power_ps,
+           transmission_type,
+           fuel_type,
+           cast((km) as integer) as km,
+           cast((engine_type) as real )as engine_type,
+           cast((co2_g) as real) as co2_g
+    from Germany_Cars_Cleaned;
+
+drop table if exists Germany_Cars_Cleaned;
+
+alter table Germany_Cars_Cleaned1
+rename to Germany_Cars_Cleaned;
+
+CREATE INDEX idx_cars_lookup ON Germany_Cars_Cleaned(brand, fuel_type, power_ps);
 
 select distinct brand
 from Germany_Cars_Cleaned
@@ -20,12 +168,10 @@ group by color
 order by color desc;
 --totul ok aici
 
-
 select distinct year,count(year) as numar
 from Germany_Cars_Cleaned
 group by year
 order by numar asc;
---exista un numar ridicat de coloane din transmission_type si fuel_type care au inversate datele cu year
 
 select distinct price_in_euro,count(price_in_euro) as numar
 from Germany_Cars_Cleaned
@@ -39,7 +185,6 @@ group by power_ps
 order by numar asc;
 --exista inregistrari care au inversate valoarea cu transmission_type sau fuel_type
 
-
 select distinct transmission_type,count(transmission_type) as numar
 from Germany_Cars_Cleaned
 group by transmission_type
@@ -50,79 +195,65 @@ select distinct fuel_type,count(fuel_type) as numar
 from Germany_Cars_Cleaned
 group by fuel_type
 order by numar asc;
---exista inregistrari care ar trebui sa fie in transmission_type
-
-select fuel_type
-from Germany_Cars
-where Germany_Cars.fuel_type in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown');
---verificam daca exista inregistrari care au inversate valoarea cu fuel_type
-update Germany_Cars
-set transmission_type=fuel_type,
- fuel_type=Null
-where fuel_type in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown') ;
---schimbam valoarea cu fuel_type cu valoarea cu transmission_type
-
---verificam interogarea
 
 select distinct model, count (model) as numar, brand
 from Germany_Cars_Cleaned
 group by model
 order by numar asc;
 
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Mercedes-Benz') + 1)) WHERE model LIKE 'Mercedes-Benz%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('BMW') + 1))           WHERE model LIKE 'BMW%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Audi') + 1))          WHERE model LIKE 'Audi%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Volkswagen') + 1))    WHERE model LIKE 'Volkswagen%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Porsche') + 1))       WHERE model LIKE 'Porsche%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('MINI') + 1))          WHERE model LIKE 'MINI%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Opel') + 1))          WHERE model LIKE 'Opel%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Peugeot') + 1))       WHERE model LIKE 'Peugeot%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Renault') + 1))       WHERE model LIKE 'Renault%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Fiat') + 1))          WHERE model LIKE 'Fiat%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Toyota') + 1))        WHERE model LIKE 'Toyota%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Ford') + 1))          WHERE model LIKE 'Ford%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Skoda') + 1))         WHERE model LIKE 'Skoda%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Volvo') + 1))         WHERE model LIKE 'Volvo%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Hyundai') + 1))       WHERE model LIKE 'Hyundai%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Kia') + 1))           WHERE model LIKE 'Kia%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Seat') + 1))          WHERE model LIKE 'Seat%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('SEAT') + 1))          WHERE model LIKE 'SEAT%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Dacia') + 1))         WHERE model LIKE 'Dacia%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Alfa Romeo') + 1))    WHERE model LIKE 'Alfa Romeo%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Nissan') + 1))        WHERE model LIKE 'Nissan%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Honda') + 1))         WHERE model LIKE 'Honda%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Mazda') + 1))         WHERE model LIKE 'Mazda%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Mitsubishi') + 1))    WHERE model LIKE 'Mitsubishi%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Citroen') + 1))       WHERE model LIKE 'Citroen%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Land Rover') + 1))    WHERE model LIKE 'Land Rover%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Jaguar') + 1))        WHERE model LIKE 'Jaguar%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Jeep') + 1))          WHERE model LIKE 'Jeep%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Volvo') + 1))         WHERE model LIKE 'Volvo%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Lamborghini') + 1))   WHERE model LIKE 'Lamborghini%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Maserati') + 1))      WHERE model LIKE 'Maserati%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Bentley') + 1))       WHERE model LIKE 'Bentley%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Aston Martin') + 1))  WHERE model LIKE 'Aston Martin%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Ferrari') + 1))       WHERE model LIKE 'Ferrari%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Lancia') + 1))        WHERE model LIKE 'Lancia%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Saab') + 1))          WHERE model LIKE 'Saab%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Dodge') + 1))         WHERE model LIKE 'Dodge%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Chevrolet') + 1))     WHERE model LIKE 'Chevrolet%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Cadillac') + 1))      WHERE model LIKE 'Cadillac%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Daewoo') + 1))        WHERE model LIKE 'Daewoo%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Infiniti') + 1))      WHERE model LIKE 'Infiniti%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Ssangyong') + 1))     WHERE model LIKE 'Ssangyong%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Rover') + 1))         WHERE model LIKE 'Rover%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Lada') + 1))          WHERE model LIKE 'Lada%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Daihatsu') + 1))      WHERE model LIKE 'Daihatsu%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Isuzu') + 1))         WHERE model LIKE 'Isuzu%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('smart') + 1))         WHERE model LIKE 'smart%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Chrysler') + 1))      WHERE model LIKE 'Chrysler%';
-UPDATE Germany_Cars_Cleaned SET model = TRIM(SUBSTR(model, LENGTH('Proton') + 1))        WHERE model LIKE 'Proton%';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Mercedes-Benz ', '') WHERE model LIKE 'Mercedes-Benz %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'BMW ', '')          WHERE model LIKE 'BMW %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Audi ', '')         WHERE model LIKE 'Audi %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Volkswagen ', '')  WHERE model LIKE 'Volkswagen %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Porsche ', '')     WHERE model LIKE 'Porsche %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'MINI ', '')          WHERE model LIKE 'MINI %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Opel ', '')          WHERE model LIKE 'Opel %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Peugeot ', '')       WHERE model LIKE 'Peugeot %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Renault ', '')       WHERE model LIKE 'Renault %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Fiat ', '')          WHERE model LIKE 'Fiat %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Toyota ', '')        WHERE model LIKE 'Toyota %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Ford ', '')          WHERE model LIKE 'Ford %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Skoda ', '')         WHERE model LIKE 'Skoda %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Volvo ', '')        WHERE model LIKE 'Volvo %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Hyundai ', '')       WHERE model LIKE 'Hyundai %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Kia ', '')         WHERE model LIKE 'Kia %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Seat ', '')         WHERE model LIKE 'Seat %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'SEAT ', '')         WHERE model LIKE 'SEAT %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Dacia ', '')         WHERE model LIKE 'Dacia %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Alfa Romeo ', '')    WHERE model LIKE 'Alfa Romeo %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Nissan ', '')        WHERE model LIKE 'Nissan %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Honda ', '')         WHERE model LIKE 'Honda %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Mazda ', '')         WHERE model LIKE 'Mazda %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Mitsubishi ', '')    WHERE model LIKE 'Mitsubishi %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Citroen ', '')       WHERE model LIKE 'Citroen %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Land Rover ', '')    WHERE model LIKE 'Land Rover %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Jaguar ', '')        WHERE model LIKE 'Jaguar %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Jeep ', '')          WHERE model LIKE 'Jeep %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Lamborghini ', '')   WHERE model LIKE 'Lamborghini %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Maserati ', '')      WHERE model LIKE 'Maserati %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Bentley ', '')       WHERE model LIKE 'Bentley %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Aston Martin ', '')  WHERE model LIKE 'Aston Martin %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Ferrari ', '')       WHERE model LIKE 'Ferrari %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Lancia ', '')        WHERE model LIKE 'Lancia %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Saab ', '')          WHERE model LIKE 'Saab %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Dodge ', '')         WHERE model LIKE 'Dodge %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Chevrolet ', '')     WHERE model LIKE 'Chevrolet %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Cadillac ', '')      WHERE model LIKE 'Cadillac %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Daewoo ', '')        WHERE model LIKE 'Daewoo %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Infiniti ', '')     WHERE model LIKE 'Infiniti %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Ssangyong ', '')    WHERE model LIKE 'Ssangyong %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Rover ', '')       WHERE model LIKE 'Rover %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Lada ', '')          WHERE model LIKE 'Lada %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Daihatsu ', '')      WHERE model LIKE 'Daihatsu %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Isuzu ', '')         WHERE model LIKE 'Isuzu %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'smart ', '')         WHERE model LIKE 'smart %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Chrysler ', '')      WHERE model LIKE 'Chrysler %';
+UPDATE Germany_Cars_Cleaned SET model = REPLACE(model, 'Proton ', '')       WHERE model LIKE 'Proton %';
 
 -- ============================================================
--- PASUL 2: GRUPARE MODELE MERCEDES-BENZ
--- ATENȚIE: Ordinea contează! Clasele mai specifice (GLA, GLB,
--- GLC, GLE, GLK) trebuie procesate ÎNAINTE de GL/GLS general
+-- GRUPARE MODELE MERCEDES-BENZ
+-- ATENTIE: Ordinea conteaza! Clasele mai specifice (GLA, GLB,
+-- GLC, GLE, GLK) trebuie procesate INAINTE de GL/GLS general
 -- ============================================================
 
 -- A-Class (AMG A inclus)
@@ -170,7 +301,7 @@ UPDATE Germany_Cars_Cleaned SET model = 'CLS'
 WHERE brand = 'mercedes-benz'
   AND model LIKE 'CLS%';
 
--- CL (după CLA, CLK, CLS ca să nu le prindă)
+-- CL (dupa CLA, CLK, CLS ca sa nu le prinda)
 UPDATE Germany_Cars_Cleaned SET model = 'CL'
 WHERE brand = 'mercedes-benz'
   AND (model LIKE 'CL %' OR model = 'CL');
@@ -180,7 +311,7 @@ UPDATE Germany_Cars_Cleaned SET model = 'SLK'
 WHERE brand = 'mercedes-benz'
   AND (model LIKE 'SLK%' OR model LIKE 'SLC%');
 
--- SL-Class (SL urmat de spațiu + număr)
+-- SL-Class (SL urmat de spatiu + numar)
 UPDATE Germany_Cars_Cleaned SET model = 'SL-Class'
 WHERE brand = 'mercedes-benz'
   AND model LIKE 'SL %';
@@ -217,7 +348,7 @@ WHERE brand = 'mercedes-benz'
 UPDATE Germany_Cars_Cleaned SET model = 'GLK'
 WHERE brand = 'mercedes-benz' AND model LIKE 'GLK%';
 
--- GL-Class / GLS (DUPĂ GLA, GLB, GLC, GLE, GLK!)
+-- GL-Class / GLS (DUPA GLA, GLB, GLC, GLE, GLK!)
 UPDATE Germany_Cars_Cleaned SET model = 'GLS'
 WHERE brand = 'mercedes-benz'
   AND (model LIKE 'GLS%' OR model LIKE 'GL %');
@@ -227,7 +358,7 @@ UPDATE Germany_Cars_Cleaned SET model = 'V-Class'
 WHERE brand = 'mercedes-benz'
   AND (model LIKE 'V %' OR model = 'V' OR model LIKE 'Viano%' OR model LIKE 'Vito%');
 
--- EQ Familie (mașini electrice Mercedes)
+-- EQ Familie (masini electrice Mercedes)
 UPDATE Germany_Cars_Cleaned SET model = 'EQA'  WHERE brand = 'mercedes-benz' AND model LIKE 'EQA%';
 UPDATE Germany_Cars_Cleaned SET model = 'EQB'  WHERE brand = 'mercedes-benz' AND model LIKE 'EQB%';
 UPDATE Germany_Cars_Cleaned SET model = 'EQC'  WHERE brand = 'mercedes-benz' AND model LIKE 'EQC%';
@@ -253,7 +384,7 @@ UPDATE Germany_Cars_Cleaned SET model = 'X-Class'  WHERE brand = 'mercedes-benz'
 -- GRUPARE MODELE BMW
 -- ============================================================
 
--- 1 Series: 11x, 12x, 13x, 14x, 1er M Coupé
+-- 1 Series: 11x, 12x, 13x, 14x, 1er M Coupe
 UPDATE Germany_Cars_Cleaned SET model = '1 Series'
 WHERE brand = 'bmw'
   AND (
@@ -317,7 +448,7 @@ WHERE brand = 'bmw'
     OR model = 'M8' OR model LIKE 'M8 %' OR model LIKE 'M850%'
   );
 
--- Gama X (eliminăm motorizarea, păstrăm X+număr)
+-- Gama X (eliminam motorizarea, pastram X+numar)
 UPDATE Germany_Cars_Cleaned SET model = 'X1'  WHERE brand = 'bmw' AND (model = 'X1'  OR model LIKE 'X1 %');
 UPDATE Germany_Cars_Cleaned SET model = 'X2'  WHERE brand = 'bmw' AND (model = 'X2'  OR model LIKE 'X2 %' OR model LIKE 'X2 M%');
 UPDATE Germany_Cars_Cleaned SET model = 'X3'  WHERE brand = 'bmw' AND (model = 'X3'  OR model LIKE 'X3 %' OR model LIKE 'X3 M%');
@@ -385,7 +516,7 @@ WHERE brand = 'audi' AND (model LIKE 'A7%' OR model LIKE 'S7%' OR model LIKE 'RS
 UPDATE Germany_Cars_Cleaned SET model = 'A8'
 WHERE brand = 'audi' AND (model LIKE 'A8%' OR model LIKE 'S8%');
 
--- TT / TTS / TT RS (înainte de alte reguli ca să nu fie ambiguitate)
+-- TT / TTS / TT RS (inainte de alte reguli ca sa nu fie ambiguitate)
 UPDATE Germany_Cars_Cleaned SET model = 'TT'
 WHERE brand = 'audi' AND (model LIKE 'TT%');
 
@@ -422,7 +553,7 @@ WHERE brand = 'audi'
 UPDATE Germany_Cars_Cleaned SET model = 'e-tron GT'
 WHERE brand = 'audi' AND model LIKE 'e-tron GT%';
 
--- e-tron (general, după e-tron GT)
+-- e-tron (general, dupa e-tron GT)
 UPDATE Germany_Cars_Cleaned SET model = 'e-tron'
 WHERE brand = 'audi' AND (model LIKE 'e-tron%' OR model = 'e-tron');
 
@@ -465,7 +596,7 @@ UPDATE Germany_Cars_Cleaned SET model = 'Polo'
 WHERE brand = 'volkswagen'
   AND (model LIKE 'Polo%' OR model LIKE 'Cross Polo%');
 
--- Beetle / New Beetle / Käfer
+-- Beetle / New Beetle / Kafer
 UPDATE Germany_Cars_Cleaned SET model = 'Beetle'
 WHERE brand = 'volkswagen'
   AND (model LIKE 'Beetle%' OR model LIKE 'New Beetle%' OR model LIKE 'Käfer%');
@@ -625,7 +756,7 @@ UPDATE Germany_Cars_Cleaned SET model = 'Croma'     WHERE brand = 'fiat' AND mod
 UPDATE Germany_Cars_Cleaned SET model = 'Strada'    WHERE brand = 'fiat' AND model LIKE 'Strada%';
 UPDATE Germany_Cars_Cleaned SET model = '124 Spider' WHERE brand = 'fiat' AND model LIKE '124 Spider%';
 UPDATE Germany_Cars_Cleaned SET model = 'Punto Evo' WHERE brand = 'fiat' AND model LIKE 'Punto Evo%';
--- Nota: Punto Evo deja prins de Punto mai sus, dar dacă vrei separat decomentează și elimină LIKE 'Punto Evo%' din Punto
+-- Nota: Punto Evo deja prins de Punto mai sus, dar daca vrei separat decomenteza si elimina LIKE 'Punto Evo%' din Punto
 
 -- ============================================================
 -- GRUPARE MODELE SMART
@@ -772,217 +903,95 @@ UPDATE Germany_Cars_Cleaned SET model = 'Mascott'      WHERE brand = 'renault' A
 UPDATE Germany_Cars_Cleaned SET model = 'R11'          WHERE brand = 'renault' AND (model LIKE 'R 11%' OR model = 'R 11');
 UPDATE Germany_Cars_Cleaned SET model = 'R6'           WHERE brand = 'renault' AND (model LIKE 'R 6%'  OR model = 'R 6');
 
+update Germany_Cars_Cleaned set model= 'Unknown' where Germany_Cars_Cleaned.model is NULL;
+
 -- ============================================================
--- FIN
+-- PASUL 4: FIX COLOR
 -- ============================================================
-
-
-
---verificam
-select year, fuel_type
-from Germany_Cars
-where year in ('Petrol', 'Diesel','Electric', 'Hybrid', 'LPG','CNG','Hydrogen' , 'Other', 'Ethanol', 'Diesel Hybrid' );
-
---verificam
-select year, transmission_type
-from Germany_Cars
-where year in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown');
-
-
---transmisia are deja valoriile, așa ca stergem year
-update Germany_Cars
-set year=null
-where year in ('Semi-automatic', 'Manual', 'Automatic', 'Unknown');
-
---testam
-select year
-from Germany_Cars
-where year not between 1800 and 2026;
-
---înlocuim valoriile anormale cu NULL
-update Germany_Cars
-set year=null
-where year not between 1800 and 2026;
-
---sunt putine, doar 199 deci le stergem pe toate
-select *
-from Germany_Cars
-where year is null;
-
---anul este foarte important, stergem inregistrarile care nu au anul
-delete from Germany_Cars
-where year is null;
-
---verificam duplicatele
- SELECT *, COUNT(*) as nr
-  FROM Germany_Cars_Cleaned
-  GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type
-  HAVING COUNT(*) > 1
-order by nr desc;
-
- SELECT * FROM Germany_Cars_Cleaned
-  WHERE id NOT IN (
-      SELECT MIN(id)
-      FROM Germany_Cars_Cleaned
-      GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type
-  );
-
---STERGEM dublurile
-delete from Germany_Cars_Cleaned
-where id not in(SELECT MIN(id)
-      FROM Germany_Cars_Cleaned
-      GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type);
-
-select count() from Germany_Cars_Cleaned;
-
-select km from germany_cars_cleaned where km is null;
-
- DELETE FROM Germany_Cars_Cleaned WHERE km IS NULL;
 
 --culoarea nu este importanta, pastram inregistrarile
 UPDATE Germany_Cars_Cleaned SET color = 'Unknown' WHERE color IS NULL;
 
---inlocuim valoriile nule cu media
- UPDATE Germany_Cars_Cleaned SET price_in_euro = (SELECT AVG(price_in_euro) FROM Germany_Cars_Cleaned) WHERE price_in_euro IS NULL;
-  update Germany_Cars_Cleaned set power_ps = (SELECT ROUND(AVG(power_ps), 0) FROM Germany_Cars_Cleaned WHERE power_ps IS NOT NULL)
-  WHERE power_ps IS NULL;
-
-
-SELECT DISTINCT transmission_type, COUNT(*) as nr FROM Germany_Cars_Cleaned GROUP BY transmission_type ORDER
-  BY transmission_type;
-SELECT DISTINCT fuel_type, COUNT(*) as nr FROM Germany_Cars_Cleaned GROUP BY fuel_type ORDER BY fuel_type;
-
---exista atat diesel hybrid cat si hybrid, le unificam
-UPDATE Germany_Cars_Cleaned SET fuel_type = 'Hybrid' WHERE fuel_type = 'Diesel Hybrid';
-
-
-select distinct Germany_Cars_Cleaned.engine_type from Germany_Cars_Cleaned group by engine_type;
--- ============================================================
--- EXTRAGERE LITRAJ (engine_liters) -- SQLite
--- Aplica pe coloana engine_type (sau inlocuieste cu title)
--- ============================================================
-
-alter table Germany_Cars rename column des;
-UPDATE Germany_Cars
-SET engine_type = CASE
-  WHEN engine_type LIKE '%0.6%' OR engine_type LIKE '%0,6%' THEN '0.6'
-  WHEN engine_type LIKE '%0.7%' OR engine_type LIKE '%0,7%' THEN '0.7'
-  WHEN engine_type LIKE '%0.8%' OR engine_type LIKE '%0,8%' THEN '0.8'
-  WHEN engine_type LIKE '%0.9%' OR engine_type LIKE '%0,9%' THEN '0.9'
-  WHEN engine_type LIKE '%1.0%' OR engine_type LIKE '%1,0%' THEN '1.0'
-  WHEN engine_type LIKE '%1.1%' OR engine_type LIKE '%1,1%' THEN '1.1'
-  WHEN engine_type LIKE '%1.2%' OR engine_type LIKE '%1,2%' THEN '1.2'
-  WHEN engine_type LIKE '%1.3%' OR engine_type LIKE '%1,3%' THEN '1.3'
-  WHEN engine_type LIKE '%1.4%' OR engine_type LIKE '%1,4%' THEN '1.4'
-  WHEN engine_type LIKE '%1.5%' OR engine_type LIKE '%1,5%' THEN '1.5'
-  WHEN engine_type LIKE '%1.6%' OR engine_type LIKE '%1,6%' THEN '1.6'
-  WHEN engine_type LIKE '%1.7%' OR engine_type LIKE '%1,7%' THEN '1.7'
-  WHEN engine_type LIKE '%1.8%' OR engine_type LIKE '%1,8%' THEN '1.8'
-  WHEN engine_type LIKE '%1.9%' OR engine_type LIKE '%1,9%' THEN '1.9'
-  WHEN engine_type LIKE '%2.0%' OR engine_type LIKE '%2,0%' THEN '2.0'
-  WHEN engine_type LIKE '%2.1%' OR engine_type LIKE '%2,1%' THEN '2.1' -- Adăugat pentru Mercedes
-WHEN engine_type LIKE '%2.2%' OR engine_type LIKE '%2,2%' THEN '2.2'
-  WHEN engine_type LIKE '%2.3%' OR engine_type LIKE '%2,3%' THEN '2.3'
-  WHEN engine_type LIKE '%2.4%' OR engine_type LIKE '%2,4%' THEN '2.4'
-  WHEN engine_type LIKE '%2.5%' OR engine_type LIKE '%2,5%' THEN '2.5'
-  WHEN engine_type LIKE '%2.7%' OR engine_type LIKE '%2,7%' THEN '2.7'
-  WHEN engine_type LIKE '%2.8%' OR engine_type LIKE '%2,8%' THEN '2.8'
-  WHEN engine_type LIKE '%2.9%' OR engine_type LIKE '%2,9%' THEN '2.9'
-  WHEN engine_type LIKE '%3.0%' OR engine_type LIKE '%3,0%' THEN '3.0'
-  WHEN engine_type LIKE '%3.2%' OR engine_type LIKE '%3,2%' THEN '3.2'
-  WHEN engine_type LIKE '%3.5%' OR engine_type LIKE '%3,5%' THEN '3.5'
-  WHEN engine_type LIKE '%3.6%' OR engine_type LIKE '%3,6%' THEN '3.6'
-  WHEN engine_type LIKE '%4.0%' OR engine_type LIKE '%4,0%' THEN '4.0'
-  WHEN engine_type LIKE '%4.2%' OR engine_type LIKE '%4,2%' THEN '4.2'
-  WHEN engine_type LIKE '%4.4%' OR engine_type LIKE '%4,4%' THEN '4.4'
-  WHEN engine_type LIKE '%4.7%' OR engine_type LIKE '%4,7%' THEN '4.7'
-  WHEN engine_type LIKE '%5.0%' OR engine_type LIKE '%5,0%' THEN '5.0'
-  WHEN engine_type LIKE '%5.2%' OR engine_type LIKE '%5,2%' THEN '5.2'
-  WHEN engine_type LIKE '%5.5%' OR engine_type LIKE '%5,5%' THEN '5.5'
-  WHEN engine_type LIKE '%6.0%' OR engine_type LIKE '%6,0%' THEN '6.0'
-  WHEN engine_type LIKE '%6.2%' OR engine_type LIKE '%6,2%' THEN '6.2'
-
-WHEN engine_type LIKE '%ELECTRIC%' THEN 'Electric'
-WHEN engine_type LIKE '%ELEKTRO%' THEN 'Electric'
-WHEN engine_type LIKE '%E-TRON%' THEN 'Electric'
-WHEN engine_type LIKE '%ELEKTROMOTOR%' THEN 'Electric'
-WHEN engine_type LIKE '%SKYACTIV-EV%' THEN 'Electric'
-WHEN engine_type LIKE '% EV %' THEN 'Electric'
-  -- În loc de 'Unknown', lasă textul original la locul lui dacă nu găsești nimic!
-  ELSE engine_type is null
-END;
-
--- ============================================================
--- VERIFICARE distributie dupa aplicare
--- ============================================================
-SELECT engine_type, COUNT(*) AS cnt
-FROM Germany_Cars_Cleaned
-GROUP BY engine_type;
-
-drop table if exists rezerva1;
-alter table Germany_Cars_Cleaned rename to rezerva1;
-drop table if exists Germany_Cars_Cleaned;;
-CREATE TABLE Germany_Cars_Cleaned
-(
-    id                INTEGER,
-    brand             TEXT,
-    model             TEXT,
-    color             TEXT,
-    year              INTEGER,        -- an => număr întreg
-    price_in_euro     INTEGER,           -- preț => număr cu zecimale
-    power_ps          INTEGER,        -- cai putere => număr întreg
-    transmission_type TEXT,
-    fuel_type         TEXT,
-    km                INTEGER,        -- kilometri => număr întreg
-    engine_type       REAL
+update Germany_Cars_Cleaned set color = 'Unknown' where color not in (
+    select color from Germany_Cars_Cleaned
+    group by color order by count(color) desc LIMIT 14
 );
 
+select * from Germany_Cars_Cleaned where engine_type is null and fuel_type<>'Electric';
 
-INSERT INTO Germany_Cars_Cleaned
-SELECT
-    id,
-    brand,
-    NULLIF(model, '') AS model,   -- '' devine NULL, randul se pastreaza
-    color,
-    CAST(year AS INTEGER),
-    CAST(price_in_euro AS integer),
-    CAST(NULLIF(power_ps, 'Unknown') AS INTEGER),
-    transmission_type,
-    fuel_type,
-    CAST(km AS INTEGER),
-    CAST(NULLIF(engine_type, 'Unknown') AS REAL)
-FROM rezerva1
-WHERE price_in_euro != '' AND price_in_euro IS NOT NULL
-  AND km != '' AND km IS NOT NULL
-  AND year != '' AND year IS NOT NULL
-  AND brand != '' AND brand IS NOT NULL;
-
-
-update Germany_Cars_Cleaned set engine_type = NULL where engine_type = 0;
-update Germany_Cars_Cleaned set model= 'Unknown' where Germany_Cars_Cleaned.model is NULL;
-
-select * from Germany_Cars_Cleaned where model = 'Unknown';
-
-DROP TABLE rezerva;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned(brand, model, fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
 SET engine_type = (
     SELECT ROUND(AVG(sub.engine_type), 1)
     FROM Germany_Cars_Cleaned AS sub
-    where power_ps between sub.power_ps-10 and sub.power_ps+10
-      and Germany_Cars_Cleaned.brand = sub.brand
-      AND Germany_Cars_Cleaned.model = sub.model
-      AND Germany_Cars_Cleaned.fuel_type = sub.fuel_type
+    where sub.power_ps between Germany_Cars_Cleaned.power_ps-10 and Germany_Cars_Cleaned.power_ps+10
+      and sub.brand = Germany_Cars_Cleaned.brand
+      AND sub.model = Germany_Cars_Cleaned.model
+      AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
       AND sub.engine_type IS NOT NULL
-
+    and sub.fuel_type<>'Electric'
 )
-where engine_type is null;
+where engine_type is null and fuel_type<>'Electric';
 
-select * from Germany_Cars where engine_type =0;
-SELECT engine_type, COUNT(*) as Numar_Aparitii
-FROM Germany_Cars
-WHERE length(engine_type) > 3 -- Excludem valorile de tip '2.0' care au 3 caractere și pe care deja le-am curățat
-GROUP BY engine_type
-ORDER BY Numar_Aparitii DESC
-LIMIT 20;
+UPDATE Germany_Cars_Cleaned
+SET engine_type = (
+    SELECT ROUND(AVG(sub.engine_type), 1)
+    FROM Germany_Cars_Cleaned AS sub
+    where sub.power_ps between Germany_Cars_Cleaned.power_ps-10 and Germany_Cars_Cleaned.power_ps+10
+      and sub.brand=Germany_Cars_Cleaned.brand
+      AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+      AND sub.engine_type IS NOT NULL
+    and sub.fuel_type<>'Electric'
+)
+where engine_type is null and fuel_type<>'Electric';
+
+UPDATE Germany_Cars_Cleaned
+SET engine_type = (
+    SELECT ROUND(AVG(sub.engine_type), 1)
+    FROM Germany_Cars_Cleaned AS sub
+    WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+      AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
+      AND sub.engine_type IS NOT NULL
+)
+WHERE engine_type IS NULL
+  AND fuel_type <> 'Electric';
+
+UPDATE Germany_Cars_Cleaned
+SET engine_type = (
+    SELECT ROUND(AVG(sub.engine_type), 1)
+    FROM Germany_Cars_Cleaned AS sub
+     where sub.fuel_type=Germany_Cars_Cleaned.fuel_type
+)
+WHERE engine_type IS NULL
+  AND fuel_type <> 'Electric';
+
+-- ============================================================
+-- PASUL 16: DEDUPLICARE
+-- ============================================================
+
+SELECT *, COUNT(*) as nr
+FROM Germany_Cars_Cleaned
+GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type,co2_g
+HAVING COUNT(*) > 1
+ORDER BY nr DESC;
+
+SELECT * FROM Germany_Cars_Cleaned
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM Germany_Cars_Cleaned
+    GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type,co2_g
+);
+
+--STERGEM dublurile
+delete from Germany_Cars_Cleaned
+where id not in(SELECT MIN(id)
+      FROM Germany_Cars_Cleaned
+      GROUP BY brand, model, color, year, price_in_euro,power_ps,transmission_type,fuel_type, km, engine_type,co2_g);
+
+
+-- ============================================================
+-- PASUL 17: VERIFICARE FINALA
+-- ============================================================
+
 select count(*) from Germany_Cars_Cleaned;

@@ -1,5 +1,6 @@
-alter table cars_details_merges
-    add column id integer;
+﻿-- ============================================================
+-- PASUL 0: CREARE TABEL CURATAT
+-- ============================================================
 
 update cars_details_merges
     set id=rowid;
@@ -8,37 +9,51 @@ drop table if exists India_Cars_Cleaned;
 -- selectare coloane necesare
 create table India_Cars_Cleaned as
     select
-        id,
+    id,
     oem as brand,
     model,
     color,
-    myear as year,
-    round(((dynx_totalvalue_x)*0.01119),-3) as price_in_euro,
-    "Max Power" as power_ps,
-    tt as transmision_type,
+    myear as year ,
+    cast(round(dynx_totalvalue_x*0.01119,-3) as integer) as price_in_euro,
+    cast(ROUND("Max Power" * 1.01387, 0) as integer) as power_ps,
+    tt as transmission_type,
     fuel_type,
     km_driven as km,
-    variant_name,
-    max_engine_capacity_new,
+    cast(round(max_engine_capacity_new/1000, 1) as double) as engine_type,
     owner_type_new as one_owner,
     "Drive Type" as drivetrain,
-    bt as body_type
+    bt as body_type,
+    seller_type_new as seller_type,
+    state
     from cars_details_merges;
 
-alter table India_Cars_Cleaned
- rename column transmision_type to transmission_type;
 
+-- ============================================================
+-- PASUL 1: VERIFICARE INITIALA
+-- ============================================================
 SELECT DISTINCT brand, COUNT(*) as nr FROM
   India_Cars_Cleaned GROUP BY brand ORDER BY
   brand;
 
- UPDATE India_Cars_Cleaned SET brand = 'Mahindra' WHERE brand = 'Mahindra Renault';
-  UPDATE India_Cars_Cleaned SET brand = 'Mahindra' WHERE brand = 'Mahindra Ssangyong';
-
-
   SELECT DISTINCT model, COUNT(*) as nr, brand FROM
   India_Cars_Cleaned GROUP BY model ORDER BY
   model;
+
+  SELECT DISTINCT year, COUNT(*) as nr FROM
+  India_Cars_Cleaned GROUP BY year ORDER BY year;
+
+select count()
+from India_Cars_Cleaned;
+
+-- ============================================================
+-- PASUL 2: FIX BRAND (MAHINDRA)
+-- ============================================================
+ UPDATE India_Cars_Cleaned SET brand = 'Mahindra' WHERE brand = 'Mahindra Renault';
+  UPDATE India_Cars_Cleaned SET brand = 'Mahindra' WHERE brand = 'Mahindra Ssangyong';
+
+-- ============================================================
+-- PASUL 3: FIX MODEL
+-- ============================================================
 --modificam modelele cu denumiri diferite
 -- AUDI
 UPDATE India_Cars_Cleaned SET model = 'Audi A3' WHERE model LIKE 'Audi A3 %' AND model NOT LIKE 'Audi A3 cabriolet%';
@@ -247,6 +262,9 @@ UPDATE India_Cars_Cleaned SET model = 'Corsa'  WHERE model LIKE '%OpelCorsa%';
 UPDATE India_Cars_Cleaned SET model = 'MU-7'   WHERE model LIKE '%MU 7%';
 UPDATE India_Cars_Cleaned SET model = 'Stile'  WHERE model LIKE '%Ashok Leyland Stile%';
 
+-- ============================================================
+-- PASUL 4: FIX COLOR
+-- ============================================================
   SELECT DISTINCT color, COUNT(*) as nr FROM
   India_Cars_Cleaned GROUP BY color ORDER BY
   color;
@@ -287,16 +305,46 @@ from India_Cars_Cleaned
 group by Color
 order by count(Color) desc;
 
+-- ============================================================
+-- PASUL 5: FIX YEAR
+-- ============================================================
   SELECT DISTINCT year, COUNT(*) as nr FROM
   India_Cars_Cleaned GROUP BY year ORDER BY year;
 
+-- ============================================================
+-- PASUL 6: FIX TRANSMISSION_TYPE
+-- ============================================================
   SELECT DISTINCT transmission_type, COUNT(*) as
   nr FROM India_Cars_Cleaned GROUP BY
   transmission_type ORDER BY transmission_type;
 
+-- ============================================================
+-- PASUL 7: FIX FUEL_TYPE
+-- ============================================================
   SELECT DISTINCT fuel_type, COUNT(*) as nr FROM
   India_Cars_Cleaned GROUP BY fuel_type ORDER BY
   fuel_type;
+
+select distinct fuel_type from India_Cars_Cleaned group by fuel_type;
+
+-- ============================================================
+-- PASUL 8: FIX DRIVETRAIN, ONE_OWNER, BODY_TYPE
+-- ============================================================
+
+  SELECT DISTINCT drivetrain, COUNT(*) as nr FROM
+  India_Cars_Cleaned GROUP BY drivetrain ORDER BY
+  drivetrain;
+ UPDATE India_Cars_Cleaned SET drivetrain = '2WD'
+  WHERE drivetrain IN ('2 WD','2WD','2wd','Two Wheel Drive','Two Whhel Drive','4X2','4x2');
+ UPDATE India_Cars_Cleaned SET drivetrain = 'FWD'
+  WHERE TRIM(drivetrain) = 'FWD' OR drivetrain = 'Front Wheel Drive';
+ UPDATE India_Cars_Cleaned SET drivetrain = 'RWD'
+  WHERE drivetrain IN ('RWD','RWD(with MTT)','Rear Wheel Drive with ESP','Rear-wheel drive with ESP');
+ UPDATE India_Cars_Cleaned SET drivetrain = '4WD'
+  WHERE drivetrain IN ('4 WD','4WD','4X4','4x4','Four Whell Drive');
+ UPDATE India_Cars_Cleaned SET drivetrain = 'AWD'
+  WHERE drivetrain IN ('AWD','All Wheel Drive','All-wheel drive with Electronic Traction','Permanent all-wheel drive quattro');
+update India_Cars_Cleaned SET drivetrain = 'Unknown' where drivetrain='3' or drivetrain is null;
 
   SELECT DISTINCT one_owner, COUNT(*) as nr FROM
   India_Cars_Cleaned GROUP BY one_owner ORDER BY
@@ -309,6 +357,7 @@ where one_owner='first';
 UPDATE India_Cars_Cleaned
 SET one_owner = CASE
     WHEN one_owner = 'first' THEN 'Yes'
+    WHEN one_owner IS NULL THEN 'Unknown'
     ELSE 'No'
 END;
 
@@ -322,87 +371,9 @@ UPDATE India_Cars_Cleaned SET body_type = 'Minivan' WHERE body_type = 'Minivans'
   UPDATE India_Cars_Cleaned SET body_type = NULL WHERE body_type IN ('Hybrids', 'Luxury Vehicles');
   UPDATE India_Cars_Cleaned SET body_type = 'Unknown' WHERE body_type is null;
 
-  SELECT DISTINCT drivetrain, COUNT(*) as nr FROM
-  India_Cars_Cleaned GROUP BY drivetrain ORDER BY
-  drivetrain;
- UPDATE India_Cars_Cleaned SET drivetrain = '2WD'
-  WHERE drivetrain IN ('2 WD','2WD','2wd','Two Wheel Drive','Two Whhel Drive','4X2','4x2');
- UPDATE India_Cars_Cleaned SET drivetrain = 'FWD'
-  WHERE TRIM(drivetrain) = 'FWD' OR drivetrain = 'Front Wheel Drive';
- UPDATE India_Cars_Cleaned SET drivetrain = 'RWD'
-  WHERE drivetrain IN ('RWD','RWD(with MTT)','Rear Wheel Drive with ESP','Rear-wheel drive with ESP');
- UPDATE India_Cars_Cleaned SET drivetrain = '4*4'
-  WHERE drivetrain IN ('4 WD','4WD','4X4','4x4','Four Whell Drive');
- UPDATE India_Cars_Cleaned SET drivetrain = 'AWD'
-  WHERE drivetrain IN ('AWD','All Wheel Drive','All-wheel drive with Electronic Traction','Permanent all-wheel drive quattro');
-update India_Cars_Cleaned SET drivetrain = 'Unknown' where drivetrain='3' or drivetrain is null;
-
-select distinct fuel_type from India_Cars_Cleaned group by fuel_type;
-
-select count()
-from India_Cars_Cleaned;
-
-alter table India_Cars
-add column id integer;
-
-update India_Cars set id = rowid;
-
-alter table India_Cars_Cleaned rename to rezerva;
-
--- test înainte să modifici
-
-
-update India_Cars_Cleaned
-    set power_ps=CAST(SUBSTR(power_ps, 1, INSTR(power_ps, 'bhp') - 3) as real);
-
-UPDATE India_Cars_Cleaned
-SET power_ps = ROUND(India_Cars_Cleaned.power_ps * 1.01387, 1);
-
-UPDATE India_Cars_Cleaned
-SET power_ps = ROUND (India_Cars_Cleaned.power_ps , 0);
-
-alter table  India_Cars_Cleaned rename to rezerva;
-
-CREATE TABLE India_Cars_Cleaned
-(
-    id                      INTEGER,
-    brand                   TEXT,
-    model                   TEXT,
-    color                   TEXT,
-    year                    INTEGER,    -- an fabricatie => intreg
-    price_in_euro           INTEGER,       -- pret => zecimale
-    power_ps                INTEGER,    -- cai putere => intreg
-    transmission_type       TEXT,
-    fuel_type               TEXT,
-    km                      INTEGER,    -- kilometraj => intreg
-    variant_name            TEXT,
-    max_engine_capacity_new INTEGER,       -- capacitate motor => zecimale (ex. 1.6, 2.0)
-    one_owner  \             text,    -- boolean: 0 sau 1
-    drivetrain              TEXT,
-    body_type               TEXT
-);
-
-INSERT INTO India_Cars_Cleaned
-SELECT
-    CAST(id AS INTEGER),
-    brand,
-    model,
-    color,
-    CAST(year AS INTEGER),
-    CAST(price_in_euro AS REAL),
-    CAST(power_ps AS INTEGER),
-    transmission_type,
-    fuel_type,
-    CAST(km AS INTEGER),
-    variant_name,
-    CAST(max_engine_capacity_new AS REAL),
-    one_owner,
-    drivetrain,
-    body_type
-FROM rezerva;
-
-drop table rezerva;
-
+-- ============================================================
+-- PASUL 9: CORECTII POST-CAST
+-- ============================================================
 SELECT
     COUNT(*)                          AS total_randuri,
     COUNT(*) - COUNT(brand)           AS null_brand,
@@ -414,58 +385,88 @@ SELECT
     COUNT(*) - COUNT(transmission_type) AS null_transmission,
     COUNT(*) - COUNT(fuel_type)       AS null_fuel_type,
     COUNT(*) - COUNT(km)              AS null_km,
-    COUNT(*) - COUNT(variant_name)    AS null_variant,
-    COUNT(*) - COUNT(max_engine_capacity_new) AS null_engine_capacity,
+    COUNT(*) - COUNT(engine_type) AS null_engine_type,
     COUNT(*) - COUNT(one_owner)       AS null_one_owner,
     COUNT(*) - COUNT(drivetrain)      AS null_drivetrain,
     COUNT(*) - COUNT(body_type)       AS null_body_type
 FROM India_Cars_Cleaned;
 
+select * from India_Cars_Cleaned where engine_type is null;
+select * from India_Cars_Cleaned where fuel_type='electric';
+
+select * from India_Cars_Cleaned where power_ps is null;
+
+-- ============================================================
+-- PASUL 10: IMPUTARE VALORI NULE
+-- ============================================================
 -- power_ps per brand + model+body_type
+
 UPDATE India_Cars_Cleaned
 SET power_ps = (
-    SELECT ROUND(AVG(power_ps))
+    SELECT ROUND(AVG(sub.power_ps))
     FROM India_Cars_Cleaned AS sub
-    WHERE sub.brand = sub.brand
-      AND sub.model = sub.model
-      and sub.max_engine_capacity_new between sub.max_engine_capacity_new-10 and sub.max_engine_capacity_new+10
-      AND sub.power_ps>10
+    WHERE sub.brand = India_Cars_Cleaned.brand
+      AND sub.model = India_Cars_Cleaned.model
+      AND sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.3
+                              AND India_Cars_Cleaned.engine_type + 0.3
+      AND sub.power_ps > 10
 )
-WHERE power_ps is null or power_ps < 10;
+WHERE power_ps IS NULL OR power_ps < 10;
 
-delete from India_Cars_Cleaned where power_ps is null;
-
--- max_engine_capacity_new per brand + model+body_type+year
 UPDATE India_Cars_Cleaned
-SET max_engine_capacity_new = (
-    SELECT ROUND(AVG(max_engine_capacity_new), 1)
+SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
+                FROM India_Cars_Cleaned AS sub
+                WHERE sub.brand = India_Cars_Cleaned.brand
+                        AND sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.3
+                              AND India_Cars_Cleaned.engine_type + 0.3
+                  AND sub.power_ps > 10)
+WHERE power_ps IS NULL
+   OR power_ps < 10;
+
+UPDATE India_Cars_Cleaned
+SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
+                FROM India_Cars_Cleaned AS sub
+                        where sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.3
+                              AND India_Cars_Cleaned.engine_type + 0.3
+                  AND sub.power_ps > 10)
+WHERE power_ps IS NULL
+   OR power_ps < 10;
+
+
+-- engine_type per brand + model+body_type+year
+UPDATE India_Cars_Cleaned
+SET engine_type = (
+    SELECT ROUND(AVG(sub.engine_type), 1)
     FROM India_Cars_Cleaned AS sub
     WHERE sub.brand = India_Cars_Cleaned.brand
       AND sub.model = India_Cars_Cleaned.model
         and sub.body_type= India_Cars_Cleaned.body_type
-      and sub.year between India_Cars_Cleaned.year-2 and India_Cars_Cleaned.year+2
-      AND sub.max_engine_capacity_new IS NOT NULL
+      and sub.power_ps between India_Cars_Cleaned.power_ps-10 and India_Cars_Cleaned.power_ps+10
+      AND sub.engine_type IS NOT NULL
+     AND sub.fuel_type <> 'Electric'
 
 )
-WHERE max_engine_capacity_new IS NULL or max_engine_capacity_new<500;
+WHERE engine_type IS NULL or engine_type<0.5;
 
---cele ramase
-UPDATE India_Cars_Cleaned
-SET max_engine_capacity_new = (
-    SELECT ROUND(AVG(max_engine_capacity_new), 1)
-    FROM India_Cars_Cleaned AS sub
-    WHERE sub.brand = sub.brand
-      AND sub.model = sub.model
-        and sub.body_type= sub.body_type
-      AND sub.max_engine_capacity_new IS NOT NULL
-    and fuel_type<>'electric'
 
-)
-WHERE max_engine_capacity_new IS NULL or max_engine_capacity_new<500;
+update India_Cars_Cleaned set engine_type=null where engine_type is not null and fuel_type='electric';
+-- ============================================================
+-- PASUL 11: DEDUPLICARE
+-- ============================================================
+SELECT *, COUNT(*) as nr
+FROM India_Cars_Cleaned
+GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km, engine_type, one_owner, drivetrain, body_type
+HAVING COUNT(*) > 1
+ORDER BY nr DESC;
 
-update India_Cars_Cleaned set max_engine_capacity_new=null where max_engine_capacity_new<>0 and fuel_type='electric';
+DELETE FROM India_Cars_Cleaned
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM India_Cars_Cleaned
+    GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km, engine_type, one_owner, drivetrain, body_type
+);
 
-select * from India_Cars_Cleaned where max_engine_capacity_new is null;
-select * from India_Cars_Cleaned where fuel_type='electric';
-
-select * from India_Cars_Cleaned where power_ps is null;
+-- ============================================================
+-- PASUL 12: VERIFICARE FINALA
+-- ============================================================
+select count(*) from India_Cars_Cleaned;
