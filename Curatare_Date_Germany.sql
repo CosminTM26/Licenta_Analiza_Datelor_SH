@@ -34,11 +34,23 @@ from Germany_Cars;
 -- Stergem randuri cu valori nule, inversate sau imposibile
 -- ============================================================
 
-
 delete
 from Germany_Cars_Cleaned
 where price_in_euro is null
    or km is null;
+
+delete
+from Germany_Cars_Cleaned
+where price_in_euro <= 0;
+
+delete
+from Germany_Cars_Cleaned
+where km < 0;
+
+delete
+from Germany_Cars_Cleaned
+where power_ps is null
+   or power_ps <= 0;
 
 delete
 from Germany_Cars_Cleaned
@@ -292,8 +304,7 @@ SET engine_type = CASE
                       WHEN engine_type LIKE '%6.3%' OR engine_type LIKE '%6,3%' THEN '6.3'
                       WHEN engine_type LIKE '%6.5%' OR engine_type LIKE '%6,5%' THEN '6.5'
 
-    -- Default
-                      ELSE engine_type = 0
+                      ELSE NULL
     END;
 
 -- ============================================================
@@ -339,6 +350,27 @@ alter table Germany_Cars_Cleaned1
 
 CREATE INDEX idx_cars_lookup ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
 
+-- ============================================================
+-- PASUL 5b: STANDARDIZARE BRAND (lowercase)
+-- Asiguram consistenta numelui de brand
+-- ============================================================
+
+UPDATE Germany_Cars_Cleaned
+SET brand = LOWER(TRIM(brand));
+
+-- ============================================================
+-- PASUL 5c: STANDARDIZARE TIP TRANSMISIE
+-- Clasificam in: Manual, Automatic, Semi-automatic, Unknown
+-- ============================================================
+
+UPDATE Germany_Cars_Cleaned
+SET transmission_type = CASE
+                            WHEN UPPER(transmission_type) LIKE '%MANUAL%' THEN 'Manual'
+                            WHEN UPPER(transmission_type) LIKE '%AUTOMATIC%' THEN 'Automatic'
+                            WHEN UPPER(transmission_type) LIKE '%SEMI%AUTO%' THEN 'Semi-automatic'
+                            WHEN transmission_type IS NULL OR TRIM(transmission_type) = '' THEN 'Unknown'
+                            ELSE transmission_type
+    END;
 
 -- ============================================================
 -- PASUL 6: ELIMINARE PREFIX BRAND DIN MODEL
@@ -1649,6 +1681,820 @@ SET model = 'R6'
 WHERE brand = 'renault'
   AND (model LIKE 'R 6%' OR model = 'R 6');
 
+-- ==================== TOYOTA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Yaris'
+WHERE brand = 'toyota'
+  AND (model LIKE 'Yaris%' OR model LIKE 'Yaris Cross%');
+UPDATE Germany_Cars_Cleaned
+SET model = 'Corolla'
+WHERE brand = 'toyota'
+  AND model LIKE 'Corolla%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Camry'
+WHERE brand = 'toyota'
+  AND model LIKE 'Camry%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Auris'
+WHERE brand = 'toyota'
+  AND model LIKE 'Auris%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Aygo'
+WHERE brand = 'toyota'
+  AND (model LIKE 'Aygo%' OR model LIKE 'AYGO%');
+UPDATE Germany_Cars_Cleaned
+SET model = 'RAV4'
+WHERE brand = 'toyota'
+  AND model LIKE 'RAV%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C-HR'
+WHERE brand = 'toyota'
+  AND model LIKE 'C-HR%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Land Cruiser'
+WHERE brand = 'toyota'
+  AND model LIKE 'Land Cruiser%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Hilux'
+WHERE brand = 'toyota'
+  AND model LIKE 'Hilux%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Prius'
+WHERE brand = 'toyota'
+  AND model LIKE 'Prius%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Supra'
+WHERE brand = 'toyota'
+  AND model LIKE 'Supra%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'GT86'
+WHERE brand = 'toyota'
+  AND (model LIKE 'GT86%' OR model LIKE 'GT 86%' OR model LIKE 'GR 86%');
+UPDATE Germany_Cars_Cleaned
+SET model = 'Highlander'
+WHERE brand = 'toyota'
+  AND model LIKE 'Highlander%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Proace'
+WHERE brand = 'toyota'
+  AND model LIKE 'Proace%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Verso'
+WHERE brand = 'toyota'
+  AND model LIKE 'Verso%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Avensis'
+WHERE brand = 'toyota'
+  AND model LIKE 'Avensis%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'bZ4X'
+WHERE brand = 'toyota'
+  AND model LIKE 'bZ4X%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mirai'
+WHERE brand = 'toyota'
+  AND model LIKE 'Mirai%';
+
+-- ==================== FORD ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Fiesta'
+WHERE brand = 'ford'
+  AND model LIKE 'Fiesta%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Focus'
+WHERE brand = 'ford'
+  AND model LIKE 'Focus%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mondeo'
+WHERE brand = 'ford'
+  AND model LIKE 'Mondeo%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Kuga'
+WHERE brand = 'ford'
+  AND model LIKE 'Kuga%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Puma'
+WHERE brand = 'ford'
+  AND model LIKE 'Puma%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'EcoSport'
+WHERE brand = 'ford'
+  AND model LIKE 'EcoSport%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Explorer'
+WHERE brand = 'ford'
+  AND model LIKE 'Explorer%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Edge'
+WHERE brand = 'ford'
+  AND model LIKE 'Edge%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mustang Mach-E'
+WHERE brand = 'ford'
+  AND model LIKE '%Mach-E%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mustang'
+WHERE brand = 'ford'
+  AND model LIKE 'Mustang%'
+  AND model NOT LIKE '%Mach-E%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Galaxy'
+WHERE brand = 'ford'
+  AND model LIKE 'Galaxy%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'S-Max'
+WHERE brand = 'ford'
+  AND model LIKE 'S-Max%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C-Max'
+WHERE brand = 'ford'
+  AND model LIKE 'C-Max%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'B-Max'
+WHERE brand = 'ford'
+  AND model LIKE 'B-Max%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ka'
+WHERE brand = 'ford'
+  AND (model LIKE 'Ka%' OR model LIKE 'Ka+%');
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ranger'
+WHERE brand = 'ford'
+  AND model LIKE 'Ranger%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Transit'
+WHERE brand = 'ford'
+  AND model LIKE 'Transit%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Tourneo'
+WHERE brand = 'ford'
+  AND model LIKE 'Tourneo%';
+
+-- ==================== HYUNDAI ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'i10'
+WHERE brand = 'hyundai'
+  AND model LIKE 'i10%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'i20'
+WHERE brand = 'hyundai'
+  AND model LIKE 'i20%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'i30'
+WHERE brand = 'hyundai'
+  AND model LIKE 'i30%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'i40'
+WHERE brand = 'hyundai'
+  AND model LIKE 'i40%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Tucson'
+WHERE brand = 'hyundai'
+  AND model LIKE 'Tucson%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Kona'
+WHERE brand = 'hyundai'
+  AND model LIKE 'Kona%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Santa Fe'
+WHERE brand = 'hyundai'
+  AND model LIKE 'Santa Fe%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'IONIQ 5'
+WHERE brand = 'hyundai'
+  AND model LIKE 'IONIQ 5%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'IONIQ 6'
+WHERE brand = 'hyundai'
+  AND model LIKE 'IONIQ 6%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'IONIQ'
+WHERE brand = 'hyundai'
+  AND model LIKE 'IONIQ%'
+  AND model NOT LIKE 'IONIQ 5%'
+  AND model NOT LIKE 'IONIQ 6%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Bayon'
+WHERE brand = 'hyundai'
+  AND model LIKE 'Bayon%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'ix20'
+WHERE brand = 'hyundai'
+  AND model LIKE 'ix20%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'ix35'
+WHERE brand = 'hyundai'
+  AND model LIKE 'ix35%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'ix55'
+WHERE brand = 'hyundai'
+  AND model LIKE 'ix55%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Veloster'
+WHERE brand = 'hyundai'
+  AND model LIKE 'Veloster%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Genesis'
+WHERE brand = 'hyundai'
+  AND model LIKE 'Genesis%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'STARIA'
+WHERE brand = 'hyundai'
+  AND model LIKE 'STARIA%';
+
+-- ==================== KIA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Picanto'
+WHERE brand = 'kia'
+  AND model LIKE 'Picanto%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Rio'
+WHERE brand = 'kia'
+  AND model LIKE 'Rio%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ceed'
+WHERE brand = 'kia'
+  AND (model LIKE 'Ceed%' OR model LIKE 'cee''d%' OR model LIKE 'Pro Cee%' OR model LIKE 'ProCeed%');
+UPDATE Germany_Cars_Cleaned
+SET model = 'Sportage'
+WHERE brand = 'kia'
+  AND model LIKE 'Sportage%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Sorento'
+WHERE brand = 'kia'
+  AND model LIKE 'Sorento%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Niro'
+WHERE brand = 'kia'
+  AND model LIKE 'Niro%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'EV6'
+WHERE brand = 'kia'
+  AND model LIKE 'EV6%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Stonic'
+WHERE brand = 'kia'
+  AND model LIKE 'Stonic%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'XCeed'
+WHERE brand = 'kia'
+  AND model LIKE 'XCeed%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Stinger'
+WHERE brand = 'kia'
+  AND model LIKE 'Stinger%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Optima'
+WHERE brand = 'kia'
+  AND model LIKE 'Optima%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Venga'
+WHERE brand = 'kia'
+  AND model LIKE 'Venga%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Soul'
+WHERE brand = 'kia'
+  AND model LIKE 'Soul%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Carnival'
+WHERE brand = 'kia'
+  AND model LIKE 'Carnival%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Carens'
+WHERE brand = 'kia'
+  AND model LIKE 'Carens%';
+
+-- ==================== SKODA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Octavia'
+WHERE brand = 'skoda'
+  AND model LIKE 'Octavia%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Superb'
+WHERE brand = 'skoda'
+  AND model LIKE 'Superb%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Fabia'
+WHERE brand = 'skoda'
+  AND model LIKE 'Fabia%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Kodiaq'
+WHERE brand = 'skoda'
+  AND model LIKE 'Kodiaq%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Karoq'
+WHERE brand = 'skoda'
+  AND model LIKE 'Karoq%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Kamiq'
+WHERE brand = 'skoda'
+  AND model LIKE 'Kamiq%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Scala'
+WHERE brand = 'skoda'
+  AND model LIKE 'Scala%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Rapid'
+WHERE brand = 'skoda'
+  AND model LIKE 'Rapid%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Citigo'
+WHERE brand = 'skoda'
+  AND model LIKE 'Citigo%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Roomster'
+WHERE brand = 'skoda'
+  AND model LIKE 'Roomster%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Yeti'
+WHERE brand = 'skoda'
+  AND model LIKE 'Yeti%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Enyaq'
+WHERE brand = 'skoda'
+  AND model LIKE 'Enyaq%';
+
+-- ==================== DACIA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Sandero'
+WHERE brand = 'dacia'
+  AND model LIKE 'Sandero%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Duster'
+WHERE brand = 'dacia'
+  AND model LIKE 'Duster%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Logan'
+WHERE brand = 'dacia'
+  AND model LIKE 'Logan%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Spring'
+WHERE brand = 'dacia'
+  AND model LIKE 'Spring%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Jogger'
+WHERE brand = 'dacia'
+  AND model LIKE 'Jogger%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Dokker'
+WHERE brand = 'dacia'
+  AND model LIKE 'Dokker%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Lodgy'
+WHERE brand = 'dacia'
+  AND model LIKE 'Lodgy%';
+
+-- ==================== VOLVO ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'XC90'
+WHERE brand = 'volvo'
+  AND model LIKE 'XC90%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'XC60'
+WHERE brand = 'volvo'
+  AND model LIKE 'XC60%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'XC40'
+WHERE brand = 'volvo'
+  AND model LIKE 'XC40%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'V90'
+WHERE brand = 'volvo'
+  AND model LIKE 'V90%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'V60'
+WHERE brand = 'volvo'
+  AND model LIKE 'V60%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'V40'
+WHERE brand = 'volvo'
+  AND model LIKE 'V40%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'S90'
+WHERE brand = 'volvo'
+  AND model LIKE 'S90%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'S60'
+WHERE brand = 'volvo'
+  AND model LIKE 'S60%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C40'
+WHERE brand = 'volvo'
+  AND model LIKE 'C40%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C30'
+WHERE brand = 'volvo'
+  AND model LIKE 'C30%';
+
+-- ==================== NISSAN ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Qashqai'
+WHERE brand = 'nissan'
+  AND model LIKE 'Qashqai%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Juke'
+WHERE brand = 'nissan'
+  AND model LIKE 'Juke%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Micra'
+WHERE brand = 'nissan'
+  AND model LIKE 'Micra%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'X-Trail'
+WHERE brand = 'nissan'
+  AND model LIKE 'X-Trail%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Leaf'
+WHERE brand = 'nissan'
+  AND model LIKE 'Leaf%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Note'
+WHERE brand = 'nissan'
+  AND model LIKE 'Note%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Navara'
+WHERE brand = 'nissan'
+  AND model LIKE 'Navara%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Pulsar'
+WHERE brand = 'nissan'
+  AND model LIKE 'Pulsar%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'GT-R'
+WHERE brand = 'nissan'
+  AND model LIKE 'GT-R%';
+UPDATE Germany_Cars_Cleaned
+SET model = '370Z'
+WHERE brand = 'nissan'
+  AND model LIKE '370Z%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ariya'
+WHERE brand = 'nissan'
+  AND model LIKE 'Ariya%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Townstar'
+WHERE brand = 'nissan'
+  AND model LIKE 'Townstar%';
+
+-- ==================== HONDA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Civic'
+WHERE brand = 'honda'
+  AND model LIKE 'Civic%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Jazz'
+WHERE brand = 'honda'
+  AND model LIKE 'Jazz%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'CR-V'
+WHERE brand = 'honda'
+  AND model LIKE 'CR-V%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'HR-V'
+WHERE brand = 'honda'
+  AND model LIKE 'HR-V%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Accord'
+WHERE brand = 'honda'
+  AND model LIKE 'Accord%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'e'
+WHERE brand = 'honda'
+  AND (model = 'e' OR model LIKE 'Honda e%');
+UPDATE Germany_Cars_Cleaned
+SET model = 'ZR-V'
+WHERE brand = 'honda'
+  AND model LIKE 'ZR-V%';
+
+-- ==================== MAZDA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mazda3'
+WHERE brand = 'mazda'
+  AND (model LIKE 'Mazda3%' OR model LIKE '3 %' OR model = '3');
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mazda2'
+WHERE brand = 'mazda'
+  AND (model LIKE 'Mazda2%' OR model LIKE '2 %' OR model = '2');
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mazda6'
+WHERE brand = 'mazda'
+  AND (model LIKE 'Mazda6%' OR model LIKE '6 %' OR model = '6');
+UPDATE Germany_Cars_Cleaned
+SET model = 'CX-3'
+WHERE brand = 'mazda'
+  AND model LIKE 'CX-3%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'CX-5'
+WHERE brand = 'mazda'
+  AND model LIKE 'CX-5%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'CX-30'
+WHERE brand = 'mazda'
+  AND model LIKE 'CX-30%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'CX-60'
+WHERE brand = 'mazda'
+  AND model LIKE 'CX-60%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'MX-5'
+WHERE brand = 'mazda'
+  AND model LIKE 'MX-5%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'MX-30'
+WHERE brand = 'mazda'
+  AND model LIKE 'MX-30%';
+
+-- ==================== SEAT ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Leon'
+WHERE brand = 'seat'
+  AND model LIKE 'Leon%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ibiza'
+WHERE brand = 'seat'
+  AND model LIKE 'Ibiza%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ateca'
+WHERE brand = 'seat'
+  AND model LIKE 'Ateca%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Arona'
+WHERE brand = 'seat'
+  AND model LIKE 'Arona%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Tarraco'
+WHERE brand = 'seat'
+  AND model LIKE 'Tarraco%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Alhambra'
+WHERE brand = 'seat'
+  AND model LIKE 'Alhambra%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Mii'
+WHERE brand = 'seat'
+  AND model LIKE 'Mii%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Toledo'
+WHERE brand = 'seat'
+  AND model LIKE 'Toledo%';
+
+-- ==================== CITROEN ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'C3'
+WHERE brand = 'citroen'
+  AND model LIKE 'C3%'
+  AND model NOT LIKE 'C3 Aircross%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C3 Aircross'
+WHERE brand = 'citroen'
+  AND model LIKE 'C3 Aircross%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C4'
+WHERE brand = 'citroen'
+  AND model LIKE 'C4%'
+  AND model NOT LIKE 'C4 Cactus%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C4 Cactus'
+WHERE brand = 'citroen'
+  AND model LIKE 'C4 Cactus%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C5'
+WHERE brand = 'citroen'
+  AND model LIKE 'C5%'
+  AND model NOT LIKE 'C5 Aircross%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C5 Aircross'
+WHERE brand = 'citroen'
+  AND model LIKE 'C5 Aircross%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C1'
+WHERE brand = 'citroen'
+  AND model LIKE 'C1%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'C2'
+WHERE brand = 'citroen'
+  AND model LIKE 'C2%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Berlingo'
+WHERE brand = 'citroen'
+  AND model LIKE 'Berlingo%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'DS3'
+WHERE brand = 'citroen'
+  AND model LIKE 'DS3%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'DS4'
+WHERE brand = 'citroen'
+  AND model LIKE 'DS4%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'DS5'
+WHERE brand = 'citroen'
+  AND model LIKE 'DS5%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'DS7'
+WHERE brand = 'citroen'
+  AND model LIKE 'DS7%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'SpaceTourer'
+WHERE brand = 'citroen'
+  AND model LIKE 'SpaceTourer%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Jumpy'
+WHERE brand = 'citroen'
+  AND model LIKE 'Jumpy%';
+
+-- ==================== LAND ROVER ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Range Rover Evoque'
+WHERE brand = 'land rover'
+  AND model LIKE '%Evoque%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Range Rover Sport'
+WHERE brand = 'land rover'
+  AND model LIKE '%Range Rover Sport%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Range Rover Velar'
+WHERE brand = 'land rover'
+  AND model LIKE '%Velar%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Range Rover'
+WHERE brand = 'land rover'
+  AND model LIKE 'Range Rover%'
+  AND model NOT LIKE '%Evoque%'
+  AND model NOT LIKE '%Sport%'
+  AND model NOT LIKE '%Velar%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Discovery Sport'
+WHERE brand = 'land rover'
+  AND model LIKE 'Discovery Sport%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Discovery'
+WHERE brand = 'land rover'
+  AND model LIKE 'Discovery%'
+  AND model NOT LIKE 'Discovery Sport%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Defender'
+WHERE brand = 'land rover'
+  AND model LIKE 'Defender%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Freelander'
+WHERE brand = 'land rover'
+  AND model LIKE 'Freelander%';
+
+-- ==================== CUPRA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Formentor'
+WHERE brand = 'cupra'
+  AND model LIKE 'Formentor%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Born'
+WHERE brand = 'cupra'
+  AND model LIKE 'Born%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Leon'
+WHERE brand = 'cupra'
+  AND model LIKE 'Leon%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ateca'
+WHERE brand = 'cupra'
+  AND model LIKE 'Ateca%';
+
+-- ==================== TESLA ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Model 3'
+WHERE brand = 'tesla'
+  AND model LIKE 'Model 3%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Model Y'
+WHERE brand = 'tesla'
+  AND model LIKE 'Model Y%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Model S'
+WHERE brand = 'tesla'
+  AND model LIKE 'Model S%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Model X'
+WHERE brand = 'tesla'
+  AND model LIKE 'Model X%';
+
+-- ==================== SUZUKI ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Swift'
+WHERE brand = 'suzuki'
+  AND model LIKE 'Swift%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Vitara'
+WHERE brand = 'suzuki'
+  AND model LIKE 'Vitara%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'SX4 S-Cross'
+WHERE brand = 'suzuki'
+  AND (model LIKE 'SX4 S-Cross%' OR model LIKE 'S-Cross%');
+UPDATE Germany_Cars_Cleaned
+SET model = 'SX4'
+WHERE brand = 'suzuki'
+  AND model LIKE 'SX4%'
+  AND model NOT LIKE 'SX4 S-Cross%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Jimny'
+WHERE brand = 'suzuki'
+  AND model LIKE 'Jimny%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Ignis'
+WHERE brand = 'suzuki'
+  AND model LIKE 'Ignis%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Baleno'
+WHERE brand = 'suzuki'
+  AND model LIKE 'Baleno%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Swace'
+WHERE brand = 'suzuki'
+  AND model LIKE 'Swace%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Across'
+WHERE brand = 'suzuki'
+  AND model LIKE 'Across%';
+
+-- ==================== MITSUBISHI ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Outlander'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'Outlander%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'ASX'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'ASX%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Eclipse Cross'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'Eclipse Cross%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Space Star'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'Space Star%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'L200'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'L200%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Pajero'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'Pajero%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Colt'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'Colt%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Lancer'
+WHERE brand = 'mitsubishi'
+  AND model LIKE 'Lancer%';
+
+-- ==================== JEEP ====================
+
+UPDATE Germany_Cars_Cleaned
+SET model = 'Compass'
+WHERE brand = 'jeep'
+  AND model LIKE 'Compass%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Renegade'
+WHERE brand = 'jeep'
+  AND model LIKE 'Renegade%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Grand Cherokee'
+WHERE brand = 'jeep'
+  AND model LIKE 'Grand Cherokee%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Cherokee'
+WHERE brand = 'jeep'
+  AND model LIKE 'Cherokee%'
+  AND model NOT LIKE 'Grand Cherokee%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Wrangler'
+WHERE brand = 'jeep'
+  AND model LIKE 'Wrangler%';
+UPDATE Germany_Cars_Cleaned
+SET model = 'Avenger'
+WHERE brand = 'jeep'
+  AND model LIKE 'Avenger%';
+
 update Germany_Cars_Cleaned
 set model= 'Unknown'
 where Germany_Cars_Cleaned.model is NULL;
@@ -1663,12 +2509,37 @@ UPDATE Germany_Cars_Cleaned
 SET color = 'Unknown'
 WHERE color IS NULL;
 
-update Germany_Cars_Cleaned
-set color = 'Unknown'
-where color not in (select color
-                    from Germany_Cars_Cleaned
-                    group by color
-                    order by count(color) desc
+UPDATE Germany_Cars_Cleaned
+SET color = CASE
+                WHEN UPPER(color) LIKE '%SCHWARZ%' OR UPPER(color) LIKE '%BLACK%' THEN 'Black'
+                WHEN UPPER(color) LIKE '%WEISS%' OR UPPER(color) LIKE '%WEIß%' OR UPPER(color) LIKE '%WHITE%'
+                    THEN 'White'
+                WHEN UPPER(color) LIKE '%GRAU%' OR UPPER(color) LIKE '%GREY%' OR UPPER(color) LIKE '%GRAY%'
+                    OR UPPER(color) LIKE '%ANTHRAZIT%' OR UPPER(color) LIKE '%GRAPHIT%' THEN 'Grey'
+                WHEN UPPER(color) LIKE '%SILBER%' OR UPPER(color) LIKE '%SILVER%' THEN 'Silver'
+                WHEN UPPER(color) LIKE '%BLAU%' OR UPPER(color) LIKE '%BLUE%' THEN 'Blue'
+                WHEN UPPER(color) LIKE '%ROT%' OR UPPER(color) LIKE '%RED%' OR UPPER(color) LIKE '%BURGUNDY%'
+                    OR UPPER(color) LIKE '%MAROON%' THEN 'Red'
+                WHEN UPPER(color) LIKE '%GRÜN%' OR UPPER(color) LIKE '%GRUN%' OR UPPER(color) LIKE '%GREEN%'
+                    THEN 'Green'
+                WHEN UPPER(color) LIKE '%BRAUN%' OR UPPER(color) LIKE '%BROWN%' OR UPPER(color) LIKE '%BRONZE%'
+                    THEN 'Brown'
+                WHEN UPPER(color) LIKE '%BEIGE%' THEN 'Beige'
+                WHEN UPPER(color) LIKE '%ORANGE%' THEN 'Orange'
+                WHEN UPPER(color) LIKE '%GELB%' OR UPPER(color) LIKE '%YELLOW%' THEN 'Yellow'
+                WHEN UPPER(color) LIKE '%GOLD%' THEN 'Gold'
+                WHEN UPPER(color) LIKE '%VIOLETT%' OR UPPER(color) LIKE '%PURPLE%' OR UPPER(color) LIKE '%LILA%'
+                    THEN 'Purple'
+                ELSE 'Unknown'
+    END
+WHERE color <> 'Unknown';
+
+UPDATE Germany_Cars_Cleaned
+SET color = 'Unknown'
+WHERE color NOT IN (SELECT color
+                    FROM Germany_Cars_Cleaned
+                    GROUP BY color
+                    ORDER BY COUNT(color) DESC
                     LIMIT 14);
 
 -- ============================================================
@@ -1724,16 +2595,55 @@ WHERE (engine_type IS NULL OR engine_type = 0)
   AND fuel_type <> 'Electric';
 
 -- ============================================================
+-- PASUL 9b: IMPUTARE CO2 LIPSA
+-- Strategie in 3 pasi (de la specific la general):
+--   1. Media pe brand + model + fuel_type (fereastra ±10 PS)
+--   2. Media pe brand + fuel_type (fereastra ±10 PS)
+--   3. Media pe fuel_type (fara restrictie PS)
+-- Excludem vehiculele electrice (co2 = 0 prin definitie)
+-- ============================================================
+
+UPDATE Germany_Cars_Cleaned
+SET co2_g = NULL
+WHERE fuel_type = 'Electric';
+
+UPDATE Germany_Cars_Cleaned
+SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
+             FROM Germany_Cars_Cleaned AS sub
+             WHERE sub.brand = Germany_Cars_Cleaned.brand
+               AND sub.model = Germany_Cars_Cleaned.model
+               AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+               AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
+               AND sub.co2_g IS NOT NULL
+               AND sub.fuel_type <> 'Electric')
+WHERE co2_g IS NULL
+  AND fuel_type <> 'Electric';
+
+UPDATE Germany_Cars_Cleaned
+SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
+             FROM Germany_Cars_Cleaned AS sub
+             WHERE sub.brand = Germany_Cars_Cleaned.brand
+               AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+               AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
+               AND sub.co2_g IS NOT NULL
+               AND sub.fuel_type <> 'Electric')
+WHERE co2_g IS NULL
+  AND fuel_type <> 'Electric';
+
+UPDATE Germany_Cars_Cleaned
+SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
+             FROM Germany_Cars_Cleaned AS sub
+             WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+               AND sub.co2_g IS NOT NULL
+               AND sub.fuel_type <> 'Electric')
+WHERE co2_g IS NULL
+  AND fuel_type <> 'Electric';
+
+
+-- ============================================================
 -- PASUL 10: DEDUPLICARE
 -- Pastram doar primul rand din fiecare grup de duplicate
 -- ============================================================
-
-SELECT *
-FROM Germany_Cars_Cleaned
-WHERE id NOT IN (SELECT MIN(id)
-                 FROM Germany_Cars_Cleaned
-                 GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km,
-                          engine_type, co2_g);
 
 delete
 from Germany_Cars_Cleaned
@@ -1742,6 +2652,62 @@ where id not in (SELECT MIN(id)
                  GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km,
                           engine_type, co2_g);
 
+
+-- ============================================================
+-- PASUL 10b: CONVERSIE BRAND LA PROPER CASE
+-- Pentru consistenta cross-market (India si SUA sunt deja Proper Case)
+-- ============================================================
+
+UPDATE Germany_Cars_Cleaned SET brand = 'Mercedes-Benz' WHERE brand = 'mercedes-benz';
+UPDATE Germany_Cars_Cleaned SET brand = 'BMW' WHERE brand = 'bmw';
+UPDATE Germany_Cars_Cleaned SET brand = 'Audi' WHERE brand = 'audi';
+UPDATE Germany_Cars_Cleaned SET brand = 'Volkswagen' WHERE brand = 'volkswagen';
+UPDATE Germany_Cars_Cleaned SET brand = 'Porsche' WHERE brand = 'porsche';
+UPDATE Germany_Cars_Cleaned SET brand = 'MINI' WHERE brand = 'mini';
+UPDATE Germany_Cars_Cleaned SET brand = 'Fiat' WHERE brand = 'fiat';
+UPDATE Germany_Cars_Cleaned SET brand = 'Smart' WHERE brand = 'smart';
+UPDATE Germany_Cars_Cleaned SET brand = 'Opel' WHERE brand = 'opel';
+UPDATE Germany_Cars_Cleaned SET brand = 'Peugeot' WHERE brand = 'peugeot';
+UPDATE Germany_Cars_Cleaned SET brand = 'Renault' WHERE brand = 'renault';
+UPDATE Germany_Cars_Cleaned SET brand = 'Toyota' WHERE brand = 'toyota';
+UPDATE Germany_Cars_Cleaned SET brand = 'Ford' WHERE brand = 'ford';
+UPDATE Germany_Cars_Cleaned SET brand = 'Hyundai' WHERE brand = 'hyundai';
+UPDATE Germany_Cars_Cleaned SET brand = 'Kia' WHERE brand = 'kia';
+UPDATE Germany_Cars_Cleaned SET brand = 'Skoda' WHERE brand = 'skoda';
+UPDATE Germany_Cars_Cleaned SET brand = 'Dacia' WHERE brand = 'dacia';
+UPDATE Germany_Cars_Cleaned SET brand = 'Volvo' WHERE brand = 'volvo';
+UPDATE Germany_Cars_Cleaned SET brand = 'Nissan' WHERE brand = 'nissan';
+UPDATE Germany_Cars_Cleaned SET brand = 'Honda' WHERE brand = 'honda';
+UPDATE Germany_Cars_Cleaned SET brand = 'Mazda' WHERE brand = 'mazda';
+UPDATE Germany_Cars_Cleaned SET brand = 'SEAT' WHERE brand = 'seat';
+UPDATE Germany_Cars_Cleaned SET brand = 'Citroen' WHERE brand = 'citroen';
+UPDATE Germany_Cars_Cleaned SET brand = 'Land Rover' WHERE brand = 'land rover';
+UPDATE Germany_Cars_Cleaned SET brand = 'Cupra' WHERE brand = 'cupra';
+UPDATE Germany_Cars_Cleaned SET brand = 'Tesla' WHERE brand = 'tesla';
+UPDATE Germany_Cars_Cleaned SET brand = 'Suzuki' WHERE brand = 'suzuki';
+UPDATE Germany_Cars_Cleaned SET brand = 'Mitsubishi' WHERE brand = 'mitsubishi';
+UPDATE Germany_Cars_Cleaned SET brand = 'Jeep' WHERE brand = 'jeep';
+UPDATE Germany_Cars_Cleaned SET brand = 'Alfa Romeo' WHERE brand = 'alfa romeo';
+UPDATE Germany_Cars_Cleaned SET brand = 'Jaguar' WHERE brand = 'jaguar';
+UPDATE Germany_Cars_Cleaned SET brand = 'Lamborghini' WHERE brand = 'lamborghini';
+UPDATE Germany_Cars_Cleaned SET brand = 'Maserati' WHERE brand = 'maserati';
+UPDATE Germany_Cars_Cleaned SET brand = 'Bentley' WHERE brand = 'bentley';
+UPDATE Germany_Cars_Cleaned SET brand = 'Aston Martin' WHERE brand = 'aston martin';
+UPDATE Germany_Cars_Cleaned SET brand = 'Ferrari' WHERE brand = 'ferrari';
+UPDATE Germany_Cars_Cleaned SET brand = 'Lancia' WHERE brand = 'lancia';
+UPDATE Germany_Cars_Cleaned SET brand = 'Saab' WHERE brand = 'saab';
+UPDATE Germany_Cars_Cleaned SET brand = 'Dodge' WHERE brand = 'dodge';
+UPDATE Germany_Cars_Cleaned SET brand = 'Chevrolet' WHERE brand = 'chevrolet';
+UPDATE Germany_Cars_Cleaned SET brand = 'Cadillac' WHERE brand = 'cadillac';
+UPDATE Germany_Cars_Cleaned SET brand = 'Daewoo' WHERE brand = 'daewoo';
+UPDATE Germany_Cars_Cleaned SET brand = 'Infiniti' WHERE brand = 'infiniti';
+UPDATE Germany_Cars_Cleaned SET brand = 'Ssangyong' WHERE brand = 'ssangyong';
+UPDATE Germany_Cars_Cleaned SET brand = 'Rover' WHERE brand = 'rover';
+UPDATE Germany_Cars_Cleaned SET brand = 'Lada' WHERE brand = 'lada';
+UPDATE Germany_Cars_Cleaned SET brand = 'Daihatsu' WHERE brand = 'daihatsu';
+UPDATE Germany_Cars_Cleaned SET brand = 'Isuzu' WHERE brand = 'isuzu';
+UPDATE Germany_Cars_Cleaned SET brand = 'Chrysler' WHERE brand = 'chrysler';
+UPDATE Germany_Cars_Cleaned SET brand = 'Proton' WHERE brand = 'proton';
 
 -- ============================================================
 -- PASUL 11: VERIFICARE FINALA

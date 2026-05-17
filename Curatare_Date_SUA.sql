@@ -318,11 +318,22 @@ set engine_type=null
 where engine_type = 'Electric';
 
 -- ============================================================
--- PASUL 3: ELIMINARE RANDURI INCOMPLETE (fara km)
+-- PASUL 3: ELIMINARE RANDURI INVALIDE
+-- Stergem randuri fara km, cu pret invalid sau an imposibil
 -- ============================================================
 delete
 from SUA_cars_Cleaned
 where km is null;
+
+delete
+from SUA_cars_Cleaned
+where price_in_euro is null
+   or price_in_euro <= 0;
+
+delete
+from SUA_cars_Cleaned
+where year is null
+   or year not between 1900 and 2026;
 
 -- ============================================================
 -- PASUL 4: CONVERSIE UNITATI SI TIPURI DE DATE
@@ -356,6 +367,26 @@ select id,
 from schimb;
 
 drop table if exists schimb;
+
+-- ============================================================
+-- PASUL 4b: STANDARDIZARE BRAND
+-- Trim si corectii de casing pentru consistenta
+-- ============================================================
+
+UPDATE SUA_Cars_Cleaned
+SET brand = TRIM(brand);
+
+UPDATE SUA_Cars_Cleaned
+SET brand = 'Mercedes-Benz'
+WHERE UPPER(brand) LIKE '%MERCEDES%';
+
+UPDATE SUA_Cars_Cleaned
+SET brand = 'BMW'
+WHERE UPPER(brand) = 'BMW';
+
+UPDATE SUA_Cars_Cleaned
+SET brand = 'Land Rover'
+WHERE UPPER(brand) LIKE '%LAND ROVER%';
 
 -- ============================================================
 -- PASUL 5: STANDARDIZARE NUME MODELE (per brand)
@@ -5080,13 +5111,13 @@ WHERE model LIKE 'Sunliner%'
 
 UPDATE SUA_Cars_Cleaned
 SET model = 'Ford Early V8'
-WHERE model LIKE 'Coupe%'
+WHERE (model LIKE 'Coupe%'
    OR model LIKE 'Roadster%'
    OR model LIKE 'Sedan Delivery%'
    OR model LIKE 'Model 18%'
    OR model LIKE 'Model 48%'
-   OR model LIKE 'Model B%'
-    AND brand = 'Ford';
+   OR model LIKE 'Model B%')
+  AND brand = 'Ford';
 
 -- Land Rover
 UPDATE SUA_Cars_Cleaned
@@ -5097,12 +5128,12 @@ WHERE model LIKE '%Range Rover 4dr%'
 -- Mazda
 UPDATE SUA_Cars_Cleaned
 SET model = 'B-Series'
-WHERE model LIKE 'B2000%'
+WHERE (model LIKE 'B2000%'
    OR model LIKE 'B2200%'
    OR model LIKE 'B2300%'
    OR model LIKE 'B3000%'
-   OR model LIKE 'B4000%'
-    AND brand = 'Mazda';
+   OR model LIKE 'B4000%')
+  AND brand = 'Mazda';
 
 -- BMW (traducere Seria -> Series)
 UPDATE SUA_Cars_Cleaned
@@ -5184,10 +5215,10 @@ SET color = CASE
                      UPPER(color) LIKE '%TWO TONE%' OR UPPER(color) LIKE '%TWO-TONE%' OR UPPER(color) LIKE '%2 TONE%' OR
                      UPPER(color) LIKE '% ROOF%' OR UPPER(color) LIKE '% TOP%' THEN 'Two-Tone'
 
-    -- Purple / Pink
+    -- Purple
                 WHEN UPPER(color) LIKE '%PINK%' OR UPPER(color) LIKE '%PURPLE%' OR UPPER(color) LIKE '%VIOLET%' OR
                      UPPER(color) LIKE '%AMETHYST%' OR UPPER(color) LIKE '%PLUM%' OR UPPER(color) LIKE '%FUCHSIA%' OR
-                     UPPER(color) LIKE '%LAVENDER%' OR UPPER(color) LIKE '%ORCHID%' THEN 'Purple / Pink'
+                     UPPER(color) LIKE '%LAVENDER%' OR UPPER(color) LIKE '%ORCHID%' THEN 'Purple'
 
     -- Orange
                 WHEN UPPER(color) LIKE '%ORANGE%' OR UPPER(color) LIKE '%MANGO%' OR UPPER(color) LIKE '%TANGERINE%' OR
@@ -5200,9 +5231,9 @@ SET color = CASE
     -- Gold
                 WHEN UPPER(color) LIKE '%GOLD%' OR UPPER(color) LIKE '%AURUM%' THEN 'Gold'
 
-    -- Bronze / Copper
+    -- Brown (Bronze / Copper)
                 WHEN UPPER(color) LIKE '%BRONZE%' OR UPPER(color) LIKE '%COPPER%' OR UPPER(color) LIKE '%CHESTNUT%'
-                    THEN 'Bronze / Copper'
+                    THEN 'Brown'
 
     -- Brown
                 WHEN UPPER(color) LIKE '%BROWN%' OR UPPER(color) LIKE '%ESPRESSO%' OR UPPER(color) LIKE '%MOCHA%' OR
@@ -5210,11 +5241,11 @@ SET color = CASE
                      UPPER(color) LIKE '%WALNUT%' OR UPPER(color) LIKE '%CARAMEL%' OR UPPER(color) LIKE '%TOFFEE%' OR
                      UPPER(color) LIKE '%COCOA%' THEN 'Brown'
 
-    -- Beige / Tan
+    -- Beige
                 WHEN UPPER(color) LIKE '%BEIGE%' OR UPPER(color) LIKE '%SAND%' OR UPPER(color) LIKE '%KHAKI%' OR
                      UPPER(color) LIKE '%CHAMPAGNE%' OR UPPER(color) LIKE '%PARCHMENT%' OR UPPER(color) LIKE '%DUNE%' OR
                      UPPER(color) LIKE '%GOBI%' OR UPPER(color) = 'TAN' OR UPPER(color) LIKE '% TAN%' OR
-                     UPPER(color) LIKE 'TAN %' THEN 'Beige / Tan'
+                     UPPER(color) LIKE 'TAN %' THEN 'Beige'
 
     -- Green
                 WHEN UPPER(color) LIKE '%GREEN%' OR UPPER(color) LIKE '%EMERALD%' OR UPPER(color) LIKE '%OLIVE%' OR
@@ -5235,14 +5266,14 @@ SET color = CASE
                      UPPER(color) LIKE '%BLAU%' OR UPPER(color) LIKE '%CAVALRY%' OR UPPER(color) LIKE '%BLUEPRINT%'
                     THEN 'Blue'
 
-    -- Gray
+    -- Grey
                 WHEN UPPER(color) LIKE '%GRAY%' OR UPPER(color) LIKE '%GREY%' OR UPPER(color) LIKE '%CHARCOAL%' OR
                      UPPER(color) LIKE '%GRAPHITE%' OR UPPER(color) LIKE '%GRANITE%' OR
                      UPPER(color) LIKE '%GUNMETAL%' OR UPPER(color) LIKE '%SLATE%' OR UPPER(color) LIKE '%TITANIUM%' OR
                      UPPER(color) LIKE '%CEMENT%' OR UPPER(color) LIKE '%NARDO%' OR UPPER(color) LIKE '%BOULDER%' OR
                      UPPER(color) LIKE '%MAGNETIC%' OR UPPER(color) LIKE '%AREA 51%' OR UPPER(color) LIKE '%SMOKE%' OR
                      UPPER(color) LIKE '%ANVIL%' OR UPPER(color) LIKE '%CARBON%' OR UPPER(color) LIKE '%TUNGSTEN%' OR
-                     UPPER(color) LIKE '%CELESTITE%' THEN 'Gray'
+                     UPPER(color) LIKE '%CELESTITE%' THEN 'Grey'
 
     -- Silver
                 WHEN UPPER(color) LIKE '%SILVER%' OR UPPER(color) LIKE '%PLATINUM%' OR UPPER(color) LIKE '%BILLET%' OR

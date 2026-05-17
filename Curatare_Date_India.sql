@@ -36,28 +36,25 @@ select id,
        state
 from cars_details_merges;
 
-
 -- ============================================================
--- PASUL 1: VERIFICARE INITIALA
--- Inspectam distributia valorilor per coloana
+-- PASUL 1b: ELIMINARE RANDURI INVALIDE
+-- Stergem randuri cu valori nule, negative sau imposibile
 -- ============================================================
-SELECT DISTINCT brand, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY brand
-ORDER BY brand;
 
-SELECT DISTINCT model, COUNT(*) as nr, brand
+DELETE
 FROM India_Cars_Cleaned
-GROUP BY model
-ORDER BY model;
+WHERE price_in_euro IS NULL
+   OR price_in_euro <= 0;
 
-SELECT DISTINCT year, COUNT(*) as nr
+DELETE
 FROM India_Cars_Cleaned
-GROUP BY year
-ORDER BY year;
+WHERE km IS NULL
+   OR km < 0;
 
-select count()
-from India_Cars_Cleaned;
+DELETE
+FROM India_Cars_Cleaned
+WHERE year IS NULL
+   OR year NOT BETWEEN 1900 AND 2026;
 
 -- ============================================================
 -- PASUL 2: CORECTIE BRAND
@@ -69,6 +66,9 @@ WHERE brand = 'Mahindra Renault';
 UPDATE India_Cars_Cleaned
 SET brand = 'Mahindra'
 WHERE brand = 'Mahindra Ssangyong';
+
+UPDATE India_Cars_Cleaned
+SET brand = TRIM(brand);
 
 -- ============================================================
 -- PASUL 3: STANDARDIZARE NUME MODELE
@@ -625,11 +625,6 @@ WHERE model LIKE '%Ashok Leyland Stile%';
 -- Grupam variantele de culori in categorii principale
 -- Culorile rare devin 'Unknown'
 -- ============================================================
-SELECT DISTINCT color, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY color
-ORDER BY color;
-
 update India_Cars_Cleaned
 set color = 'Unknown'
 where color like '?%';
@@ -664,7 +659,7 @@ update India_Cars_Cleaned
 set color = 'Brown'
 where color like '%Chocolate%';
 update India_Cars_Cleaned
-set color = 'Bronze'
+set color = 'Brown'
 where color like '%Bronze%';
 update India_Cars_Cleaned
 set color = 'Titanium'
@@ -673,7 +668,7 @@ update India_Cars_Cleaned
 set color = 'Yellow'
 where color like '%Yellow%';
 update India_Cars_Cleaned
-set color = 'Violet'
+set color = 'Purple'
 where color like '%Violet%';
 update India_Cars_Cleaned
 set color = 'Titanium'
@@ -711,50 +706,49 @@ where color not in (select India_Cars_Cleaned.Color
                     order by count(Color) desc
                     LIMIT 14);
 
-select India_Cars_Cleaned.Color, count()
-from India_Cars_Cleaned
-group by Color
-order by count(Color) desc;
 
 -- ============================================================
 -- PASUL 5: VERIFICARE AN
 -- ============================================================
-SELECT DISTINCT year, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY year
-ORDER BY year;
+-- ============================================================
+-- PASUL 6: STANDARDIZARE TIP TRANSMISIE
+-- Clasificam in: Manual, Automatic, Unknown
+-- ============================================================
+
+
+UPDATE India_Cars_Cleaned
+SET transmission_type = CASE
+                            WHEN UPPER(TRIM(transmission_type)) IN ('MANUAL', 'MT') THEN 'Manual'
+                            WHEN UPPER(TRIM(transmission_type)) IN ('AUTOMATIC', 'AT', 'AUTO', 'CVT', 'DCT', 'AMT')
+                                THEN 'Automatic'
+                            WHEN transmission_type IS NULL OR TRIM(transmission_type) = '' THEN 'Unknown'
+                            ELSE transmission_type
+    END;
 
 -- ============================================================
--- PASUL 6: VERIFICARE TIP TRANSMISIE
+-- PASUL 7: STANDARDIZARE TIP COMBUSTIBIL
+-- Unificam variantele in: Petrol, Diesel, CNG, LPG, Electric, Hybrid
 -- ============================================================
-SELECT DISTINCT transmission_type,
-                COUNT(*) as
-                    nr
-FROM India_Cars_Cleaned
-GROUP BY transmission_type
-ORDER BY transmission_type;
 
--- ============================================================
--- PASUL 7: VERIFICARE TIP COMBUSTIBIL
--- ============================================================
-SELECT DISTINCT fuel_type, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY fuel_type
-ORDER BY fuel_type;
-
-select distinct fuel_type
-from India_Cars_Cleaned
-group by fuel_type;
+UPDATE India_Cars_Cleaned
+SET fuel_type = CASE
+                    WHEN UPPER(TRIM(fuel_type)) LIKE '%PETROL%' OR UPPER(TRIM(fuel_type)) = 'GASOLINE' THEN 'Petrol'
+                    WHEN UPPER(TRIM(fuel_type)) LIKE '%DIESEL%' THEN 'Diesel'
+                    WHEN UPPER(TRIM(fuel_type)) LIKE '%CNG%' OR UPPER(TRIM(fuel_type)) LIKE '%PETROL + CNG%'
+                        THEN 'CNG'
+                    WHEN UPPER(TRIM(fuel_type)) LIKE '%LPG%' OR UPPER(TRIM(fuel_type)) LIKE '%PETROL + LPG%'
+                        THEN 'LPG'
+                    WHEN UPPER(TRIM(fuel_type)) LIKE '%ELECTRIC%' THEN 'Electric'
+                    WHEN UPPER(TRIM(fuel_type)) LIKE '%HYBRID%' THEN 'Hybrid'
+                    WHEN fuel_type IS NULL OR TRIM(fuel_type) = '' THEN 'Other'
+                    ELSE fuel_type
+    END;
 
 -- ============================================================
 -- PASUL 8: STANDARDIZARE TRACTIUNE, PROPRIETAR, TIP CAROSERIE
 -- Unificam variantele de scriere (ex: "4 WD" -> "4WD")
 -- ============================================================
 
-SELECT DISTINCT drivetrain, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY drivetrain
-ORDER BY drivetrain;
 UPDATE India_Cars_Cleaned
 SET drivetrain = '2WD'
 WHERE drivetrain IN ('2 WD', '2WD', '2wd', 'Two Wheel Drive', 'Two Whhel Drive', '4X2', '4x2');
@@ -777,14 +771,6 @@ SET drivetrain = 'Unknown'
 where drivetrain = '3'
    or drivetrain is null;
 
-SELECT DISTINCT one_owner, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY one_owner
-ORDER BY one_owner;
-
-select one_owner
-from India_Cars_Cleaned
-where one_owner = 'first';
 
 UPDATE India_Cars_Cleaned
 SET one_owner = CASE
@@ -793,10 +779,6 @@ SET one_owner = CASE
                     ELSE 'No'
     END;
 
-SELECT DISTINCT body_type, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY body_type
-ORDER BY body_type;
 
 UPDATE India_Cars_Cleaned
 SET body_type = 'Minivan'
@@ -812,36 +794,30 @@ UPDATE India_Cars_Cleaned
 SET body_type = 'Unknown'
 WHERE body_type is null;
 
+-- Standardizare seller_type
+UPDATE India_Cars_Cleaned
+SET seller_type = CASE
+                      WHEN UPPER(TRIM(seller_type)) LIKE '%DEALER%' OR UPPER(TRIM(seller_type)) LIKE '%CERTIFIED%'
+                          THEN 'Dealer'
+                      WHEN UPPER(TRIM(seller_type)) LIKE '%INDIVIDUAL%' OR UPPER(TRIM(seller_type)) LIKE '%PRIVATE%'
+                          THEN 'Individual'
+                      WHEN seller_type IS NULL OR TRIM(seller_type) = '' THEN 'Unknown'
+                      ELSE seller_type
+    END;
+
+-- Standardizare state (trim si curat)
+UPDATE India_Cars_Cleaned
+SET state = TRIM(state);
+UPDATE India_Cars_Cleaned
+SET state = 'Unknown'
+WHERE state IS NULL
+   OR TRIM(state) = '';
+
 -- ============================================================
 -- PASUL 9: VERIFICARE VALORI NULE
 -- Numaram NULL-urile per coloana inainte de imputare
 -- ============================================================
-SELECT COUNT(*)                            AS total_randuri,
-       COUNT(*) - COUNT(brand)             AS null_brand,
-       COUNT(*) - COUNT(model)             AS null_model,
-       COUNT(*) - COUNT(Color)             AS null_color,
-       COUNT(*) - COUNT(year)              AS null_year,
-       COUNT(*) - COUNT(price_in_euro)     AS null_price,
-       COUNT(*) - COUNT(power_ps)          AS null_power_ps,
-       COUNT(*) - COUNT(transmission_type) AS null_transmission,
-       COUNT(*) - COUNT(fuel_type)         AS null_fuel_type,
-       COUNT(*) - COUNT(km)                AS null_km,
-       COUNT(*) - COUNT(engine_type)       AS null_engine_type,
-       COUNT(*) - COUNT(one_owner)         AS null_one_owner,
-       COUNT(*) - COUNT(drivetrain)        AS null_drivetrain,
-       COUNT(*) - COUNT(body_type)         AS null_body_type
-FROM India_Cars_Cleaned;
 
-select *
-from India_Cars_Cleaned
-where engine_type is null;
-select *
-from India_Cars_Cleaned
-where fuel_type = 'electric';
-
-select *
-from India_Cars_Cleaned
-where power_ps is null;
 
 -- ============================================================
 -- PASUL 10: IMPUTARE VALORI NULE
@@ -877,8 +853,8 @@ WHERE power_ps IS NULL
 UPDATE India_Cars_Cleaned
 SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
                 FROM India_Cars_Cleaned AS sub
-                where sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.3
-                    AND India_Cars_Cleaned.engine_type + 0.3
+                where sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.4
+                    AND India_Cars_Cleaned.engine_type + 0.4
                   AND sub.power_ps > 10)
 WHERE power_ps IS NULL
    OR power_ps < 10;
@@ -901,17 +877,34 @@ WHERE engine_type IS NULL
 update India_Cars_Cleaned
 set engine_type=null
 where engine_type is not null
-  and fuel_type = 'electric';
+  and fuel_type = 'Electric';
+
+-- Imputare engine_type — Pas suplimentar (brand + fuel_type, fara model)
+UPDATE India_Cars_Cleaned
+SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+                   FROM India_Cars_Cleaned AS sub
+                   WHERE sub.brand = India_Cars_Cleaned.brand
+                     AND sub.fuel_type = India_Cars_Cleaned.fuel_type
+                     AND sub.power_ps BETWEEN India_Cars_Cleaned.power_ps - 10 AND India_Cars_Cleaned.power_ps + 10
+                     AND sub.engine_type IS NOT NULL
+                     AND sub.fuel_type <> 'Electric')
+WHERE (engine_type IS NULL OR engine_type < 0.5)
+  AND fuel_type <> 'Electric';
+
+-- Imputare engine_type — Fallback global (fuel_type)
+UPDATE India_Cars_Cleaned
+SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+                   FROM India_Cars_Cleaned AS sub
+                   WHERE sub.fuel_type = India_Cars_Cleaned.fuel_type
+                     AND sub.engine_type IS NOT NULL
+                     AND sub.fuel_type <> 'Electric')
+WHERE (engine_type IS NULL OR engine_type < 0.5)
+  AND fuel_type <> 'Electric';
+
 -- ============================================================
 -- PASUL 11: DEDUPLICARE
 -- Pastram doar primul rand din fiecare grup de duplicate
 -- ============================================================
-SELECT *, COUNT(*) as nr
-FROM India_Cars_Cleaned
-GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km, engine_type, one_owner,
-         drivetrain, body_type
-HAVING COUNT(*) > 1
-ORDER BY nr DESC;
 
 DELETE
 FROM India_Cars_Cleaned
