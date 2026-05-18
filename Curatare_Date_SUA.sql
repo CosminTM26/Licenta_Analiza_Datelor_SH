@@ -1,7 +1,13 @@
 ﻿-- ============================================================
 -- SCRIPT CURATARE DATE: Piata auto SH din SUA
 -- Sursa: tabel SUA_Cars (date brute din dataset)
--- Rezultat: tabel SUA_cars_Cleaned cu date standardizate
+-- Rezultat: tabel SUA_Cars_Cleaned cu date standardizate
+-- Pasi: creare tabel → engine_type (text → litri) →
+--       separare Electric → eliminare invalide →
+--       conversie USD→EUR + mile→km → brand → modele →
+--       corectii modele → culori → transmisie → combustibil →
+--       tractiune → one_owner → imputare engine → deduplicare →
+--       verificare
 -- ============================================================
 
 -- ============================================================
@@ -5112,11 +5118,11 @@ WHERE model LIKE 'Sunliner%'
 UPDATE SUA_Cars_Cleaned
 SET model = 'Ford Early V8'
 WHERE (model LIKE 'Coupe%'
-   OR model LIKE 'Roadster%'
-   OR model LIKE 'Sedan Delivery%'
-   OR model LIKE 'Model 18%'
-   OR model LIKE 'Model 48%'
-   OR model LIKE 'Model B%')
+    OR model LIKE 'Roadster%'
+    OR model LIKE 'Sedan Delivery%'
+    OR model LIKE 'Model 18%'
+    OR model LIKE 'Model 48%'
+    OR model LIKE 'Model B%')
   AND brand = 'Ford';
 
 -- Land Rover
@@ -5129,10 +5135,10 @@ WHERE model LIKE '%Range Rover 4dr%'
 UPDATE SUA_Cars_Cleaned
 SET model = 'B-Series'
 WHERE (model LIKE 'B2000%'
-   OR model LIKE 'B2200%'
-   OR model LIKE 'B2300%'
-   OR model LIKE 'B3000%'
-   OR model LIKE 'B4000%')
+    OR model LIKE 'B2200%'
+    OR model LIKE 'B2300%'
+    OR model LIKE 'B3000%'
+    OR model LIKE 'B4000%')
   AND brand = 'Mazda';
 
 -- BMW (traducere Seria -> Series)
@@ -5206,10 +5212,16 @@ WHERE brand = 'Ford'
 
 -- ============================================================
 -- PASUL 7: STANDARDIZARE CULORI
--- Grupam sute de variante de culori in ~14 categorii principale
+-- Grupam sute de variante in ~14 categorii unificate cross-market:
+--   Gray/Charcoal/Graphite → Grey, Bronze/Copper → Brown,
+--   Tan/Sand/Champagne → Beige, Pink/Violet → Purple
+-- Culorile rare (sub top 14 ca frecventa) devin 'Unknown'
 -- ============================================================
 UPDATE SUA_Cars_Cleaned
 SET color = CASE
+    -- Culori specifice cu slash care nu sunt two-tone (trebuie prinse inainte de regula /)
+                WHEN UPPER(color) LIKE '%BEIGE%' AND UPPER(color) LIKE '%TAN%' THEN 'Beige'
+                WHEN UPPER(color) LIKE '%BRONZE%' AND UPPER(color) LIKE '%COPPER%' THEN 'Brown'
     -- Two-Tone
                 WHEN UPPER(color) LIKE '%/%' OR UPPER(color) LIKE '% WITH %' OR UPPER(color) LIKE '% & %' OR
                      UPPER(color) LIKE '%TWO TONE%' OR UPPER(color) LIKE '%TWO-TONE%' OR UPPER(color) LIKE '%2 TONE%' OR
@@ -5525,6 +5537,7 @@ WHERE id NOT IN (SELECT MIN(id)
 
 -- ============================================================
 -- PASUL 14: VERIFICARE FINALA
+-- Numar total de randuri dupa curatare
 -- ============================================================
 select count(*)
 from SUA_cars_Cleaned;

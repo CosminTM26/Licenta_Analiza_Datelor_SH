@@ -2,6 +2,11 @@
 -- SCRIPT CURATARE DATE: Piata auto SH din India
 -- Sursa: tabel cars_details_merges (date brute din dataset)
 -- Rezultat: tabel India_Cars_Cleaned cu date standardizate
+-- Pasi: creare tabel (conversii INR→EUR, BHP→PS, cc→litri) →
+--       eliminare invalide → corectie brand → modele →
+--       culori → transmisie → combustibil → tractiune/proprietar/
+--       caroserie/seller/state → imputare power_ps + engine_type →
+--       deduplicare → verificare
 -- ============================================================
 
 -- ============================================================
@@ -21,13 +26,13 @@ create table India_Cars_Cleaned as
 select id,
        oem                                                      as brand,
        model,
-       color,
+       color                                                    as color,
        myear                                                    as year,
        cast(round(dynx_totalvalue_x * 0.01119, -3) as integer)  as price_in_euro,
        cast(ROUND("Max Power" * 1.01387, 0) as integer)         as power_ps,
        tt                                                       as transmission_type,
        fuel_type,
-       km_driven                                                as km,
+       cast(km_driven as integer)                               as km,
        cast(round(max_engine_capacity_new / 1000, 1) as double) as engine_type,
        owner_type_new                                           as one_owner,
        "Drive Type"                                             as drivetrain,
@@ -622,8 +627,12 @@ WHERE model LIKE '%Ashok Leyland Stile%';
 
 -- ============================================================
 -- PASUL 4: STANDARDIZARE CULORI
--- Grupam variantele de culori in categorii principale
--- Culorile rare devin 'Unknown'
+-- Mapam variantele in categorii unificate cross-market:
+--   Chocolate/Bronze/Copper → Brown, Violet/Magenta/Pink → Purple,
+--   Titanium/Steel/Star/Metal/Gray → Grey, Aqua/Navy/Indigo → Blue,
+--   Maroon/Burgundy/Wine → Red, Beige/Tan/Cream/Ivory → White/Brown,
+--   Gold/Golden/Amber → Gold, Green variants → Green
+-- Culorile rare (sub top 14 ca frecventa) devin 'Unknown'
 -- ============================================================
 update India_Cars_Cleaned
 set color = 'Unknown'
@@ -697,6 +706,39 @@ where color like '%Star%';
 update India_Cars_Cleaned
 set color = 'Grey'
 where color like '%Metal%';
+update India_Cars_Cleaned
+set color = 'Grey'
+where color like '%Gray%';
+update India_Cars_Cleaned
+set color = 'Gold'
+where color like '%Gold%';
+update India_Cars_Cleaned
+set color = 'Green'
+where color like '%Green%';
+update India_Cars_Cleaned
+set color = 'Gold'
+where color like '%Amber%';
+update India_Cars_Cleaned
+set color = 'Red'
+where color like '%Burgundy%'
+   or color like '%Wine%';
+update India_Cars_Cleaned
+set color = 'White'
+where color like '%Ivory%'
+   or color like '%Cream%';
+update India_Cars_Cleaned
+set color = 'Blue'
+where color like '%Navy%'
+   or color like '%Indigo%'
+   or color like '%Cobalt%';
+update India_Cars_Cleaned
+set color = 'Purple'
+where color like '%Magenta%'
+   or color like '%Pink%';
+update India_Cars_Cleaned
+set color = 'Brown'
+where color like '%Copper%'
+   or color like '%Tan%';
 
 update India_Cars_Cleaned
 set color = 'Unknown'
@@ -708,11 +750,9 @@ where color not in (select India_Cars_Cleaned.Color
 
 
 -- ============================================================
--- PASUL 5: VERIFICARE AN
--- ============================================================
--- ============================================================
--- PASUL 6: STANDARDIZARE TIP TRANSMISIE
+-- PASUL 5-6: STANDARDIZARE TIP TRANSMISIE
 -- Clasificam in: Manual, Automatic, Unknown
+-- (AMT, CVT, DCT → Automatic; MT → Manual)
 -- ============================================================
 
 
@@ -745,8 +785,13 @@ SET fuel_type = CASE
     END;
 
 -- ============================================================
--- PASUL 8: STANDARDIZARE TRACTIUNE, PROPRIETAR, TIP CAROSERIE
--- Unificam variantele de scriere (ex: "4 WD" -> "4WD")
+-- PASUL 8: STANDARDIZARE TRACTIUNE, PROPRIETAR, CAROSERIE,
+--          SELLER_TYPE, STATE
+-- Drivetrain: "4 WD"/"4X4"/"4*4" → "4WD", etc.
+-- One_owner: "first" → "Yes", rest → "No", NULL → "Unknown"
+-- Body_type: "MUV"/"Minivans" → "Minivan"
+-- Seller_type: Dealer/Individual/Unknown
+-- State: trim si NULL → "Unknown"
 -- ============================================================
 
 UPDATE India_Cars_Cleaned
@@ -814,17 +859,16 @@ WHERE state IS NULL
    OR TRIM(state) = '';
 
 -- ============================================================
--- PASUL 9: VERIFICARE VALORI NULE
--- Numaram NULL-urile per coloana inainte de imputare
--- ============================================================
-
-
--- ============================================================
--- PASUL 10: IMPUTARE VALORI NULE
--- Strategie in mai multi pasi (de la specific la general):
---   power_ps: brand+model+engine → brand+engine → engine
---   engine_type: brand+model+body_type+power_ps
--- Excludem vehiculele electrice din imputarea engine_type
+-- PASUL 9-10: IMPUTARE VALORI NULE
+-- power_ps (de la specific la general):
+--   1. Media pe brand + model + engine_type (±0.3L)
+--   2. Media pe brand + engine_type (±0.3L)
+--   3. Media pe engine_type (±0.4L)
+-- engine_type (de la specific la general):
+--   1. Media pe brand + model + body_type + power_ps (±10 PS)
+--   2. Media pe brand + fuel_type + power_ps (±10 PS)
+--   3. Media pe fuel_type (fallback global)
+-- Electric → engine_type = NULL (nu au cilindree)
 -- ============================================================
 
 -- Imputare power_ps
@@ -859,8 +903,16 @@ SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
 WHERE power_ps IS NULL
    OR power_ps < 10;
 
+DELETE
+FROM India_Cars_Cleaned
+WHERE power_ps IS NULL;
 
--- Imputare engine_type
+-- Imputare engine_type]
+update India_Cars_Cleaned
+set engine_type=null
+where engine_type is not null
+  and fuel_type = 'Electric';
+
 UPDATE India_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    FROM India_Cars_Cleaned AS sub
@@ -873,11 +925,6 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
 WHERE engine_type IS NULL
    or engine_type < 0.5;
 
-
-update India_Cars_Cleaned
-set engine_type=null
-where engine_type is not null
-  and fuel_type = 'Electric';
 
 -- Imputare engine_type — Pas suplimentar (brand + fuel_type, fara model)
 UPDATE India_Cars_Cleaned
@@ -915,6 +962,7 @@ WHERE id NOT IN (SELECT MIN(id)
 
 -- ============================================================
 -- PASUL 12: VERIFICARE FINALA
+-- Numar total de randuri dupa curatare
 -- ============================================================
 select count(*)
 from India_Cars_Cleaned;

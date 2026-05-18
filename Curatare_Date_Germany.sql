@@ -2,6 +2,11 @@
 -- SCRIPT CURATARE DATE: Piata auto SH din Germania
 -- Sursa: tabel Germany_Cars (date brute din dataset)
 -- Rezultat: tabel Germany_Cars_Cleaned cu date standardizate
+-- Pasi: creare tabel → eliminare invalide → combustibil →
+--       engine_type (text liber → litri) → CO2 → tipuri date →
+--       brand lowercase → transmisie → prefix model → modele →
+--       culori (DE→EN) → imputare engine + CO2 → deduplicare →
+--       brand Proper Case → verificare
 -- ============================================================
 
 -- ============================================================
@@ -31,7 +36,9 @@ from Germany_Cars;
 
 -- ============================================================
 -- PASUL 1: ELIMINARE RANDURI INVALIDE
--- Stergem randuri cu valori nule, inversate sau imposibile
+-- Stergem: pret/km NULL, pret <= 0, km < 0, power_ps NULL/≤1
+-- Corectam randuri cu fuel_type si transmission_type inversate
+-- Eliminam ani imposibili (in afara 1900-2026)
 -- ============================================================
 
 delete
@@ -50,7 +57,7 @@ where km < 0;
 delete
 from Germany_Cars_Cleaned
 where power_ps is null
-   or power_ps <= 0;
+   or power_ps <= 1;
 
 delete
 from Germany_Cars_Cleaned
@@ -81,7 +88,9 @@ WHERE fuel_type = 'Diesel Hybrid';
 -- ============================================================
 -- PASUL 3: STANDARDIZARE CAPACITATE MOTOR (engine_type)
 -- Extragem capacitatea cilindrica (litri) din textul liber
--- Pattern-uri: "2.0L", "2,0 L", "ELECTRIC", etc.
+-- Pattern-uri: "2.0 l", "2,0l" (virgula germana), "ELEKTRO", etc.
+-- Electric → NULL, restul → valoare numerica in litri
+-- Fallback fara sufixul 'l' pentru cazurile fara unitate
 -- ============================================================
 
 update Germany_Cars_Cleaned
@@ -324,7 +333,8 @@ WHERE co2_g IS NOT NULL;
 -- ============================================================
 -- PASUL 5: RECREARE TABEL CU TIPURI CORECTE
 -- Convertim coloanele la tipurile potrivite (INTEGER, REAL)
--- Eliminam coloanele neutilizate (registration_date, power_kw, etc.)
+-- Eliminam coloanele neutilizate (registration_date, power_kw,
+--   fuel_consumption_l_100km)
 -- ============================================================
 
 drop table if exists Germany_Cars_Cleaned1;
@@ -351,8 +361,10 @@ alter table Germany_Cars_Cleaned1
 CREATE INDEX idx_cars_lookup ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
 
 -- ============================================================
--- PASUL 5b: STANDARDIZARE BRAND (lowercase)
--- Asiguram consistenta numelui de brand
+-- PASUL 5b: STANDARDIZARE BRAND (lowercase temporar)
+-- Convertim la lowercase pentru ca PASUL 7 (modele) foloseste
+-- WHERE brand = 'mercedes-benz' etc. Se revine la Proper Case
+-- in PASUL 10b
 -- ============================================================
 
 UPDATE Germany_Cars_Cleaned
@@ -376,6 +388,159 @@ SET transmission_type = CASE
 -- PASUL 6: ELIMINARE PREFIX BRAND DIN MODEL
 -- Numele brandului apare duplicat in coloana model
 -- ============================================================
+
+
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Mercedes-Benz'
+WHERE brand = 'mercedes-benz';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'BMW'
+WHERE brand = 'bmw';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Audi'
+WHERE brand = 'audi';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Volkswagen'
+WHERE brand = 'volkswagen';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Porsche'
+WHERE brand = 'porsche';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'MINI'
+WHERE brand = 'mini';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Fiat'
+WHERE brand = 'fiat';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Smart'
+WHERE brand = 'smart';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Opel'
+WHERE brand = 'opel';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Peugeot'
+WHERE brand = 'peugeot';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Renault'
+WHERE brand = 'renault';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Toyota'
+WHERE brand = 'toyota';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Ford'
+WHERE brand = 'ford';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Hyundai'
+WHERE brand = 'hyundai';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Kia'
+WHERE brand = 'kia';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Skoda'
+WHERE brand = 'skoda';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Dacia'
+WHERE brand = 'dacia';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Volvo'
+WHERE brand = 'volvo';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Nissan'
+WHERE brand = 'nissan';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Honda'
+WHERE brand = 'honda';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Mazda'
+WHERE brand = 'mazda';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'SEAT'
+WHERE brand = 'seat';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Citroen'
+WHERE brand = 'citroen';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Land Rover'
+WHERE brand = 'land rover';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Cupra'
+WHERE brand = 'cupra';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Tesla'
+WHERE brand = 'tesla';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Suzuki'
+WHERE brand = 'suzuki';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Mitsubishi'
+WHERE brand = 'mitsubishi';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Jeep'
+WHERE brand = 'jeep';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Alfa Romeo'
+WHERE brand = 'alfa romeo';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Jaguar'
+WHERE brand = 'jaguar';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Lamborghini'
+WHERE brand = 'lamborghini';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Maserati'
+WHERE brand = 'maserati';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Bentley'
+WHERE brand = 'bentley';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Aston Martin'
+WHERE brand = 'aston martin';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Ferrari'
+WHERE brand = 'ferrari';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Lancia'
+WHERE brand = 'lancia';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Saab'
+WHERE brand = 'saab';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Dodge'
+WHERE brand = 'dodge';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Chevrolet'
+WHERE brand = 'chevrolet';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Cadillac'
+WHERE brand = 'cadillac';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Daewoo'
+WHERE brand = 'daewoo';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Infiniti'
+WHERE brand = 'infiniti';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Ssangyong'
+WHERE brand = 'ssangyong';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Rover'
+WHERE brand = 'rover';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Lada'
+WHERE brand = 'lada';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Daihatsu'
+WHERE brand = 'daihatsu';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Isuzu'
+WHERE brand = 'isuzu';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Chrysler'
+WHERE brand = 'chrysler';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Proton'
+WHERE brand = 'proton';
+
 
 UPDATE Germany_Cars_Cleaned
 SET model = REPLACE(model, 'Mercedes-Benz ', '')
@@ -521,6 +686,11 @@ WHERE model LIKE 'Chrysler %';
 UPDATE Germany_Cars_Cleaned
 SET model = REPLACE(model, 'Proton ', '')
 WHERE model LIKE 'Proton %';
+
+-- Stergem randuri unde model = numele brandului (nicio informatie reala despre model)
+DELETE
+FROM Germany_Cars_Cleaned
+WHERE LOWER(TRIM(model)) = LOWER(TRIM(brand));
 
 -- ============================================================
 -- PASUL 7: STANDARDIZARE NUME MODELE (per brand)
@@ -2495,14 +2665,27 @@ SET model = 'Avenger'
 WHERE brand = 'jeep'
   AND model LIKE 'Avenger%';
 
-update Germany_Cars_Cleaned
-set model= 'Unknown'
+DELETE
+FROM Germany_Cars_Cleaned
+WHERE TRIM(model) = TRIM(brand);
+
+
+delete
+from Germany_Cars_Cleaned
 where Germany_Cars_Cleaned.model is NULL;
+
+
+-- Dupa Proper Case, stergem si randurile unde model = brand (ex. "Alfa Romeo"/"Alfa Romeo")
+-- Nu au informatii reale despre model; cratime vs spatiu nu mai e problema aici
+
 
 -- ============================================================
 -- PASUL 8: STANDARDIZARE CULORI
--- Grupam variantele de culori in categorii principale
--- Culorile rare devin 'Unknown'
+-- Mapam culorile din germana si engleza in categorii unificate:
+--   Schwarz→Black, Weiß→White, Grau/Anthrazit→Grey, Silber→Silver,
+--   Blau→Blue, Rot/Burgundy→Red, Grün→Green, Braun/Bronze→Brown,
+--   Gelb→Yellow, Gold, Violett/Lila→Purple, Beige, Orange
+-- Culorile rare (sub top 14 ca frecventa) devin 'Unknown'
 -- ============================================================
 
 UPDATE Germany_Cars_Cleaned
@@ -2528,7 +2711,7 @@ SET color = CASE
                 WHEN UPPER(color) LIKE '%ORANGE%' THEN 'Orange'
                 WHEN UPPER(color) LIKE '%GELB%' OR UPPER(color) LIKE '%YELLOW%' THEN 'Yellow'
                 WHEN UPPER(color) LIKE '%GOLD%' THEN 'Gold'
-                WHEN UPPER(color) LIKE '%VIOLETT%' OR UPPER(color) LIKE '%PURPLE%' OR UPPER(color) LIKE '%LILA%'
+                WHEN UPPER(color) LIKE '%VIOLET%' OR UPPER(color) LIKE '%PURPLE%' OR UPPER(color) LIKE '%LILA%'
                     THEN 'Purple'
                 ELSE 'Unknown'
     END
@@ -2658,59 +2841,9 @@ where id not in (SELECT MIN(id)
 -- Pentru consistenta cross-market (India si SUA sunt deja Proper Case)
 -- ============================================================
 
-UPDATE Germany_Cars_Cleaned SET brand = 'Mercedes-Benz' WHERE brand = 'mercedes-benz';
-UPDATE Germany_Cars_Cleaned SET brand = 'BMW' WHERE brand = 'bmw';
-UPDATE Germany_Cars_Cleaned SET brand = 'Audi' WHERE brand = 'audi';
-UPDATE Germany_Cars_Cleaned SET brand = 'Volkswagen' WHERE brand = 'volkswagen';
-UPDATE Germany_Cars_Cleaned SET brand = 'Porsche' WHERE brand = 'porsche';
-UPDATE Germany_Cars_Cleaned SET brand = 'MINI' WHERE brand = 'mini';
-UPDATE Germany_Cars_Cleaned SET brand = 'Fiat' WHERE brand = 'fiat';
-UPDATE Germany_Cars_Cleaned SET brand = 'Smart' WHERE brand = 'smart';
-UPDATE Germany_Cars_Cleaned SET brand = 'Opel' WHERE brand = 'opel';
-UPDATE Germany_Cars_Cleaned SET brand = 'Peugeot' WHERE brand = 'peugeot';
-UPDATE Germany_Cars_Cleaned SET brand = 'Renault' WHERE brand = 'renault';
-UPDATE Germany_Cars_Cleaned SET brand = 'Toyota' WHERE brand = 'toyota';
-UPDATE Germany_Cars_Cleaned SET brand = 'Ford' WHERE brand = 'ford';
-UPDATE Germany_Cars_Cleaned SET brand = 'Hyundai' WHERE brand = 'hyundai';
-UPDATE Germany_Cars_Cleaned SET brand = 'Kia' WHERE brand = 'kia';
-UPDATE Germany_Cars_Cleaned SET brand = 'Skoda' WHERE brand = 'skoda';
-UPDATE Germany_Cars_Cleaned SET brand = 'Dacia' WHERE brand = 'dacia';
-UPDATE Germany_Cars_Cleaned SET brand = 'Volvo' WHERE brand = 'volvo';
-UPDATE Germany_Cars_Cleaned SET brand = 'Nissan' WHERE brand = 'nissan';
-UPDATE Germany_Cars_Cleaned SET brand = 'Honda' WHERE brand = 'honda';
-UPDATE Germany_Cars_Cleaned SET brand = 'Mazda' WHERE brand = 'mazda';
-UPDATE Germany_Cars_Cleaned SET brand = 'SEAT' WHERE brand = 'seat';
-UPDATE Germany_Cars_Cleaned SET brand = 'Citroen' WHERE brand = 'citroen';
-UPDATE Germany_Cars_Cleaned SET brand = 'Land Rover' WHERE brand = 'land rover';
-UPDATE Germany_Cars_Cleaned SET brand = 'Cupra' WHERE brand = 'cupra';
-UPDATE Germany_Cars_Cleaned SET brand = 'Tesla' WHERE brand = 'tesla';
-UPDATE Germany_Cars_Cleaned SET brand = 'Suzuki' WHERE brand = 'suzuki';
-UPDATE Germany_Cars_Cleaned SET brand = 'Mitsubishi' WHERE brand = 'mitsubishi';
-UPDATE Germany_Cars_Cleaned SET brand = 'Jeep' WHERE brand = 'jeep';
-UPDATE Germany_Cars_Cleaned SET brand = 'Alfa Romeo' WHERE brand = 'alfa romeo';
-UPDATE Germany_Cars_Cleaned SET brand = 'Jaguar' WHERE brand = 'jaguar';
-UPDATE Germany_Cars_Cleaned SET brand = 'Lamborghini' WHERE brand = 'lamborghini';
-UPDATE Germany_Cars_Cleaned SET brand = 'Maserati' WHERE brand = 'maserati';
-UPDATE Germany_Cars_Cleaned SET brand = 'Bentley' WHERE brand = 'bentley';
-UPDATE Germany_Cars_Cleaned SET brand = 'Aston Martin' WHERE brand = 'aston martin';
-UPDATE Germany_Cars_Cleaned SET brand = 'Ferrari' WHERE brand = 'ferrari';
-UPDATE Germany_Cars_Cleaned SET brand = 'Lancia' WHERE brand = 'lancia';
-UPDATE Germany_Cars_Cleaned SET brand = 'Saab' WHERE brand = 'saab';
-UPDATE Germany_Cars_Cleaned SET brand = 'Dodge' WHERE brand = 'dodge';
-UPDATE Germany_Cars_Cleaned SET brand = 'Chevrolet' WHERE brand = 'chevrolet';
-UPDATE Germany_Cars_Cleaned SET brand = 'Cadillac' WHERE brand = 'cadillac';
-UPDATE Germany_Cars_Cleaned SET brand = 'Daewoo' WHERE brand = 'daewoo';
-UPDATE Germany_Cars_Cleaned SET brand = 'Infiniti' WHERE brand = 'infiniti';
-UPDATE Germany_Cars_Cleaned SET brand = 'Ssangyong' WHERE brand = 'ssangyong';
-UPDATE Germany_Cars_Cleaned SET brand = 'Rover' WHERE brand = 'rover';
-UPDATE Germany_Cars_Cleaned SET brand = 'Lada' WHERE brand = 'lada';
-UPDATE Germany_Cars_Cleaned SET brand = 'Daihatsu' WHERE brand = 'daihatsu';
-UPDATE Germany_Cars_Cleaned SET brand = 'Isuzu' WHERE brand = 'isuzu';
-UPDATE Germany_Cars_Cleaned SET brand = 'Chrysler' WHERE brand = 'chrysler';
-UPDATE Germany_Cars_Cleaned SET brand = 'Proton' WHERE brand = 'proton';
-
 -- ============================================================
 -- PASUL 11: VERIFICARE FINALA
+-- Numar total de randuri dupa curatare
 -- ============================================================
 
 select count(*)
