@@ -5,7 +5,7 @@
 -- Pasi: creare tabel → eliminare invalide → combustibil →
 --       engine_type (text liber → litri) → CO2 → tipuri date →
 --       brand lowercase → transmisie → prefix model → modele →
---       culori (DE→EN) → imputare engine + CO2 → deduplicare →
+--       culori (DE→EN) → imputare engine + CO2 + consum → deduplicare →
 --       brand Proper Case → verificare
 -- ============================================================
 
@@ -85,6 +85,9 @@ UPDATE Germany_Cars_Cleaned
 SET fuel_type = 'Hybrid'
 WHERE fuel_type = 'Diesel Hybrid';
 
+update Germany_Cars_Cleaned
+set fuel_type='Unknown'
+where fuel_type = 'Other';
 -- ============================================================
 -- PASUL 3: STANDARDIZARE CAPACITATE MOTOR (engine_type)
 -- Extragem capacitatea cilindrica (litri) din textul liber
@@ -350,7 +353,8 @@ select id,
        fuel_type,
        cast((km) as integer)            as km,
        cast((engine_type) as real)      as engine_type,
-       cast((co2_g) as real)            as co2_g
+       cast((co2_g) as real)            as co2_g,
+       fuel_consumption_l_100km
 from Germany_Cars_Cleaned;
 
 drop table if exists Germany_Cars_Cleaned;
@@ -370,6 +374,11 @@ CREATE INDEX idx_cars_lookup ON Germany_Cars_Cleaned (brand, fuel_type, power_ps
 UPDATE Germany_Cars_Cleaned
 SET brand = LOWER(TRIM(brand));
 
+-- Inlocuim cratimele cu spatii temporar pentru brandurile care folosesc spatiu in interogari (land-rover, alfa-romeo, aston-martin)
+UPDATE Germany_Cars_Cleaned
+SET brand = REPLACE(brand, '-', ' ')
+WHERE brand IN ('alfa-romeo', 'aston-martin', 'land-rover');
+
 -- ============================================================
 -- PASUL 5c: STANDARDIZARE TIP TRANSMISIE
 -- Clasificam in: Manual, Automatic, Semi-automatic, Unknown
@@ -378,8 +387,9 @@ SET brand = LOWER(TRIM(brand));
 UPDATE Germany_Cars_Cleaned
 SET transmission_type = CASE
                             WHEN UPPER(transmission_type) LIKE '%MANUAL%' THEN 'Manual'
+                            WHEN UPPER(transmission_type) LIKE '%SEMI%AUTO%' OR
+                                 UPPER(transmission_type) LIKE '%SEMI-AUTO%' THEN 'Semi-automatic'
                             WHEN UPPER(transmission_type) LIKE '%AUTOMATIC%' THEN 'Automatic'
-                            WHEN UPPER(transmission_type) LIKE '%SEMI%AUTO%' THEN 'Semi-automatic'
                             WHEN transmission_type IS NULL OR TRIM(transmission_type) = '' THEN 'Unknown'
                             ELSE transmission_type
     END;
@@ -390,156 +400,7 @@ SET transmission_type = CASE
 -- ============================================================
 
 
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Mercedes-Benz'
-WHERE brand = 'mercedes-benz';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'BMW'
-WHERE brand = 'bmw';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Audi'
-WHERE brand = 'audi';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Volkswagen'
-WHERE brand = 'volkswagen';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Porsche'
-WHERE brand = 'porsche';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'MINI'
-WHERE brand = 'mini';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Fiat'
-WHERE brand = 'fiat';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Smart'
-WHERE brand = 'smart';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Opel'
-WHERE brand = 'opel';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Peugeot'
-WHERE brand = 'peugeot';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Renault'
-WHERE brand = 'renault';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Toyota'
-WHERE brand = 'toyota';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Ford'
-WHERE brand = 'ford';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Hyundai'
-WHERE brand = 'hyundai';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Kia'
-WHERE brand = 'kia';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Skoda'
-WHERE brand = 'skoda';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Dacia'
-WHERE brand = 'dacia';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Volvo'
-WHERE brand = 'volvo';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Nissan'
-WHERE brand = 'nissan';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Honda'
-WHERE brand = 'honda';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Mazda'
-WHERE brand = 'mazda';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'SEAT'
-WHERE brand = 'seat';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Citroen'
-WHERE brand = 'citroen';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Land Rover'
-WHERE brand = 'land rover';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Cupra'
-WHERE brand = 'cupra';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Tesla'
-WHERE brand = 'tesla';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Suzuki'
-WHERE brand = 'suzuki';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Mitsubishi'
-WHERE brand = 'mitsubishi';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Jeep'
-WHERE brand = 'jeep';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Alfa Romeo'
-WHERE brand = 'alfa romeo';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Jaguar'
-WHERE brand = 'jaguar';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Lamborghini'
-WHERE brand = 'lamborghini';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Maserati'
-WHERE brand = 'maserati';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Bentley'
-WHERE brand = 'bentley';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Aston Martin'
-WHERE brand = 'aston martin';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Ferrari'
-WHERE brand = 'ferrari';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Lancia'
-WHERE brand = 'lancia';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Saab'
-WHERE brand = 'saab';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Dodge'
-WHERE brand = 'dodge';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Chevrolet'
-WHERE brand = 'chevrolet';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Cadillac'
-WHERE brand = 'cadillac';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Daewoo'
-WHERE brand = 'daewoo';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Infiniti'
-WHERE brand = 'infiniti';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Ssangyong'
-WHERE brand = 'ssangyong';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Rover'
-WHERE brand = 'rover';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Lada'
-WHERE brand = 'lada';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Daihatsu'
-WHERE brand = 'daihatsu';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Isuzu'
-WHERE brand = 'isuzu';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Chrysler'
-WHERE brand = 'chrysler';
-UPDATE Germany_Cars_Cleaned
-SET brand = 'Proton'
-WHERE brand = 'proton';
+-- Conversiile de brand la Proper Case au fost mutate la Pasul 10b pentru a nu strica model cleaning-ul de la Pasul 7.
 
 
 UPDATE Germany_Cars_Cleaned
@@ -2674,6 +2535,163 @@ delete
 from Germany_Cars_Cleaned
 where Germany_Cars_Cleaned.model is NULL;
 
+-- ============================================================
+-- PASUL b: CONVERSIE BRAND LA PROPER CASE
+-- Pentru consistenta cross-market (India si SUA sunt deja Proper Case)
+-- ============================================================
+
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Mercedes-Benz'
+WHERE brand = 'mercedes-benz';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'BMW'
+WHERE brand = 'bmw';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Audi'
+WHERE brand = 'audi';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Volkswagen'
+WHERE brand = 'volkswagen';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Porsche'
+WHERE brand = 'porsche';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Mini'
+WHERE brand = 'mini';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Fiat'
+WHERE brand = 'fiat';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Smart'
+WHERE brand = 'smart';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Opel'
+WHERE brand = 'opel';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Peugeot'
+WHERE brand = 'peugeot';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Renault'
+WHERE brand = 'renault';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Toyota'
+WHERE brand = 'toyota';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Ford'
+WHERE brand = 'ford';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Hyundai'
+WHERE brand = 'hyundai';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Kia'
+WHERE brand = 'kia';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Skoda'
+WHERE brand = 'skoda';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Dacia'
+WHERE brand = 'dacia';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Volvo'
+WHERE brand = 'volvo';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Nissan'
+WHERE brand = 'nissan';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Honda'
+WHERE brand = 'honda';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Mazda'
+WHERE brand = 'mazda';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Seat'
+WHERE brand = 'seat';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Citroen'
+WHERE brand = 'citroen';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Land Rover'
+WHERE brand = 'land rover';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Cupra'
+WHERE brand = 'cupra';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Tesla'
+WHERE brand = 'tesla';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Suzuki'
+WHERE brand = 'suzuki';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Mitsubishi'
+WHERE brand = 'mitsubishi';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Jeep'
+WHERE brand = 'jeep';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Alfa Romeo'
+WHERE brand = 'alfa romeo';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Jaguar'
+WHERE brand = 'jaguar';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Lamborghini'
+WHERE brand = 'lamborghini';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Maserati'
+WHERE brand = 'maserati';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Bentley'
+WHERE brand = 'bentley';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Aston Martin'
+WHERE brand = 'aston martin';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Ferrari'
+WHERE brand = 'ferrari';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Lancia'
+WHERE brand = 'lancia';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Saab'
+WHERE brand = 'saab';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Dodge'
+WHERE brand = 'dodge';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Chevrolet'
+WHERE brand = 'chevrolet';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Cadillac'
+WHERE brand = 'cadillac';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Daewoo'
+WHERE brand = 'daewoo';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Infiniti'
+WHERE brand = 'infiniti';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Ssangyong'
+WHERE brand = 'ssangyong';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Rover'
+WHERE brand = 'rover';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Lada'
+WHERE brand = 'lada';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Daihatsu'
+WHERE brand = 'daihatsu';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Isuzu'
+WHERE brand = 'isuzu';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Chrysler'
+WHERE brand = 'chrysler';
+UPDATE Germany_Cars_Cleaned
+SET brand = 'Proton'
+WHERE brand = 'proton';
+
+
 
 -- Dupa Proper Case, stergem si randurile unde model = brand (ex. "Alfa Romeo"/"Alfa Romeo")
 -- Nu au informatii reale despre model; cratime vs spatiu nu mai e problema aici
@@ -2723,7 +2741,7 @@ WHERE color NOT IN (SELECT color
                     FROM Germany_Cars_Cleaned
                     GROUP BY color
                     ORDER BY COUNT(color) DESC
-                    LIMIT 14);
+                    LIMIT 13);
 
 -- ============================================================
 -- PASUL 9: IMPUTARE CAPACITATE MOTOR LIPSA
@@ -2745,9 +2763,13 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      AND sub.model = Germany_Cars_Cleaned.model
                      AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL
+                     and sub.fuel_type <> 'Unknown'
                      and sub.fuel_type <> 'Electric')
 WHERE (engine_type IS NULL OR engine_type = 0)
   AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
@@ -2756,9 +2778,13 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      and sub.brand = Germany_Cars_Cleaned.brand
                      AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL
+                     and sub.fuel_type <> 'Unknown'
                      and sub.fuel_type <> 'Electric')
 WHERE (engine_type IS NULL OR engine_type = 0)
   AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
@@ -2769,6 +2795,9 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      and sub.fuel_type <> 'Electric')
 WHERE (engine_type IS NULL OR engine_type = 0)
   AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
 
 UPDATE Germany_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
@@ -2790,6 +2819,9 @@ UPDATE Germany_Cars_Cleaned
 SET co2_g = NULL
 WHERE fuel_type = 'Electric';
 
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, model, fuel_type, power_ps);
+
 UPDATE Germany_Cars_Cleaned
 SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
              FROM Germany_Cars_Cleaned AS sub
@@ -2798,9 +2830,13 @@ SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
                AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
                AND sub.co2_g IS NOT NULL
+               and sub.fuel_type <> 'Unknown'
                AND sub.fuel_type <> 'Electric')
 WHERE co2_g IS NULL
   AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
 SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
@@ -2809,9 +2845,13 @@ SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
                AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
                AND sub.co2_g IS NOT NULL
+               and sub.fuel_type <> 'Unknown'
                AND sub.fuel_type <> 'Electric')
 WHERE co2_g IS NULL
   AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
 
 UPDATE Germany_Cars_Cleaned
 SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
@@ -2822,6 +2862,83 @@ SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
 WHERE co2_g IS NULL
   AND fuel_type <> 'Electric';
 
+
+drop index idx_cars_lookup1;
+
+-- ============================================================
+-- PASUL 9c: IMPUTARE CONSUM COMBUSTIBIL LIPSA
+-- Strategie in 4 pasi (de la specific la general):
+--   1. Media pe brand + model + fuel_type + transmission_type (fereastra ±2 ani)
+--   2. Media pe brand + fuel_type + transmission_type (fereastra ±10 PS)
+--   3. Media pe fuel_type (fereastra ±0.4L engine)
+--   4. Media pe fuel_type (fallback global)
+-- Excludem vehiculele electrice (consum = 0 prin definitie)
+-- ============================================================
+
+UPDATE Germany_Cars_Cleaned
+SET fuel_consumption_l_100km = NULL
+WHERE fuel_type = 'Electric';
+
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, model, fuel_type, transmission_type, year);
+
+UPDATE Germany_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM Germany_Cars_Cleaned AS sub
+                                WHERE sub.brand = Germany_Cars_Cleaned.brand
+                                  AND sub.model = Germany_Cars_Cleaned.model
+                                  AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+                                  AND sub.transmission_type = Germany_Cars_Cleaned.transmission_type
+                                  AND sub.year BETWEEN Germany_Cars_Cleaned.year - 2 AND Germany_Cars_Cleaned.year + 2
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL
+                                  and sub.fuel_type <> 'Unknown'
+                                  AND sub.fuel_type <> 'Electric'
+                                  AND sub.transmission_type <> 'Unknown')
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, transmission_type, power_ps);
+
+UPDATE Germany_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM Germany_Cars_Cleaned AS sub
+                                WHERE sub.brand = Germany_Cars_Cleaned.brand
+                                  AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+                                  AND sub.transmission_type = Germany_Cars_Cleaned.transmission_type
+                                  AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL
+                                  AND sub.fuel_type <> 'Electric'
+                                  and sub.fuel_type <> 'Unknown'
+                                  AND sub.transmission_type <> 'Unknown')
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type, engine_type);
+
+UPDATE Germany_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM Germany_Cars_Cleaned AS sub
+                                WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+                                  AND sub.engine_type BETWEEN Germany_Cars_Cleaned.engine_type - 0.4 AND Germany_Cars_Cleaned.engine_type + 0.4
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL
+                                  AND sub.fuel_type <> 'Electric')
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
+CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
+
+UPDATE Germany_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM Germany_Cars_Cleaned AS sub
+                                WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL
+                                  AND sub.fuel_type <> 'Electric')
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1;
 
 -- ============================================================
 -- PASUL 10: DEDUPLICARE
@@ -2837,14 +2954,13 @@ where id not in (SELECT MIN(id)
 
 
 -- ============================================================
--- PASUL 10b: CONVERSIE BRAND LA PROPER CASE
--- Pentru consistenta cross-market (India si SUA sunt deja Proper Case)
--- ============================================================
-
--- ============================================================
 -- PASUL 11: VERIFICARE FINALA
 -- Numar total de randuri dupa curatare
 -- ============================================================
 
 select count(*)
 from Germany_Cars_Cleaned;
+
+select fuel_type, count(*)
+from Germany_Cars_Cleaned
+group by fuel_type

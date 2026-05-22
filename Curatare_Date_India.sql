@@ -1,12 +1,12 @@
-﻿-- ============================================================
+-- ============================================================
 -- SCRIPT CURATARE DATE: Piata auto SH din India
 -- Sursa: tabel cars_details_merges (date brute din dataset)
 -- Rezultat: tabel India_Cars_Cleaned cu date standardizate
--- Pasi: creare tabel (conversii INR→EUR, BHP→PS, cc→litri) →
+-- Pasi: creare tabel (conversii INR→EUR, BHP→PS, cc→litri, kmpl→l/100km) →
 --       eliminare invalide → corectie brand → modele →
 --       culori → transmisie → combustibil → tractiune/proprietar/
---       caroserie/seller/state → imputare power_ps + engine_type →
---       deduplicare → verificare
+--       caroserie/seller/state → imputare power_ps + engine_type +
+--       consum → deduplicare → verificare
 -- ============================================================
 
 -- ============================================================
@@ -34,6 +34,11 @@ select id,
        fuel_type,
        cast(km_driven as integer)                               as km,
        cast(round(max_engine_capacity_new / 1000, 1) as double) as engine_type,
+       CASE
+           WHEN mileage_new LIKE '%kmpl%'
+               THEN ROUND(100.0 / NULLIF(CAST(SUBSTR(mileage_new, 1, INSTR(mileage_new, ' ') - 1) AS REAL), 0), 1)
+           ELSE NULL
+           END                                                  as fuel_consumption_l_100km,
        owner_type_new                                           as one_owner,
        "Drive Type"                                             as drivetrain,
        bt                                                       as body_type,
@@ -741,12 +746,16 @@ where color like '%Copper%'
    or color like '%Tan%';
 
 update India_Cars_Cleaned
+set color = 'Grey'
+where color like '%Misty Lake%';
+
+update India_Cars_Cleaned
 set color = 'Unknown'
 where color not in (select India_Cars_Cleaned.Color
                     from India_Cars_Cleaned
                     group by Color
                     order by count(Color) desc
-                    LIMIT 14);
+                    LIMIT 13);
 
 
 -- ============================================================
@@ -780,7 +789,7 @@ SET fuel_type = CASE
                         THEN 'LPG'
                     WHEN UPPER(TRIM(fuel_type)) LIKE '%ELECTRIC%' THEN 'Electric'
                     WHEN UPPER(TRIM(fuel_type)) LIKE '%HYBRID%' THEN 'Hybrid'
-                    WHEN fuel_type IS NULL OR TRIM(fuel_type) = '' THEN 'Other'
+                    WHEN fuel_type IS NULL OR TRIM(fuel_type) = '' THEN 'Unknown'
                     ELSE fuel_type
     END;
 
@@ -859,19 +868,14 @@ WHERE state IS NULL
    OR TRIM(state) = '';
 
 -- ============================================================
--- PASUL 9-10: IMPUTARE VALORI NULE
--- power_ps (de la specific la general):
---   1. Media pe brand + model + engine_type (±0.3L)
---   2. Media pe brand + engine_type (±0.3L)
---   3. Media pe engine_type (±0.4L)
--- engine_type (de la specific la general):
---   1. Media pe brand + model + body_type + power_ps (±10 PS)
---   2. Media pe brand + fuel_type + power_ps (±10 PS)
---   3. Media pe fuel_type (fallback global)
--- Electric → engine_type = NULL (nu au cilindree)
+-- PASUL 9: IMPUTARE PUTERE MOTOR LIPSA (power_ps)
+-- Strategie in 3 pasi (de la specific la general):
+--   1. Media pe brand + model + engine_type (fereastra ±0.3L)
+--   2. Media pe brand + engine_type (fereastra ±0.3L)
+--   3. Media pe engine_type (fereastra ±0.4L)
 -- ============================================================
 
--- Imputare power_ps
+CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (brand, model, engine_type);
 
 UPDATE India_Cars_Cleaned
 SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
@@ -884,6 +888,9 @@ SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
 WHERE power_ps IS NULL
    OR power_ps < 10;
 
+drop index idx_cars_lookup_India;
+CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (brand, engine_type);
+
 UPDATE India_Cars_Cleaned
 SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
                 FROM India_Cars_Cleaned AS sub
@@ -893,6 +900,9 @@ SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
                   AND sub.power_ps > 10)
 WHERE power_ps IS NULL
    OR power_ps < 10;
+
+drop index idx_cars_lookup_India;
+CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (engine_type);
 
 UPDATE India_Cars_Cleaned
 SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
@@ -907,11 +917,21 @@ DELETE
 FROM India_Cars_Cleaned
 WHERE power_ps IS NULL;
 
--- Imputare engine_type]
+-- ============================================================
+-- PASUL 10: IMPUTARE CAPACITATE MOTOR LIPSA (engine_type)
+-- Strategie in 3 pasi (de la specific la general):
+--   1. Media pe brand + model + body_type (fereastra ±10 PS)
+--   2. Media pe brand + fuel_type (fereastra ±10 PS)
+--   3. Media pe fuel_type (fallback global)
+-- Excludem vehiculele electrice (nu au cilindree)
+-- ============================================================
+
 update India_Cars_Cleaned
 set engine_type=null
-where engine_type is not null
-  and fuel_type = 'Electric';
+where fuel_type = 'Electric';
+
+drop index idx_cars_lookup_India;
+CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (brand, model, body_type, power_ps);
 
 UPDATE India_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
@@ -921,12 +941,16 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      and sub.body_type = India_Cars_Cleaned.body_type
                      and sub.power_ps between India_Cars_Cleaned.power_ps - 10 and India_Cars_Cleaned.power_ps + 10
                      AND sub.engine_type IS NOT NULL
+                     and sub.body_type <> 'Unknown'
+                     and sub.fuel_type <> 'Unknown'
                      AND sub.fuel_type <> 'Electric')
-WHERE engine_type IS NULL
-   or engine_type < 0.5;
-
+WHERE (engine_type IS NULL OR engine_type < 0.5)
+  AND fuel_type <> 'Electric';
 
 -- Imputare engine_type — Pas suplimentar (brand + fuel_type, fara model)
+drop index idx_cars_lookup1_India;
+CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (brand, fuel_type, power_ps);
+
 UPDATE India_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    FROM India_Cars_Cleaned AS sub
@@ -934,11 +958,15 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      AND sub.fuel_type = India_Cars_Cleaned.fuel_type
                      AND sub.power_ps BETWEEN India_Cars_Cleaned.power_ps - 10 AND India_Cars_Cleaned.power_ps + 10
                      AND sub.engine_type IS NOT NULL
+                     and sub.fuel_type <> 'Unknown'
                      AND sub.fuel_type <> 'Electric')
 WHERE (engine_type IS NULL OR engine_type < 0.5)
   AND fuel_type <> 'Electric';
 
 -- Imputare engine_type — Fallback global (fuel_type)
+drop index idx_cars_lookup1_India;
+CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (fuel_type);
+
 UPDATE India_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    FROM India_Cars_Cleaned AS sub
@@ -947,6 +975,83 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      AND sub.fuel_type <> 'Electric')
 WHERE (engine_type IS NULL OR engine_type < 0.5)
   AND fuel_type <> 'Electric';
+
+drop index idx_cars_lookup1_India;
+
+-- ============================================================
+-- PASUL 10b: IMPUTARE CONSUM COMBUSTIBIL LIPSA
+-- Strategie in 4 pasi (de la specific la general):
+--   1. Media pe brand + model + fuel_type + transmission + drivetrain (fereastra ±2 ani)
+--   2. Media pe brand + fuel_type + transmission_type (fereastra ±10 PS)
+--   3. Media pe fuel_type (fereastra ±0.4L engine)
+--   4. Media pe fuel_type (fallback global)
+-- km/kg (CNG) → NULL la creare (nu e comparabil cu l/100km)
+-- ============================================================
+
+
+CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (brand, model, fuel_type, transmission_type, drivetrain, year);
+
+update India_Cars_Cleaned
+set fuel_consumption_l_100km=null
+where fuel_type = 'Electric'
+   or India_Cars_Cleaned.fuel_type = 'CNG';
+
+UPDATE India_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM India_Cars_Cleaned AS sub
+                                WHERE sub.brand = India_Cars_Cleaned.brand
+                                  AND sub.model = India_Cars_Cleaned.model
+                                  AND sub.fuel_type = India_Cars_Cleaned.fuel_type
+                                  AND sub.transmission_type = India_Cars_Cleaned.transmission_type
+                                  AND sub.drivetrain = India_Cars_Cleaned.drivetrain
+                                  AND sub.year BETWEEN India_Cars_Cleaned.year - 2 AND India_Cars_Cleaned.year + 2
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL
+                                  and sub.fuel_type <> 'Unknown'
+                                  AND sub.drivetrain <> 'Unknown'
+                                  AND sub.transmission_type <> 'Unknown')
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type NOT IN ('Electric', 'CNG');
+
+drop index idx_cars_lookup1_India;
+CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (brand, fuel_type, transmission_type, power_ps);
+
+UPDATE India_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM India_Cars_Cleaned AS sub
+                                WHERE sub.brand = India_Cars_Cleaned.brand
+                                  AND sub.fuel_type = India_Cars_Cleaned.fuel_type
+                                  AND sub.transmission_type = India_Cars_Cleaned.transmission_type
+                                  AND sub.power_ps BETWEEN India_Cars_Cleaned.power_ps - 10 AND India_Cars_Cleaned.power_ps + 10
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL
+                                  and sub.fuel_type <> 'Unknown'
+                                  AND sub.transmission_type <> 'Unknown')
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type NOT IN ('Electric', 'CNG');
+
+drop index idx_cars_lookup1_India;
+CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (fuel_type, engine_type);
+
+UPDATE India_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM India_Cars_Cleaned AS sub
+                                WHERE sub.fuel_type = India_Cars_Cleaned.fuel_type
+                                  AND sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.4 AND India_Cars_Cleaned.engine_type + 0.4
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL)
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type NOT IN ('Electric', 'CNG');
+
+drop index idx_cars_lookup1_India;
+CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (fuel_type);
+
+UPDATE India_Cars_Cleaned
+SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+                                FROM India_Cars_Cleaned AS sub
+                                WHERE sub.fuel_type = India_Cars_Cleaned.fuel_type
+                                  AND sub.fuel_consumption_l_100km IS NOT NULL)
+WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
+  AND fuel_type NOT IN ('Electric', 'CNG');
+
+drop index idx_cars_lookup1_India;
 
 -- ============================================================
 -- PASUL 11: DEDUPLICARE
