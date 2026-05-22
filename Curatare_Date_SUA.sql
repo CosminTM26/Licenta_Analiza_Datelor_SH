@@ -14,8 +14,8 @@
 -- PASUL 0: CREARE TABEL CURATAT
 -- Selectam coloanele relevante si le redenumim uniform
 -- ============================================================
-drop table if exists SUA_cars_Cleaned;
-create table SUA_cars_Cleaned as
+drop table if exists SUA_Cars_Cleaned;
+create table SUA_Cars_Cleaned as
 select manufacturer   as brand,
        model,
        exterior_color as color,
@@ -38,7 +38,7 @@ from SUA_Cars;
 -- Extragem capacitatea cilindrica (litri) din textul liber
 -- Pattern-uri: "2.0L", "2.0 L", "Electric Motor", etc.
 -- ============================================================
-UPDATE SUA_cars_Cleaned
+UPDATE SUA_Cars_Cleaned
 SET engine_type = CASE
 
 
@@ -317,11 +317,11 @@ SET engine_type = CASE
 -- PASUL 2: SEPARARE VEHICULE ELECTRICE
 -- Mutam "Electric" din engine_type in fuel_type (nu au cilindree)
 -- ============================================================
-update SUA_cars_Cleaned
+update SUA_Cars_Cleaned
 set fuel_type='Electric'
 where engine_type = 'Electric';
 
-update SUA_cars_Cleaned
+update SUA_Cars_Cleaned
 set engine_type=null
 where engine_type = 'Electric';
 
@@ -330,16 +330,16 @@ where engine_type = 'Electric';
 -- Stergem randuri fara km, cu pret invalid sau an imposibil
 -- ============================================================
 delete
-from SUA_cars_Cleaned
+from SUA_Cars_Cleaned
 where km is null;
 
 delete
-from SUA_cars_Cleaned
+from SUA_Cars_Cleaned
 where price_in_euro is null
    or price_in_euro <= 0;
 
 delete
-from SUA_cars_Cleaned
+from SUA_Cars_Cleaned
 where year is null
    or year not between 1900 and 2026;
 
@@ -350,18 +350,18 @@ where year is null
 -- Consum: mpg -> l/100km (formula: 235.21 / mpg; NULL pentru Electric)
 -- Rotunjire la sute pentru valori curate
 -- ============================================================
-alter table SUA_cars_Cleaned
+alter table SUA_Cars_Cleaned
     add column id integer;
 
-update SUA_cars_Cleaned
+update SUA_Cars_Cleaned
 set id=ROWID;
 
 drop table if exists schimb;
-alter table SUA_cars_Cleaned
+alter table SUA_Cars_Cleaned
     rename to schimb;
 
-drop table if exists SUA_cars_Cleaned;
-create table SUA_cars_Cleaned
+drop table if exists SUA_Cars_Cleaned;
+create table SUA_Cars_Cleaned
 (
     id                       integer,
     brand                    text,
@@ -378,7 +378,7 @@ create table SUA_cars_Cleaned
     fuel_consumption_l_100km real
 );
 
-insert into SUA_cars_Cleaned
+insert into SUA_Cars_Cleaned
 select id,
        brand,
        model,
@@ -392,12 +392,24 @@ select id,
        drivetrain,
        one_owner,
        CASE
-           WHEN mpg IS NULL OR mpg NOT LIKE '%-%' THEN NULL
-           ELSE ROUND(235.21 / NULLIF(
-                   (CAST(SUBSTR(mpg, 1, INSTR(mpg, '-') - 1) AS REAL) +
-                    CAST(SUBSTR(mpg, INSTR(mpg, '-') + 1) AS REAL)) / 2.0,
-                   0), 1)
-           END                                              as fuel_consumption_l_100km
+            WHEN mpg IS NULL OR mpg = '' OR mpg = '0' OR mpg = '0-0' THEN NULL
+            WHEN INSTR(mpg, '-') > 0 THEN
+                CASE 
+                    WHEN CAST(SUBSTR(mpg, 1, INSTR(mpg, '-') - 1) AS REAL) > 0 
+                     AND CAST(SUBSTR(mpg, INSTR(mpg, '-') + 1) AS REAL) > 0 THEN
+                        ROUND(235.21 / ((CAST(SUBSTR(mpg, 1, INSTR(mpg, '-') - 1) AS REAL) + CAST(SUBSTR(mpg, INSTR(mpg, '-') + 1) AS REAL)) / 2.0), 1)
+                    WHEN CAST(SUBSTR(mpg, 1, INSTR(mpg, '-') - 1) AS REAL) > 0 THEN
+                        ROUND(235.21 / CAST(SUBSTR(mpg, 1, INSTR(mpg, '-') - 1) AS REAL), 1)
+                    WHEN CAST(SUBSTR(mpg, INSTR(mpg, '-') + 1) AS REAL) > 0 THEN
+                        ROUND(235.21 / CAST(SUBSTR(mpg, INSTR(mpg, '-') + 1) AS REAL), 1)
+                    ELSE NULL
+                END
+            ELSE
+                CASE 
+                    WHEN CAST(mpg AS REAL) > 0 THEN ROUND(235.21 / CAST(mpg AS REAL), 1)
+                    ELSE NULL
+                END
+        END as fuel_consumption_l_100km
 from schimb;
 
 drop table if exists schimb;
@@ -423,7 +435,7 @@ SET brand = 'Land Rover'
 WHERE UPPER(brand) LIKE '%LAND ROVER%';
 
 UPDATE SUA_Cars_Cleaned
-SET brand = 'RAM'
+SET brand = 'Ram'
 WHERE UPPER(brand) = 'RAM';
 
 -- ============================================================
@@ -4528,12 +4540,12 @@ WHERE model LIKE '968%'
 UPDATE SUA_Cars_Cleaned
 SET model = '1500 Classic'
 WHERE (model LIKE '1500 Classic%' OR model LIKE '1500 Warlock%')
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 
 UPDATE SUA_Cars_Cleaned
 SET model = '1500 TRX'
 WHERE model LIKE '1500 TRX%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 
 UPDATE SUA_Cars_Cleaned
 SET model = '1500'
@@ -4541,41 +4553,41 @@ WHERE model LIKE '1500%'
   AND model NOT LIKE '1500 Classic%'
   AND model NOT LIKE '1500 Warlock%'
   AND model NOT LIKE '1500 TRX%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 
 
 UPDATE SUA_Cars_Cleaned
 SET model = '2500'
 WHERE model LIKE '2500%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 UPDATE SUA_Cars_Cleaned
 SET model = '3500'
 WHERE model LIKE '3500%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 
 
 UPDATE SUA_Cars_Cleaned
 SET model = 'ProMaster City'
 WHERE model LIKE 'ProMaster City%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 
 UPDATE SUA_Cars_Cleaned
 SET model = 'ProMaster 1500'
 WHERE model LIKE 'ProMaster 1500%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 UPDATE SUA_Cars_Cleaned
 SET model = 'ProMaster 2500'
 WHERE model LIKE 'ProMaster 2500%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 UPDATE SUA_Cars_Cleaned
 SET model = 'ProMaster 3500'
 WHERE model LIKE 'ProMaster 3500%'
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 
 UPDATE SUA_Cars_Cleaned
 SET model = 'Cargo C/V'
 WHERE (model LIKE 'Cargo C/V%' OR model LIKE 'Cargo Tradesman%')
-  AND brand = 'RAM';
+  AND brand = 'Ram';
 
 
 -- ==================== SUBARU ====================
@@ -5209,19 +5221,19 @@ WHERE model = 'Seria 8'
 
 -- Dodge -> RAM (rebrand)
 UPDATE SUA_Cars_Cleaned
-SET brand = 'RAM',
+SET brand = 'Ram',
     model = '1500'
 WHERE model LIKE 'Ram 1500%'
   AND brand = 'Dodge';
 
 UPDATE SUA_Cars_Cleaned
-SET brand = 'RAM',
+SET brand = 'Ram',
     model = '2500'
 WHERE model LIKE 'Ram 2500%'
   AND brand = 'Dodge';
 
 UPDATE SUA_Cars_Cleaned
-SET brand = 'RAM',
+SET brand = 'Ram',
     model = '3500'
 WHERE model LIKE 'Ram 3500%'
   AND brand = 'Dodge';
@@ -5247,7 +5259,7 @@ WHERE brand = 'Ford'
 -- Grupam sute de variante in ~14 categorii unificate cross-market:
 --   Gray/Charcoal/Graphite → Grey, Bronze/Copper → Brown,
 --   Tan/Sand/Champagne → Beige, Pink/Violet → Purple
--- Culorile rare (sub top 14 ca frecventa) devin 'Unknown'
+-- Culorile rare (sub top 12 ca frecventa) devin 'Unknown'
 -- ============================================================
 UPDATE SUA_Cars_Cleaned
 SET color = CASE
@@ -5339,14 +5351,21 @@ SET color = CASE
                 ELSE 'Unknown'
     END;
 
--- Culorile rare (sub top 13 ca frecventa) devin 'Unknown'
+-- Culorile rare (sub top 12 ca frecventa non-Unknown) devin 'Unknown'
+drop table if exists temp_top_colors;
+create temp table temp_top_colors as
+select color
+from SUA_Cars_Cleaned
+where color <> 'Unknown'
+group by color
+order by count(color) desc
+limit 12;
+
 update SUA_Cars_Cleaned
 set color = 'Unknown'
-where color not in (select color
-                    from SUA_Cars_Cleaned
-                    group by color
-                    order by count(color) desc
-                    LIMIT 13);
+where color not in (select color from temp_top_colors);
+
+drop table if exists temp_top_colors;
 
 -- ============================================================
 -- PASUL 8: STANDARDIZARE TIP TRANSMISIE
@@ -5434,7 +5453,7 @@ UPDATE SUA_Cars_Cleaned
 SET fuel_type = CASE
     -- 1. Erori, Lipsă Date și Valori Ambigue
                     WHEN fuel_type IN ('', '-', '0', 'Unknown', 'Unspecified', 'Other', 'Automatic', 'B', 'Bi-Fuel') OR
-                         fuel_type IS NULL THEN 'Other'
+                         fuel_type IS NULL THEN 'Unknown'
 
     -- 2. Hybrid (PHEV, MHEV, Gas/Electric)
     -- Această regulă TREBUIE să fie prima pentru a prinde combinațiile "Electric/Gas" înainte să ajungă la secțiunile separate
@@ -5465,7 +5484,7 @@ SET fuel_type = CASE
                          UPPER(fuel_type) LIKE '%UNLEADED%' OR fuel_type = 'G' THEN 'Petrol'
 
     -- 10. Fallback
-                    ELSE 'Other'
+                    ELSE 'Unknown'
     END;
 
 
@@ -5528,10 +5547,11 @@ SET one_owner = CASE
 -- ============================================================
 UPDATE SUA_Cars_Cleaned
 SET engine_type = NULL
-WHERE fuel_type = 'Electric';
+WHERE fuel_type = 'Electric'
+   OR fuel_type = 'Hydrogen';
 
 
-CREATE INDEX idx_cars_lookup_SUA ON SUA_cars_Cleaned (brand, model, fuel_type, year);
+CREATE INDEX idx_cars_lookup_SUA ON SUA_Cars_Cleaned (brand, model, fuel_type, year);
 
 -- Pas 1: imputare pe brand + model + fuel_type (fereastra ±2 ani)
 UPDATE SUA_Cars_Cleaned
@@ -5540,16 +5560,16 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    where sub.brand = SUA_Cars_Cleaned.brand
                      AND sub.model = SUA_Cars_Cleaned.model
                      AND sub.fuel_type = SUA_Cars_Cleaned.fuel_type
-                     and sub.year between SUA_cars_Cleaned.year - 2 and SUA_cars_Cleaned.year + 2
+                     and sub.year between SUA_Cars_Cleaned.year - 2 and SUA_Cars_Cleaned.year + 2
                      AND sub.engine_type IS NOT NULL
-                     and sub.fuel_type <> 'Other'
-                     and sub.fuel_type <> 'Electric')
+                     and sub.fuel_type <> 'Unknown'
+                     and sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
 WHERE (engine_type IS NULL OR engine_type = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 -- Pas 2: imputare pe brand + fuel_type (fara restrictie de model)
 drop index idx_cars_lookup_SUA;
-CREATE INDEX idx_cars_lookup_SUA ON SUA_cars_Cleaned (brand, fuel_type);
+CREATE INDEX idx_cars_lookup_SUA ON SUA_Cars_Cleaned (brand, fuel_type);
 
 UPDATE SUA_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
@@ -5557,25 +5577,25 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    where sub.brand = SUA_Cars_Cleaned.brand
                      AND sub.fuel_type = SUA_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL
-                     and sub.fuel_type <> 'Other'
-                     and sub.fuel_type <> 'Electric')
+                     and sub.fuel_type <> 'Unknown'
+                     and sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
 WHERE (engine_type IS NULL OR engine_type = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 -- Pas 3: fallback global pe fuel_type
 drop index idx_cars_lookup_SUA;
-CREATE INDEX idx_cars_lookup_SUA ON SUA_cars_Cleaned (fuel_type);
+CREATE INDEX idx_cars_lookup_SUA ON SUA_Cars_Cleaned (fuel_type);
 
 UPDATE SUA_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    FROM SUA_Cars_Cleaned AS sub
                    WHERE sub.fuel_type = SUA_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL
-                     and sub.fuel_type <> 'Electric')
+                     and sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
 WHERE (engine_type IS NULL OR engine_type = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
-
+drop index idx_cars_lookup_SUA;
 
 -- ============================================================
 -- PASUL 12b: IMPUTARE CONSUM COMBUSTIBIL LIPSA
@@ -5583,16 +5603,18 @@ WHERE (engine_type IS NULL OR engine_type = 0)
 --   1. Media pe brand + model + fuel_type + transmission + drivetrain (fereastra ±2 ani, engine exact)
 --   2. Media pe brand + fuel_type + transmission + drivetrain (fereastra ±4 ani, engine ±0.2L)
 --   3. Media pe fuel_type + drivetrain (fereastra ±0.4L engine)
---   4. Media pe fuel_type (fereastra ±0.8L engine)
--- Excludem vehiculele electrice (consum = 0 prin definitie)
+--   4. Media pe fuel_type (fereastra ±0.9L engine)
+-- Excludem vehiculele electrice, hydrogen si CNG (consum incomparabil sau 0)
 -- ============================================================
 
-CREATE INDEX idx_cars_lookup1_SUA ON SUA_cars_Cleaned (brand, model, fuel_type, year, transmission_type, drivetrain,
+CREATE INDEX idx_cars_lookup1_SUA ON SUA_Cars_Cleaned (brand, model, fuel_type, year, transmission_type, drivetrain,
                                                        engine_type);
 
 UPDATE SUA_Cars_Cleaned
 SET fuel_consumption_l_100km = NULL
-WHERE fuel_type = 'Electric';
+WHERE fuel_type = 'Electric'
+   OR fuel_type = 'Hydrogen'
+   OR fuel_type = 'CNG';
 
 -- Pas 1: imputare pe brand + model + fuel_type + transmission + drivetrain (fereastra ±2 ani)
 UPDATE SUA_Cars_Cleaned
@@ -5601,22 +5623,22 @@ SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 
                                 where sub.brand = SUA_Cars_Cleaned.brand
                                   AND sub.model = SUA_Cars_Cleaned.model
                                   AND sub.fuel_type = SUA_Cars_Cleaned.fuel_type
-                                  and sub.transmission_type = SUA_cars_Cleaned.transmission_type
-                                  and sub.year between SUA_cars_Cleaned.year - 2 and SUA_cars_Cleaned.year + 2
-                                  AND sub.engine_type = SUA_cars_Cleaned.engine_type
-                                  and sub.drivetrain = SUA_cars_Cleaned.drivetrain
+                                  and sub.transmission_type = SUA_Cars_Cleaned.transmission_type
+                                  and sub.year between SUA_Cars_Cleaned.year - 2 and SUA_Cars_Cleaned.year + 2
+                                  AND sub.engine_type = SUA_Cars_Cleaned.engine_type
+                                  and sub.drivetrain = SUA_Cars_Cleaned.drivetrain
                                   and sub.fuel_consumption_l_100km is not null
-                                  and sub.fuel_type <> 'Electric'
+                                  and sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG')
                                   and sub.drivetrain <> 'Unknown'
                                   and sub.transmission_type <> 'Unknown'
-                                  and sub.fuel_type <> 'Other')
+                                  and sub.fuel_type <> 'Unknown')
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
 -- Pas 2: imputare pe brand + fuel_type + transmission + drivetrain (fereastra ±4 ani, engine ±0.2L)
 drop index idx_cars_lookup1_SUA;
 
-CREATE INDEX idx_cars_lookup1_SUA ON SUA_cars_Cleaned (brand, fuel_type, year, transmission_type, drivetrain,
+CREATE INDEX idx_cars_lookup1_SUA ON SUA_Cars_Cleaned (brand, fuel_type, year, transmission_type, drivetrain,
                                                        engine_type);
 
 UPDATE SUA_Cars_Cleaned
@@ -5626,20 +5648,20 @@ SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 
                                   AND sub.fuel_type = SUA_Cars_Cleaned.fuel_type
                                   AND sub.transmission_type = SUA_Cars_Cleaned.transmission_type
                                   AND (sub.drivetrain = SUA_Cars_Cleaned.drivetrain and
-                                       SUA_cars_Cleaned.drivetrain <> 'Unknown')
+                                       SUA_Cars_Cleaned.drivetrain <> 'Unknown')
                                   AND sub.year BETWEEN SUA_Cars_Cleaned.year - 4 AND SUA_Cars_Cleaned.year + 4
                                   AND sub.engine_type BETWEEN SUA_Cars_Cleaned.engine_type - 0.2 AND SUA_Cars_Cleaned.engine_type + 0.2
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
-                                  AND sub.fuel_type <> 'Electric'
+                                  AND sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG')
                                   and sub.drivetrain <> 'Unknown'
                                   and sub.transmission_type <> 'Unknown'
-                                  and sub.fuel_type <> 'Other')
+                                  and sub.fuel_type <> 'Unknown')
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
 -- Pas 3: fallback pe fuel_type + drivetrain (fereastra ±0.4L engine)
 drop index idx_cars_lookup1_SUA;
-CREATE INDEX idx_cars_lookup1_SUA ON SUA_cars_Cleaned (fuel_type, drivetrain, engine_type);
+CREATE INDEX idx_cars_lookup1_SUA ON SUA_Cars_Cleaned (fuel_type, drivetrain, engine_type);
 
 UPDATE SUA_Cars_Cleaned
 SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
@@ -5648,22 +5670,22 @@ SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 
                                   AND sub.drivetrain = SUA_Cars_Cleaned.drivetrain
                                   AND sub.engine_type BETWEEN SUA_Cars_Cleaned.engine_type - 0.4 AND SUA_Cars_Cleaned.engine_type + 0.4
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
-                                  AND sub.fuel_type <> 'Electric')
+                                  AND sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG'))
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
--- Pas 4: fallback global pe fuel_type (fereastra ±0.8L engine)
+-- Pas 4: fallback global pe fuel_type (fereastra ±0.9L engine)
 UPDATE SUA_Cars_Cleaned
 SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
                                 FROM SUA_Cars_Cleaned AS sub
                                 WHERE sub.fuel_type = SUA_Cars_Cleaned.fuel_type
                                   AND sub.engine_type BETWEEN SUA_Cars_Cleaned.engine_type - 0.9 AND SUA_Cars_Cleaned.engine_type + 0.9
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
-                                  AND sub.fuel_type <> 'Electric')
+                                  AND sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG'))
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
-
+drop index idx_cars_lookup1_SUA;
 
 -- ============================================================
 -- PASUL 13: DEDUPLICARE
@@ -5671,29 +5693,22 @@ WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
 -- ============================================================
 
 DELETE
-FROM SUA_cars_Cleaned
+FROM SUA_Cars_Cleaned
 WHERE id NOT IN (SELECT MIN(id)
-                 FROM SUA_cars_Cleaned
+                 FROM SUA_Cars_Cleaned
                  GROUP BY brand, model, color, year, price_in_euro, transmission_type, fuel_type, km, engine_type,
                           drivetrain, one_owner);
 
 -- ============================================================
 -- PASUL 13b: CONVERSIE BRAND LA PROPER CASE
--- Convertim brandurile la Proper Case pentru consistenta cross-market
--- In particular, model cleaning-ul a rulat cu 'INFINITI' si 'RAM', pe care acum le transformam in 'Infiniti' si 'Ram'
+-- Brandul INFINITI este pastrat majuscule conform AGENTS.md.
+-- Brandul Ram este standardizat direct la Pasul 4b.
 -- ============================================================
-UPDATE SUA_Cars_Cleaned
-SET brand = 'Infiniti'
-WHERE brand = 'INFINITI';
-
-UPDATE SUA_Cars_Cleaned
-SET brand = 'Ram'
-WHERE brand = 'RAM';
 
 -- ============================================================
 -- PASUL 14: VERIFICARE FINALA
 -- Numar total de randuri dupa curatare
 -- ============================================================
 select count(*)
-from SUA_cars_Cleaned;
+from SUA_Cars_Cleaned;
 

@@ -21,8 +21,28 @@ update cars_details_merges
 set id=rowid;
 
 drop table if exists India_Cars_Cleaned;
--- selectare coloane necesare
-create table India_Cars_Cleaned as
+create table India_Cars_Cleaned
+(
+    id                       integer,
+    brand                    text,
+    model                    text,
+    color                    text,
+    year                     integer,
+    price_in_euro            integer,
+    power_ps                 integer,
+    transmission_type        text,
+    fuel_type                text,
+    km                       integer,
+    engine_type              real,
+    fuel_consumption_l_100km real,
+    one_owner                text,
+    drivetrain               text,
+    body_type                text,
+    seller_type              text,
+    state                    text
+);
+
+insert into India_Cars_Cleaned
 select id,
        oem                                                      as brand,
        model,
@@ -34,11 +54,11 @@ select id,
        fuel_type,
        cast(km_driven as integer)                               as km,
        cast(round(max_engine_capacity_new / 1000, 1) as double) as engine_type,
-       CASE
-           WHEN mileage_new LIKE '%kmpl%'
-               THEN ROUND(100.0 / NULLIF(CAST(SUBSTR(mileage_new, 1, INSTR(mileage_new, ' ') - 1) AS REAL), 0), 1)
-           ELSE NULL
-           END                                                  as fuel_consumption_l_100km,
+       CAST(CASE
+                WHEN mileage_new LIKE '%kmpl%'
+                    THEN ROUND(100.0 / NULLIF(CAST(SUBSTR(mileage_new, 1, INSTR(mileage_new, ' ') - 1) AS REAL), 0), 1)
+                ELSE NULL
+           END AS REAL)                                         as fuel_consumption_l_100km,
        owner_type_new                                           as one_owner,
        "Drive Type"                                             as drivetrain,
        bt                                                       as body_type,
@@ -635,9 +655,9 @@ WHERE model LIKE '%Ashok Leyland Stile%';
 -- Mapam variantele in categorii unificate cross-market:
 --   Chocolate/Bronze/Copper → Brown, Violet/Magenta/Pink → Purple,
 --   Titanium/Steel/Star/Metal/Gray → Grey, Aqua/Navy/Indigo → Blue,
---   Maroon/Burgundy/Wine → Red, Beige/Tan/Cream/Ivory → White/Brown,
+--   Maroon/Burgundy/Wine → Red, Beige → Beige, Cream/Ivory → White, Tan/Copper → Brown,
 --   Gold/Golden/Amber → Gold, Green variants → Green
--- Culorile rare (sub top 14 ca frecventa) devin 'Unknown'
+-- Culorile rare (sub top 12 ca frecventa) devin 'Unknown'
 -- ============================================================
 update India_Cars_Cleaned
 set color = 'Unknown'
@@ -700,7 +720,7 @@ update India_Cars_Cleaned
 set color = 'Red'
 where color like '%Maroon%';
 update India_Cars_Cleaned
-set color = 'Brown'
+set color = 'Beige'
 where color like '%Beige%';
 update India_Cars_Cleaned
 set color = 'Grey'
@@ -749,13 +769,20 @@ update India_Cars_Cleaned
 set color = 'Grey'
 where color like '%Misty Lake%';
 
+drop table if exists temp_top_colors;
+create temp table temp_top_colors as
+select color
+from India_Cars_Cleaned
+where color <> 'Unknown'
+group by color
+order by count(color) desc
+limit 12;
+
 update India_Cars_Cleaned
 set color = 'Unknown'
-where color not in (select India_Cars_Cleaned.Color
-                    from India_Cars_Cleaned
-                    group by Color
-                    order by count(Color) desc
-                    LIMIT 13);
+where color not in (select color from temp_top_colors);
+
+drop table if exists temp_top_colors;
 
 
 -- ============================================================
@@ -884,9 +911,9 @@ SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
                   AND sub.model = India_Cars_Cleaned.model
                   AND sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.3
                     AND India_Cars_Cleaned.engine_type + 0.3
-                  AND sub.power_ps > 10)
+                  AND sub.power_ps > 5)
 WHERE power_ps IS NULL
-   OR power_ps < 10;
+   OR power_ps < 5;
 
 drop index idx_cars_lookup_India;
 CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (brand, engine_type);
@@ -897,9 +924,9 @@ SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
                 WHERE sub.brand = India_Cars_Cleaned.brand
                   AND sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.3
                     AND India_Cars_Cleaned.engine_type + 0.3
-                  AND sub.power_ps > 10)
+                  AND sub.power_ps > 5)
 WHERE power_ps IS NULL
-   OR power_ps < 10;
+   OR power_ps < 5;
 
 drop index idx_cars_lookup_India;
 CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (engine_type);
@@ -909,13 +936,14 @@ SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
                 FROM India_Cars_Cleaned AS sub
                 where sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.4
                     AND India_Cars_Cleaned.engine_type + 0.4
-                  AND sub.power_ps > 10)
+                  AND sub.power_ps > 5)
 WHERE power_ps IS NULL
-   OR power_ps < 10;
+   OR power_ps < 5;
 
 DELETE
 FROM India_Cars_Cleaned
-WHERE power_ps IS NULL;
+WHERE power_ps IS NULL
+   OR power_ps < 10;
 
 -- ============================================================
 -- PASUL 10: IMPUTARE CAPACITATE MOTOR LIPSA (engine_type)

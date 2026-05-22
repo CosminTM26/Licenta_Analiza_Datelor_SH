@@ -98,7 +98,8 @@ where fuel_type = 'Other';
 
 update Germany_Cars_Cleaned
 set engine_type = NULL
-where Germany_Cars_Cleaned.fuel_type = 'Electric';
+where Germany_Cars_Cleaned.fuel_type = 'Electric'
+   or Germany_Cars_Cleaned.fuel_type = 'Hydrogen';
 
 UPDATE Germany_Cars_Cleaned
 SET engine_type = CASE
@@ -341,20 +342,41 @@ WHERE co2_g IS NOT NULL;
 -- ============================================================
 
 drop table if exists Germany_Cars_Cleaned1;
-create table Germany_Cars_Cleaned1 as
+create table Germany_Cars_Cleaned1
+(
+    id                       integer,
+    brand                    text,
+    model                    text,
+    color                    text,
+    year                     integer,
+    price_in_euro            integer,
+    power_ps                 integer,
+    transmission_type        text,
+    fuel_type                text,
+    km                       integer,
+    engine_type              real,
+    co2_g                    real,
+    fuel_consumption_l_100km real
+);
+
+insert into Germany_Cars_Cleaned1
 select id,
        brand,
        model,
        color,
-       cast((year) as integer)          as year,
-       cast((price_in_euro) as integer) as price_in_euro,
-       cast((power_ps) as integer)      as power_ps,
+       cast((year) as integer)                as year,
+       cast((price_in_euro) as integer)       as price_in_euro,
+       cast((power_ps) as integer)            as power_ps,
        transmission_type,
        fuel_type,
-       cast((km) as integer)            as km,
-       cast((engine_type) as real)      as engine_type,
-       cast((co2_g) as real)            as co2_g,
-       fuel_consumption_l_100km
+       cast((km) as integer)                  as km,
+       cast((engine_type) as real)            as engine_type,
+       cast(replace(co2_g, ',', '.') as real) as co2_g,
+       cast(CASE
+                WHEN fuel_consumption_l_100km LIKE '%l/100 km%' AND INSTR(fuel_consumption_l_100km, ' ') > 0 THEN
+                    REPLACE(SUBSTR(fuel_consumption_l_100km, 1, INSTR(fuel_consumption_l_100km, ' ') - 1), ',', '.')
+                ELSE NULL
+           END AS REAL)                       as fuel_consumption_l_100km
 from Germany_Cars_Cleaned;
 
 drop table if exists Germany_Cars_Cleaned;
@@ -2667,7 +2689,7 @@ UPDATE Germany_Cars_Cleaned
 SET brand = 'Daewoo'
 WHERE brand = 'daewoo';
 UPDATE Germany_Cars_Cleaned
-SET brand = 'Infiniti'
+SET brand = 'INFINITI'
 WHERE brand = 'infiniti';
 UPDATE Germany_Cars_Cleaned
 SET brand = 'Ssangyong'
@@ -2703,7 +2725,7 @@ WHERE brand = 'proton';
 --   Schwarz→Black, Weiß→White, Grau/Anthrazit→Grey, Silber→Silver,
 --   Blau→Blue, Rot/Burgundy→Red, Grün→Green, Braun/Bronze→Brown,
 --   Gelb→Yellow, Gold, Violett/Lila→Purple, Beige, Orange
--- Culorile rare (sub top 14 ca frecventa) devin 'Unknown'
+-- Culorile rare (sub top 12 ca frecventa) devin 'Unknown'
 -- ============================================================
 
 UPDATE Germany_Cars_Cleaned
@@ -2735,13 +2757,20 @@ SET color = CASE
     END
 WHERE color <> 'Unknown';
 
-UPDATE Germany_Cars_Cleaned
-SET color = 'Unknown'
-WHERE color NOT IN (SELECT color
-                    FROM Germany_Cars_Cleaned
-                    GROUP BY color
-                    ORDER BY COUNT(color) DESC
-                    LIMIT 13);
+drop table if exists temp_top_colors;
+create temp table temp_top_colors as
+select color
+from Germany_Cars_Cleaned
+where color <> 'Unknown'
+group by color
+order by count(color) desc
+limit 12;
+
+update Germany_Cars_Cleaned
+set color = 'Unknown'
+where color not in (select color from temp_top_colors);
+
+drop table if exists temp_top_colors;
 
 -- ============================================================
 -- PASUL 9: IMPUTARE CAPACITATE MOTOR LIPSA
@@ -2764,9 +2793,9 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL
                      and sub.fuel_type <> 'Unknown'
-                     and sub.fuel_type <> 'Electric')
+                     and sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
 WHERE (engine_type IS NULL OR engine_type = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
@@ -2779,9 +2808,9 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                      AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL
                      and sub.fuel_type <> 'Unknown'
-                     and sub.fuel_type <> 'Electric')
+                     and sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
 WHERE (engine_type IS NULL OR engine_type = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type, power_ps);
@@ -2792,9 +2821,9 @@ SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                      AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
                      AND sub.engine_type IS NOT NULL
-                     and sub.fuel_type <> 'Electric')
+                     and sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
 WHERE (engine_type IS NULL OR engine_type = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
@@ -2802,9 +2831,10 @@ CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
 UPDATE Germany_Cars_Cleaned
 SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
                    FROM Germany_Cars_Cleaned AS sub
-                   where sub.fuel_type = Germany_Cars_Cleaned.fuel_type)
+                   where sub.fuel_type = Germany_Cars_Cleaned.fuel_type
+                     AND sub.engine_type IS NOT NULL)
 WHERE (engine_type IS NULL OR engine_type = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 -- ============================================================
 -- PASUL 9b: IMPUTARE CO2 LIPSA
@@ -2817,7 +2847,8 @@ WHERE (engine_type IS NULL OR engine_type = 0)
 
 UPDATE Germany_Cars_Cleaned
 SET co2_g = NULL
-WHERE fuel_type = 'Electric';
+WHERE fuel_type = 'Electric'
+   OR fuel_type = 'Hydrogen';
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, model, fuel_type, power_ps);
@@ -2831,9 +2862,9 @@ SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
                AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
                AND sub.co2_g IS NOT NULL
                and sub.fuel_type <> 'Unknown'
-               AND sub.fuel_type <> 'Electric')
-WHERE co2_g IS NULL
-  AND fuel_type <> 'Electric';
+               AND sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
+WHERE (co2_g IS NULL or co2_g <= 10)
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
@@ -2846,9 +2877,9 @@ SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
                AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
                AND sub.co2_g IS NOT NULL
                and sub.fuel_type <> 'Unknown'
-               AND sub.fuel_type <> 'Electric')
-WHERE co2_g IS NULL
-  AND fuel_type <> 'Electric';
+               AND sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
+WHERE (co2_g IS NULL or co2_g <= 10)
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
@@ -2858,9 +2889,9 @@ SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
              FROM Germany_Cars_Cleaned AS sub
              WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                AND sub.co2_g IS NOT NULL
-               AND sub.fuel_type <> 'Electric')
-WHERE co2_g IS NULL
-  AND fuel_type <> 'Electric';
+               AND sub.fuel_type NOT IN ('Electric', 'Hydrogen'))
+WHERE (co2_g IS NULL or co2_g <= 10)
+  AND fuel_type NOT IN ('Electric', 'Hydrogen');
 
 
 drop index idx_cars_lookup1;
@@ -2872,12 +2903,14 @@ drop index idx_cars_lookup1;
 --   2. Media pe brand + fuel_type + transmission_type (fereastra ±10 PS)
 --   3. Media pe fuel_type (fereastra ±0.4L engine)
 --   4. Media pe fuel_type (fallback global)
--- Excludem vehiculele electrice (consum = 0 prin definitie)
+-- Excludem vehiculele electrice, hydrogen si CNG (consum incomparabil sau 0)
 -- ============================================================
 
 UPDATE Germany_Cars_Cleaned
 SET fuel_consumption_l_100km = NULL
-WHERE fuel_type = 'Electric';
+WHERE fuel_type = 'Electric'
+   OR fuel_type = 'Hydrogen'
+   OR fuel_type = 'CNG';
 
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, model, fuel_type, transmission_type, year);
 
@@ -2891,10 +2924,10 @@ SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 
                                   AND sub.year BETWEEN Germany_Cars_Cleaned.year - 2 AND Germany_Cars_Cleaned.year + 2
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
                                   and sub.fuel_type <> 'Unknown'
-                                  AND sub.fuel_type <> 'Electric'
+                                  AND sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG')
                                   AND sub.transmission_type <> 'Unknown')
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, transmission_type, power_ps);
@@ -2907,11 +2940,11 @@ SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 
                                   AND sub.transmission_type = Germany_Cars_Cleaned.transmission_type
                                   AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
-                                  AND sub.fuel_type <> 'Electric'
+                                  AND sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG')
                                   and sub.fuel_type <> 'Unknown'
                                   AND sub.transmission_type <> 'Unknown')
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type, engine_type);
@@ -2922,9 +2955,9 @@ SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 
                                 WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                                   AND sub.engine_type BETWEEN Germany_Cars_Cleaned.engine_type - 0.4 AND Germany_Cars_Cleaned.engine_type + 0.4
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
-                                  AND sub.fuel_type <> 'Electric')
+                                  AND sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG'))
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
 drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
@@ -2934,9 +2967,9 @@ SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 
                                 FROM Germany_Cars_Cleaned AS sub
                                 WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
-                                  AND sub.fuel_type <> 'Electric')
+                                  AND sub.fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG'))
 WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
-  AND fuel_type <> 'Electric';
+  AND fuel_type NOT IN ('Electric', 'Hydrogen', 'CNG');
 
 drop index idx_cars_lookup1;
 
@@ -2961,6 +2994,6 @@ where id not in (SELECT MIN(id)
 select count(*)
 from Germany_Cars_Cleaned;
 
-select fuel_type, count(*)
+select *
 from Germany_Cars_Cleaned
-group by fuel_type
+where co2_g < 30
