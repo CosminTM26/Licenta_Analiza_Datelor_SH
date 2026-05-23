@@ -6,7 +6,7 @@
 --       eliminare invalide → corectie brand → modele →
 --       culori → transmisie → combustibil → tractiune/proprietar/
 --       caroserie/seller/state → imputare power_ps + engine_type +
---       consum → deduplicare → verificare
+--       consum → deduplicare → eliminare outlieri → verificare
 -- ============================================================
 
 -- ============================================================
@@ -66,6 +66,10 @@ select id,
        state
 from cars_details_merges;
 
+
+
+select MEDIAN(cars_details_merges.km_driven) from cars_details_merges
+select MEDIAN(km) from India_Cars_Cleaned
 -- ============================================================
 -- PASUL 1b: ELIMINARE RANDURI INVALIDE
 -- Stergem randuri cu valori nule, negative sau imposibile
@@ -894,6 +898,15 @@ SET state = 'Unknown'
 WHERE state IS NULL
    OR TRIM(state) = '';
 
+
+
+DELETE
+FROM India_Cars_Cleaned
+WHERE id NOT IN (SELECT MIN(id)
+                 FROM India_Cars_Cleaned
+                 GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km,
+                          engine_type, one_owner, drivetrain, body_type);
+
 -- ============================================================
 -- PASUL 9: IMPUTARE PUTERE MOTOR LIPSA (power_ps)
 -- Strategie in 3 pasi (de la specific la general):
@@ -905,7 +918,7 @@ WHERE state IS NULL
 CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (brand, model, engine_type);
 
 UPDATE India_Cars_Cleaned
-SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
+SET power_ps = (SELECT ROUND(MEDIAN(sub.power_ps))
                 FROM India_Cars_Cleaned AS sub
                 WHERE sub.brand = India_Cars_Cleaned.brand
                   AND sub.model = India_Cars_Cleaned.model
@@ -919,7 +932,7 @@ drop index idx_cars_lookup_India;
 CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (brand, engine_type);
 
 UPDATE India_Cars_Cleaned
-SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
+SET power_ps = (SELECT ROUND(MEDIAN(sub.power_ps))
                 FROM India_Cars_Cleaned AS sub
                 WHERE sub.brand = India_Cars_Cleaned.brand
                   AND sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.3
@@ -932,7 +945,7 @@ drop index idx_cars_lookup_India;
 CREATE INDEX idx_cars_lookup_India ON India_Cars_Cleaned (engine_type);
 
 UPDATE India_Cars_Cleaned
-SET power_ps = (SELECT ROUND(AVG(sub.power_ps))
+SET power_ps = (SELECT ROUND(MEDIAN(sub.power_ps))
                 FROM India_Cars_Cleaned AS sub
                 where sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.4
                     AND India_Cars_Cleaned.engine_type + 0.4
@@ -943,7 +956,7 @@ WHERE power_ps IS NULL
 DELETE
 FROM India_Cars_Cleaned
 WHERE power_ps IS NULL
-   OR power_ps < 10;
+   OR power_ps < 15;
 
 -- ============================================================
 -- PASUL 10: IMPUTARE CAPACITATE MOTOR LIPSA (engine_type)
@@ -962,7 +975,7 @@ drop index idx_cars_lookup_India;
 CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (brand, model, body_type, power_ps);
 
 UPDATE India_Cars_Cleaned
-SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+SET engine_type = (SELECT ROUND(MEDIAN(sub.engine_type), 1)
                    FROM India_Cars_Cleaned AS sub
                    WHERE sub.brand = India_Cars_Cleaned.brand
                      AND sub.model = India_Cars_Cleaned.model
@@ -980,7 +993,7 @@ drop index idx_cars_lookup1_India;
 CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (brand, fuel_type, power_ps);
 
 UPDATE India_Cars_Cleaned
-SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+SET engine_type = (SELECT ROUND(MEDIAN(sub.engine_type), 1)
                    FROM India_Cars_Cleaned AS sub
                    WHERE sub.brand = India_Cars_Cleaned.brand
                      AND sub.fuel_type = India_Cars_Cleaned.fuel_type
@@ -996,7 +1009,7 @@ drop index idx_cars_lookup1_India;
 CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (fuel_type);
 
 UPDATE India_Cars_Cleaned
-SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+SET engine_type = (SELECT ROUND(MEDIAN(sub.engine_type), 1)
                    FROM India_Cars_Cleaned AS sub
                    WHERE sub.fuel_type = India_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL
@@ -1025,7 +1038,7 @@ where fuel_type = 'Electric'
    or India_Cars_Cleaned.fuel_type = 'CNG';
 
 UPDATE India_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM India_Cars_Cleaned AS sub
                                 WHERE sub.brand = India_Cars_Cleaned.brand
                                   AND sub.model = India_Cars_Cleaned.model
@@ -1044,7 +1057,7 @@ drop index idx_cars_lookup1_India;
 CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (brand, fuel_type, transmission_type, power_ps);
 
 UPDATE India_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM India_Cars_Cleaned AS sub
                                 WHERE sub.brand = India_Cars_Cleaned.brand
                                   AND sub.fuel_type = India_Cars_Cleaned.fuel_type
@@ -1060,7 +1073,7 @@ drop index idx_cars_lookup1_India;
 CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (fuel_type, engine_type);
 
 UPDATE India_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM India_Cars_Cleaned AS sub
                                 WHERE sub.fuel_type = India_Cars_Cleaned.fuel_type
                                   AND sub.engine_type BETWEEN India_Cars_Cleaned.engine_type - 0.4 AND India_Cars_Cleaned.engine_type + 0.4
@@ -1072,7 +1085,7 @@ drop index idx_cars_lookup1_India;
 CREATE INDEX idx_cars_lookup1_India ON India_Cars_Cleaned (fuel_type);
 
 UPDATE India_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM India_Cars_Cleaned AS sub
                                 WHERE sub.fuel_type = India_Cars_Cleaned.fuel_type
                                   AND sub.fuel_consumption_l_100km IS NOT NULL)
@@ -1082,20 +1095,18 @@ WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
 drop index idx_cars_lookup1_India;
 
 -- ============================================================
--- PASUL 11: DEDUPLICARE
--- Pastram doar primul rand din fiecare grup de duplicate
+-- PASUL 11: ELIMINARE OUTLIERI
+-- Praguri asimetrice P0.1 / P99.9 per piata
 -- ============================================================
 
-DELETE
-FROM India_Cars_Cleaned
-WHERE id NOT IN (SELECT MIN(id)
-                 FROM India_Cars_Cleaned
-                 GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km,
-                          engine_type, one_owner, drivetrain, body_type);
+DELETE FROM India_Cars_Cleaned
+WHERE km > 324039
+   OR engine_type > 4.15
+   OR power_ps > 383
+   OR price_in_euro < 579
+   OR price_in_euro > 124661
+   OR fuel_consumption_l_100km < 3.5
+   OR fuel_consumption_l_100km > 11.6;
 
--- ============================================================
--- PASUL 12: VERIFICARE FINALA
--- Numar total de randuri dupa curatare
--- ============================================================
 select count(*)
 from India_Cars_Cleaned;

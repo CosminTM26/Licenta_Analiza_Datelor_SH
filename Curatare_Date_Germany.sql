@@ -5,8 +5,9 @@
 -- Pasi: creare tabel → eliminare invalide → combustibil →
 --       engine_type (text liber → litri) → CO2 → tipuri date →
 --       brand lowercase → transmisie → prefix model → modele →
---       culori (DE→EN) → imputare engine + CO2 + consum → deduplicare →
---       brand Proper Case → verificare
+--       brand Proper Case → culori (DE→EN) →
+--       imputare engine + CO2 + consum → deduplicare →
+--       eliminare outlieri → verificare
 -- ============================================================
 
 -- ============================================================
@@ -2715,10 +2716,6 @@ WHERE brand = 'proton';
 
 
 
--- Dupa Proper Case, stergem si randurile unde model = brand (ex. "Alfa Romeo"/"Alfa Romeo")
--- Nu au informatii reale despre model; cratime vs spatiu nu mai e problema aici
-
-
 -- ============================================================
 -- PASUL 8: STANDARDIZARE CULORI
 -- Mapam culorile din germana si engleza in categorii unificate:
@@ -2772,6 +2769,15 @@ where color not in (select color from temp_top_colors);
 
 drop table if exists temp_top_colors;
 
+delete
+from Germany_Cars_Cleaned
+where id not in (SELECT MIN(id)
+                 FROM Germany_Cars_Cleaned
+                 GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km,
+                          engine_type, co2_g);
+
+
+
 -- ============================================================
 -- PASUL 9: IMPUTARE CAPACITATE MOTOR LIPSA
 -- Strategie in 4 pasi (de la specific la general):
@@ -2785,7 +2791,7 @@ drop table if exists temp_top_colors;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, model, fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
-SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+SET engine_type = (SELECT ROUND(median(sub.engine_type), 1)
                    FROM Germany_Cars_Cleaned AS sub
                    where sub.power_ps between Germany_Cars_Cleaned.power_ps - 10 and Germany_Cars_Cleaned.power_ps + 10
                      and sub.brand = Germany_Cars_Cleaned.brand
@@ -2801,7 +2807,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
-SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+SET engine_type = (SELECT ROUND(MEDIAN(sub.engine_type), 1)
                    FROM Germany_Cars_Cleaned AS sub
                    where sub.power_ps between Germany_Cars_Cleaned.power_ps - 10 and Germany_Cars_Cleaned.power_ps + 10
                      and sub.brand = Germany_Cars_Cleaned.brand
@@ -2816,7 +2822,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
-SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+SET engine_type = (SELECT ROUND(MEDIAN(sub.engine_type), 1)
                    FROM Germany_Cars_Cleaned AS sub
                    WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                      AND sub.power_ps BETWEEN Germany_Cars_Cleaned.power_ps - 10 AND Germany_Cars_Cleaned.power_ps + 10
@@ -2829,7 +2835,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
 
 UPDATE Germany_Cars_Cleaned
-SET engine_type = (SELECT ROUND(AVG(sub.engine_type), 1)
+SET engine_type = (SELECT ROUND(MEDIAN(sub.engine_type), 1)
                    FROM Germany_Cars_Cleaned AS sub
                    where sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                      AND sub.engine_type IS NOT NULL)
@@ -2854,7 +2860,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, model, fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
-SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
+SET co2_g = (SELECT ROUND(MEDIAN(sub.co2_g), 0)
              FROM Germany_Cars_Cleaned AS sub
              WHERE sub.brand = Germany_Cars_Cleaned.brand
                AND sub.model = Germany_Cars_Cleaned.model
@@ -2870,7 +2876,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
-SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
+SET co2_g = (SELECT ROUND(MEDIAN(sub.co2_g), 0)
              FROM Germany_Cars_Cleaned AS sub
              WHERE sub.brand = Germany_Cars_Cleaned.brand
                AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
@@ -2885,7 +2891,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
 
 UPDATE Germany_Cars_Cleaned
-SET co2_g = (SELECT ROUND(AVG(sub.co2_g), 0)
+SET co2_g = (SELECT ROUND(MEDIAN(sub.co2_g), 0)
              FROM Germany_Cars_Cleaned AS sub
              WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                AND sub.co2_g IS NOT NULL
@@ -2915,7 +2921,7 @@ WHERE fuel_type = 'Electric'
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, model, fuel_type, transmission_type, year);
 
 UPDATE Germany_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM Germany_Cars_Cleaned AS sub
                                 WHERE sub.brand = Germany_Cars_Cleaned.brand
                                   AND sub.model = Germany_Cars_Cleaned.model
@@ -2933,7 +2939,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (brand, fuel_type, transmission_type, power_ps);
 
 UPDATE Germany_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM Germany_Cars_Cleaned AS sub
                                 WHERE sub.brand = Germany_Cars_Cleaned.brand
                                   AND sub.fuel_type = Germany_Cars_Cleaned.fuel_type
@@ -2950,7 +2956,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type, engine_type);
 
 UPDATE Germany_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM Germany_Cars_Cleaned AS sub
                                 WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                                   AND sub.engine_type BETWEEN Germany_Cars_Cleaned.engine_type - 0.4 AND Germany_Cars_Cleaned.engine_type + 0.4
@@ -2963,7 +2969,7 @@ drop index idx_cars_lookup1;
 CREATE INDEX idx_cars_lookup1 ON Germany_Cars_Cleaned (fuel_type);
 
 UPDATE Germany_Cars_Cleaned
-SET fuel_consumption_l_100km = (SELECT ROUND(AVG(sub.fuel_consumption_l_100km), 1)
+SET fuel_consumption_l_100km = (SELECT ROUND(MEDIAN(sub.fuel_consumption_l_100km), 1)
                                 FROM Germany_Cars_Cleaned AS sub
                                 WHERE sub.fuel_type = Germany_Cars_Cleaned.fuel_type
                                   AND sub.fuel_consumption_l_100km IS NOT NULL
@@ -2974,26 +2980,25 @@ WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
 drop index idx_cars_lookup1;
 
 -- ============================================================
--- PASUL 10: DEDUPLICARE
--- Pastram doar primul rand din fiecare grup de duplicate
--- ============================================================
-
-delete
-from Germany_Cars_Cleaned
-where id not in (SELECT MIN(id)
-                 FROM Germany_Cars_Cleaned
-                 GROUP BY brand, model, color, year, price_in_euro, power_ps, transmission_type, fuel_type, km,
-                          engine_type, co2_g);
-
-
--- ============================================================
--- PASUL 11: VERIFICARE FINALA
+-- PASUL 10: VERIFICARE FINALA
 -- Numar total de randuri dupa curatare
 -- ============================================================
 
 select count(*)
 from Germany_Cars_Cleaned;
 
-select *
-from Germany_Cars_Cleaned
-where co2_g < 30
+DELETE
+FROM Germany_Cars_Cleaned
+WHERE km > 450000
+   OR (engine_type > 6.5 AND engine_type IS NOT NULL)
+   OR power_ps > 730
+   OR price_in_euro < 650
+   OR price_in_euro > 399636
+   OR fuel_consumption_l_100km < 1.1
+   OR fuel_consumption_l_100km > 18.4
+   OR co2_g < 26
+   OR co2_g > 421;
+
+-- Verificare rapidă a volumului rămas
+SELECT COUNT(*) AS total_ramase_germania
+FROM Germany_Cars_Cleaned;
