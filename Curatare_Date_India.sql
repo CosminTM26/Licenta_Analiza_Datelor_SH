@@ -67,9 +67,6 @@ select id,
 from cars_details_merges;
 
 
-
-select MEDIAN(cars_details_merges.km_driven) from cars_details_merges
-select MEDIAN(km) from India_Cars_Cleaned
 -- ============================================================
 -- PASUL 1b: ELIMINARE RANDURI INVALIDE
 -- Stergem randuri cu valori nule, negative sau imposibile
@@ -1099,12 +1096,13 @@ drop index idx_cars_lookup1_India;
 -- Praguri asimetrice P0.1 / P99.9 per piata
 -- ============================================================
 
+-- Praguri P0.1 / P99.9 recalculate
 DELETE FROM India_Cars_Cleaned
-WHERE km > 324039
+WHERE km > 324049
    OR engine_type > 4.15
    OR power_ps > 383
    OR price_in_euro < 579
-   OR price_in_euro > 124661
+   OR price_in_euro > 124662
    OR fuel_consumption_l_100km < 3.5
    OR fuel_consumption_l_100km > 11.6;
 

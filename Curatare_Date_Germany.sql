@@ -2987,13 +2987,14 @@ drop index idx_cars_lookup1;
 select count(*)
 from Germany_Cars_Cleaned;
 
+-- Praguri P0.1 / P99.9 recalculate
 DELETE
 FROM Germany_Cars_Cleaned
 WHERE km > 450000
-   OR (engine_type > 6.5 AND engine_type IS NOT NULL)
+   OR engine_type > 6.5
    OR power_ps > 730
    OR price_in_euro < 650
-   OR price_in_euro > 399636
+   OR price_in_euro > 399665
    OR fuel_consumption_l_100km < 1.1
    OR fuel_consumption_l_100km > 18.4
    OR co2_g < 26

@@ -77,9 +77,10 @@ ggplot(Germany_Cars, aes(y = power_ps)) +
 n_inainte <- nrow(Germany_Cars)
 
 Germany_Cars <- Germany_Cars %>%
-  filter(price_in_euro >= limita_jos_pret & price_in_euro <= limita_sus_pret) %>%
+  filter(price_in_euro >= limita_jos_pret) %>%
   filter(km >= limita_jos_km & km <= limita_sus_km) %>%
-  filter(power_ps >= limita_jos_ps & power_ps <= limita_sus_ps)
+  filter(power_ps >= limita_jos_ps & power_ps <= limita_sus_ps) %>%
+  filter(year <= 2023)
 
 n_dupa <- nrow(Germany_Cars)
 

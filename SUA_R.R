@@ -66,8 +66,9 @@ ggplot(SUA_Cars, aes(y = km)) +
 n_inainte <- nrow(SUA_Cars)
 
 SUA_Cars <- SUA_Cars %>%
-  filter(price_in_euro >= limita_jos_pret & price_in_euro <= limita_sus_pret) %>%
-  filter(km >= limita_jos_km & km <= limita_sus_km)
+  filter(price_in_euro >= limita_jos_pret) %>%
+  filter(km >= limita_jos_km & km <= limita_sus_km) %>%
+  filter(year <= 2023)
 
 n_dupa <- nrow(SUA_Cars)
 

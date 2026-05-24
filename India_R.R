@@ -78,10 +78,11 @@ ggplot(India_Cars %>% filter(power_ps > 0), aes(y = power_ps)) +
 n_inainte <- nrow(India_Cars)
 
 India_Cars <- India_Cars %>%
-  filter(price_in_euro >= limita_jos_pret & price_in_euro <= limita_sus_pret) %>%
+  filter(price_in_euro >= limita_jos_pret) %>%
   filter(km >= limita_jos_km & km <= limita_sus_km) %>%
   filter(is.na(power_ps) | power_ps <= 0 |
-           (power_ps >= limita_jos_ps & power_ps <= limita_sus_ps))
+           (power_ps >= limita_jos_ps & power_ps <= limita_sus_ps)) %>%
+  filter(year <= 2023)
 
 n_dupa <- nrow(India_Cars)
 

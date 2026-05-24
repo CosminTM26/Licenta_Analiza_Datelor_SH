@@ -5703,13 +5703,13 @@ drop index idx_cars_lookup1_SUA;
 -- Praguri asimetrice P0.1 / P99.9 per piata
 -- ============================================================
 
+-- Praguri P0.1 / P99.9 recalculate
 DELETE
 FROM SUA_Cars_Cleaned
 WHERE km > 442816
    OR engine_type > 7.3
    OR price_in_euro < 2772
    OR price_in_euro > 221777
-   -- Noul prag de 0.9L elimină anomaliile pure fără a afecta mașinile electrice/hibrizi
    OR fuel_consumption_l_100km < 0.9
    OR fuel_consumption_l_100km > 19.6;
 
