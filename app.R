@@ -23,7 +23,13 @@ ui <- dashboardPage(
     uiOutput("brand_selector")
   ),
   dashboardBody(
-    h2(textOutput("titlu_dinamic"))
+    h2(textOutput("titlu_dinamic")),
+    # Rand KPIs
+    fluidRow(
+      column(width = 3,
+        valueBoxOutput("kpi_listari", width = NULL),
+        plotOutput("spark_listari", height = "60px"))
+    )
   )
 )
 
@@ -70,6 +76,27 @@ server <- function(input, output, session) {
   output$titlu_dinamic <- renderText({
     req(input$piata, input$brand)
     paste0("Analiza brand: ", input$brand, " (", input$piata, ")")
+  })
+
+  # ---- KPI 1: Numar listari ----
+  output$kpi_listari <- renderValueBox({
+    date <- date_curente()
+    valueBox(
+      value = comma(nrow(date)),
+      subtitle = "Listari",
+      icon = icon("car"),
+      color = "blue"
+    )
+  })
+
+  # ---- Sparkline listari: count pe ani ----
+  output$spark_listari <- renderPlot({
+    req(nrow(date_curente()) > 0)
+    date_curente() %>%
+      count(year) %>%
+      ggplot(aes(x = year, y = n)) +
+      geom_col(fill = "#3c8dbc") +
+      theme_void()
   })
 }
 
