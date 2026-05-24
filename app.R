@@ -28,7 +28,10 @@ ui <- dashboardPage(
     fluidRow(
       column(width = 3,
         valueBoxOutput("kpi_listari", width = NULL),
-        plotOutput("spark_listari", height = "60px"))
+        plotOutput("spark_listari", height = "60px")),
+      column(width = 3,
+        valueBoxOutput("kpi_pret", width = NULL),
+        plotOutput("spark_pret", height = "60px"))
     )
   )
 )
@@ -96,6 +99,26 @@ server <- function(input, output, session) {
       count(year) %>%
       ggplot(aes(x = year, y = n)) +
       geom_col(fill = "#3c8dbc") +
+      theme_void()
+  })
+
+  # ---- KPI 2: Pret median ----
+  output$kpi_pret <- renderValueBox({
+    req(nrow(date_curente()) > 0)
+    pret_med <- median(date_curente()$price_in_euro, na.rm = TRUE)
+    valueBox(
+      value = paste0(comma(pret_med), " EUR"),
+      subtitle = "Pret median",
+      icon = icon("euro-sign"),
+      color = "green"
+    )
+  })
+
+  # ---- Sparkline pret: densitate ----
+  output$spark_pret <- renderPlot({
+    req(nrow(date_curente()) > 0)
+    ggplot(date_curente(), aes(x = price_in_euro)) +
+      geom_density(fill = "#00a65a", color = "#00a65a", alpha = 0.5) +
       theme_void()
   })
 }
