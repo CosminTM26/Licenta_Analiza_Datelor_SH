@@ -23,7 +23,7 @@ ui <- dashboardPage(
     uiOutput("brand_selector")
   ),
   dashboardBody(
-    h2("Dashboard in constructie")
+    h2(textOutput("titlu_dinamic"))
   )
 )
 
@@ -49,6 +49,27 @@ server <- function(input, output, session) {
   output$brand_selector <- renderUI({
     selectInput("brand", "Selecteaza Brand:",
                 choices = brand_options())
+  })
+
+  # ---- Reactive: date pentru piata + brand selectate ----
+  date_curente <- reactive({
+    req(input$piata, input$brand)
+    tabel <- switch(input$piata,
+                    "SUA" = "SUA_Cars_Cleaned",
+                    "Germania" = "Germany_Cars_Cleaned",
+                    "India" = "India_Cars_Cleaned")
+    con <- dbConnect(RSQLite::SQLite(), "identifier.sqlite")
+    rezultat <- dbGetQuery(con,
+      paste0("SELECT * FROM ", tabel, " WHERE brand = ?"),
+      params = list(input$brand))
+    dbDisconnect(con)
+    rezultat
+  })
+
+  # ---- Titlu dinamic ----
+  output$titlu_dinamic <- renderText({
+    req(input$piata, input$brand)
+    paste0("Analiza brand: ", input$brand, " (", input$piata, ")")
   })
 }
 
