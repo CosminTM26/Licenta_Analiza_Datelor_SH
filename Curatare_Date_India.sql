@@ -1110,7 +1110,3 @@ WHERE km > 324049
 select count(*)
 from India_Cars_Cleaned;
 
-
-select state
-from India_Cars_Cleaned
-group by state
