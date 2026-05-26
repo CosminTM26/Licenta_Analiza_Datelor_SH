@@ -33,3 +33,6 @@ Utile/.antigravitycli
 appexplicatie.R
 Utile/appexplicatie.R
 *.log
+*.RDataFiles
+*.utile
+.remember
