@@ -29,3 +29,7 @@ identifier.sqlite
 Utile/.RDataFiles
 Utile/docs
 Utile/.antigravitycli
+
+appexplicatie.R
+Utile/appexplicatie.R
+*.log

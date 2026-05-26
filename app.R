@@ -205,6 +205,24 @@ prezice_pret <- function(model, date_noi, pred_rv) {
 }
 
 # ==============================================================================
+# HELPER-E GRAFICE (utilitare pentru axe si tema comuna)
+# ==============================================================================
+
+# Tick-uri pe axa numerica: include 0 si max, plus diviziuni intermediare
+# (folosit pentru axa Y la histograme/bar charts ca sa se vada clar valoarea maxima)
+breaks_cu_max <- function(max_val, n = 10) {
+  ticks <- pretty(c(0, max_val), n = n)
+  ticks <- ticks[ticks > 0 & ticks < (max_val - max_val * 0.035)]
+  c(0, ticks, max_val)
+}
+
+# Tema standard pentru toate graficele (theme_minimal + margini configurabile)
+tema_plot <- function(top = 10, right = 25, bottom = 10, left = 10) {
+  theme_minimal(base_size = 13) +
+    theme(plot.margin = margin(t = top, r = right, b = bottom, l = left))
+}
+
+# ==============================================================================
 # UI
 # ==============================================================================
 
@@ -223,43 +241,15 @@ ui <- dashboardPage(
   ),
 
   dashboardBody(
-    # Spacing aerisit + valueBox responsive (font mai mic pe ecran ingust)
+    # Spacing + valueBox font responsive cu clamp() (scalare automata dupa latimea ecranului)
     tags$head(tags$style(HTML("
       .content-wrapper { padding: 20px; }
       .box { margin-bottom: 25px; }
       .row { margin-bottom: 10px; }
       .small-box, .info-box { margin-bottom: 20px; }
-      .small-box h3 {
-        font-size: 30px !important;
-        font-weight: bold !important;
-        line-height: 1.2 !important;
-        margin: 0 0 5px 0 !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .small-box p {
-        font-size: 13px !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      @media (max-width: 1400px) {
-        .small-box h3 { font-size: 24px !important; }
-        .small-box p  { font-size: 12px !important; }
-      }
-      @media (max-width: 1200px) {
-        .small-box h3 { font-size: 18px !important; }
-        .small-box p  { font-size: 11px !important; }
-      }
-      @media (max-width: 992px) {
-        .small-box h3 { font-size: 26px !important; }
-        .small-box p  { font-size: 13px !important; }
-      }
-      @media (max-width: 768px) {
-        .small-box h3 { font-size: 20px !important; }
-        .small-box p  { font-size: 11px !important; }
-      }
+      .small-box h3, .small-box p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .small-box h3 { font-size: clamp(18px, 2.2vw, 30px) !important; font-weight: bold !important; line-height: 1.2 !important; margin: 0 0 5px 0 !important; }
+      .small-box p  { font-size: clamp(11px, 1vw, 13px) !important; }
     "))),
 
     tabItems(
@@ -497,7 +487,7 @@ server <- function(input, output, session) {
     # Recodificam preturile peste lim la valoarea lim pentru a le grupa in ultima bara
     df$price_plot <- pmin(df$price_in_euro, lim, na.rm = TRUE)
 
-    # Generam tick-uri personalizate pe axa pentru a arata exact min_pret si lim (ultimul pret)
+    # Tick-uri personalizate pe axa X (include min_pret si lim, cu spatiere)
     ticks <- pretty(c(min_pret, lim), n = 12)
     ticks <- ticks[ticks > min_pret & ticks < (lim - (lim - min_pret) * 0.035)]
     custom_breaks <- c(min_pret, ticks, lim)
@@ -513,16 +503,14 @@ server <- function(input, output, session) {
       scale_x_continuous(breaks = custom_breaks,
                          labels = function(x) {
                            labs <- format(round(x), big.mark = ",")
-                           is_lim <- abs(x - lim) < 1e-3
-                           labs[is_lim] <- paste0(">", labs[is_lim])
+                           labs[abs(x - lim) < 1e-3] <- paste0(">", labs[abs(x - lim) < 1e-3])
                            labs
                          },
                          limits = c(min_pret, lim), expand = c(0, 0)) +
       scale_y_continuous(breaks = function(x) pretty(x, n = 10),
                          labels = function(x) format(x, big.mark = ",")) +
       labs(x = "Pret (EUR)", y = "Nr. masini") +
-      theme_minimal(base_size = 13) +
-      theme(plot.margin = margin(t = 10, r = 25, b = 10, l = 10))
+      tema_plot()
   })
 
   # Distributia anilor de fabricatie (histograma cu etichete verticale)
@@ -530,84 +518,52 @@ server <- function(input, output, session) {
     df <- car_data(); req(nrow(df) > 0)
     df_f <- df %>% filter(year <= 2023)
 
+    # Pragul de grupare = percentila 1% (anii sub prag intra in "Sub X")
     min_an <- min(df_f$year, na.rm = TRUE)
-    an_lim <- as.integer(quantile(df_f$year, 0.01, na.rm = TRUE))
+    prag   <- max(as.integer(quantile(df_f$year, 0.01, na.rm = TRUE)), min_an)
+    are_grup <- prag > min_an
+    grup_eticheta <- if (are_grup) paste("Sub", prag) else as.character(prag)
 
-    # Daca percentila 1% este mai mare decat anul minim, grupam tot ce este sub ea
-    if (an_lim > min_an) {
-      df_f <- df_f %>% mutate(year_group = ifelse(year < an_lim, paste("Sub", an_lim), as.character(year)))
-      ani_unici <- as.character(an_lim:2023)
-      grupuri <- c(paste("Sub", an_lim), ani_unici)
-
-      start_seq <- an_lim + 1
-      if (start_seq <= 2021) {
-        ani_seq <- seq(start_seq, 2021, by = 2)
-        custom_breaks_x <- c(paste("Sub", an_lim), as.character(ani_seq), "2023")
-      } else {
-        custom_breaks_x <- c(paste("Sub", an_lim), "2023")
-      }
-    } else {
-      df_f <- df_f %>% mutate(year_group = as.character(year))
-      ani_unici <- as.character(min_an:2023)
-      grupuri <- ani_unici
-
-      start_seq <- min_an + 1
-      if (start_seq <= 2021) {
-        ani_seq <- seq(start_seq, 2021, by = 2)
-        custom_breaks_x <- c(as.character(min_an), as.character(ani_seq), "2023")
-      } else {
-        custom_breaks_x <- c(as.character(min_an), "2023")
-      }
-    }
-
+    # Construim grupul si lista completa de categorii in ordine
+    df_f <- df_f %>%
+      mutate(year_group = ifelse(year < prag, grup_eticheta, as.character(year)))
+    grupuri <- c(if (are_grup) grup_eticheta, as.character(prag:2023))
     df_f$year_group <- factor(df_f$year_group, levels = grupuri)
     df_f <- df_f %>% filter(!is.na(year_group))
 
-    # Calculam frecventa pentru fiecare categorie
+    # Frecventa per categorie + tick-uri X (prima, ultima si din 2 in 2)
     plot_data <- df_f %>% count(year_group, .drop = FALSE)
-
-    # Calculam valoarea maxima pentru limita axei Y
-    max_count <- if (nrow(plot_data) > 0) max(plot_data$n, na.rm = TRUE) else 100
-
-    # Generam tick-uri personalizate pe axa Y verticala
-    ticks <- pretty(c(0, max_count), n = 10)
-    ticks <- ticks[ticks > 0 & ticks < (max_count - max_count * 0.035)]
-    custom_breaks_y <- c(0, ticks, max_count)
+    max_count <- max(plot_data$n, na.rm = TRUE)
+    ani_mijloc <- if (prag + 1 <= 2021) as.character(seq(prag + 1, 2021, by = 2)) else character(0)
+    custom_breaks_x <- c(grup_eticheta, ani_mijloc, "2023")
 
     ggplot(plot_data, aes(x = year_group, y = n)) +
       geom_col(fill = "darkorange", color = "white", width = 0.8) +
       geom_text(aes(label = ifelse(n > 0, format(n, big.mark = ","), "")),
                 angle = 90, hjust = -0.1, size = 2.8, na.rm = TRUE) +
       scale_x_discrete(breaks = custom_breaks_x) +
-      scale_y_continuous(breaks = custom_breaks_y,
+      scale_y_continuous(breaks = breaks_cu_max(max_count),
                          labels = function(x) format(round(x), big.mark = ","),
                          limits = c(0, max_count), expand = c(0, 0)) +
       coord_cartesian(clip = "off") +
       labs(x = "An Fabricatie", y = "Nr. masini") +
-      theme_minimal(base_size = 13) +
-      theme(plot.margin = margin(t = 35, r = 15, b = 10, l = 10))
+      tema_plot(top = 35, right = 15)
   })
 
   # Bar plot orizontal cu numere (top N)
   bar_plot <- function(df, col, y_label = "Nr. listari", n_top = 10) {
     plot_data <- df %>% count(.data[[col]]) %>% top_n(n_top, n)
-    max_val <- if (nrow(plot_data) > 0) max(plot_data$n, na.rm = TRUE) else 100
-
-    # Generam tick-uri pentru axa numerica (reprezinta axa Y, afisata pe orizontala din cauza coord_flip)
-    ticks <- pretty(c(0, max_val), n = 10)
-    ticks <- ticks[ticks > 0 & ticks < (max_val - max_val * 0.035)]
-    custom_breaks <- c(0, ticks, max_val)
+    max_val <- max(plot_data$n, na.rm = TRUE)
 
     ggplot(plot_data, aes(x = reorder(.data[[col]], n), y = n)) +
       geom_col(fill = "steelblue", width = 0.7) +
       geom_text(aes(label = format(n, big.mark = ",")), hjust = -0.1, size = 3.8) +
       coord_flip(clip = "off") +
-      scale_y_continuous(breaks = custom_breaks,
+      scale_y_continuous(breaks = breaks_cu_max(max_val),
                          labels = function(x) format(round(x), big.mark = ","),
                          limits = c(0, max_val), expand = c(0, 0)) +
       labs(x = "", y = y_label) +
-      theme_minimal(base_size = 13) +
-      theme(plot.margin = margin(t = 10, r = 55, b = 10, l = 10))
+      tema_plot(right = 55)
   }
 
   output$models_plot <- renderPlot({
@@ -642,24 +598,17 @@ server <- function(input, output, session) {
     validate(need(nrow(df_p) > 0, "Fara date"))
 
     plot_data <- df_p %>% count(one_owner)
-    max_val <- if (nrow(plot_data) > 0) max(plot_data$n, na.rm = TRUE) else 100
+    max_val <- max(plot_data$n, na.rm = TRUE)
 
-    # Generam tick-uri personalizate pe axa Y verticala
-    ticks <- pretty(c(0, max_val), n = 10)
-    ticks <- ticks[ticks > 0 & ticks < (max_val - max_val * 0.035)]
-    custom_breaks <- c(0, ticks, max_val)
-
-    plot_data %>%
-      ggplot(aes(x = one_owner, y = n, fill = one_owner)) +
+    ggplot(plot_data, aes(x = one_owner, y = n, fill = one_owner)) +
       geom_col(width = 0.55, show.legend = FALSE) +
       geom_text(aes(label = format(n, big.mark = ",")), vjust = -0.5, size = 4) +
       scale_fill_manual(values = c("Yes" = "darkgreen", "No" = "darkred")) +
-      scale_y_continuous(breaks = custom_breaks,
+      scale_y_continuous(breaks = breaks_cu_max(max_val),
                          labels = function(x) format(round(x), big.mark = ","),
                          limits = c(0, max_val), expand = c(0, 0)) +
       labs(x = "Un singur proprietar?", y = "Nr. masini") +
-      theme_minimal(base_size = 13) +
-      theme(plot.margin = margin(t = 35, r = 15, b = 10, l = 10))
+      tema_plot(top = 35, right = 15)
   })
 
   # Tab-uri dinamice (extra-graficele difera per piata)
@@ -785,19 +734,18 @@ server <- function(input, output, session) {
   output$pred_ind_result <- renderUI({ result_box(pred_ind()) })
   output$pred_sua_result <- renderUI({ result_box(pred_sua()) })
 
-  # Dropdown-uri model: se actualizeaza cand schimbi brandul
-  output$pred_ger_model_ui <- renderUI({
-    req(input$pred_ger_brand)
-    selectInput("pred_ger_model", "Model:", choices = get_models("Germany_Cars_Cleaned", input$pred_ger_brand))
-  })
-  output$pred_ind_model_ui <- renderUI({
-    req(input$pred_ind_brand)
-    selectInput("pred_ind_model", "Model:", choices = get_models("India_Cars_Cleaned", input$pred_ind_brand))
-  })
-  output$pred_sua_model_ui <- renderUI({
-    req(input$pred_sua_brand)
-    selectInput("pred_sua_model", "Model:", choices = get_models("SUA_Cars_Cleaned", input$pred_sua_brand))
-  })
+  # Dropdown-uri model: se actualizeaza cand schimbi brandul (acelasi tipar pentru toate pietele)
+  register_model_dropdown <- function(piata, tabel) {
+    output[[paste0("pred_", piata, "_model_ui")]] <- renderUI({
+      brand_input <- input[[paste0("pred_", piata, "_brand")]]
+      req(brand_input)
+      selectInput(paste0("pred_", piata, "_model"), "Model:",
+                  choices = get_models(tabel, brand_input))
+    })
+  }
+  register_model_dropdown("ger", "Germany_Cars_Cleaned")
+  register_model_dropdown("ind", "India_Cars_Cleaned")
+  register_model_dropdown("sua", "SUA_Cars_Cleaned")
 
   # ============================================================================
   # ============================== GERMANIA ====================================
