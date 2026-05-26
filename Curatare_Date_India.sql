@@ -1097,7 +1097,8 @@ drop index idx_cars_lookup1_India;
 -- ============================================================
 
 -- Praguri P0.1 / P99.9 recalculate
-DELETE FROM India_Cars_Cleaned
+DELETE
+FROM India_Cars_Cleaned
 WHERE km > 324049
    OR engine_type > 4.15
    OR power_ps > 383
@@ -1108,3 +1109,8 @@ WHERE km > 324049
 
 select count(*)
 from India_Cars_Cleaned;
+
+
+select state
+from India_Cars_Cleaned
+group by state

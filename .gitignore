@@ -12,11 +12,11 @@
 .rdata
 # Git directory
 .git/
-.claude
+Utile/.claude
 
 Utile/CLAUDE.md
 
-AGENTS.md
+Utile/.claude/AGENTS.md
 
 ../identifier.sqlite
 ../identifier.db
@@ -26,8 +26,7 @@ Utile/identifier.db
 
 identifier.sqlite
 .idea/
-.RDataFiles
-docs
-.antigravitycli
+Utile/.RDataFiles
+Utile/docs
+Utile/.antigravitycli
 
-appexplicatie.R

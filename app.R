@@ -45,19 +45,19 @@ get_vals <- function(tbl, col) {
 
 # Preincarca valori pentru selectInput-urile din predictor (la pornire)
 ger_brands <- get_vals("Germany_Cars_Cleaned", "brand")
-ger_fuels  <- get_vals("Germany_Cars_Cleaned", "fuel_type")
-ger_trans  <- get_vals("Germany_Cars_Cleaned", "transmission_type")
-ind_brands <- get_vals("India_Cars_Cleaned",   "brand")
-ind_fuels  <- get_vals("India_Cars_Cleaned",   "fuel_type")
-ind_trans  <- get_vals("India_Cars_Cleaned",   "transmission_type")
-ind_body   <- get_vals("India_Cars_Cleaned",   "body_type")
-ind_states <- get_vals("India_Cars_Cleaned",   "state")
-ind_seller <- get_vals("India_Cars_Cleaned",   "seller_type")
-ind_drive  <- get_vals("India_Cars_Cleaned",   "drivetrain")
-sua_brands <- get_vals("SUA_Cars_Cleaned",     "brand")
-sua_fuels  <- get_vals("SUA_Cars_Cleaned",     "fuel_type")
-sua_trans  <- get_vals("SUA_Cars_Cleaned",     "transmission_type")
-sua_drive  <- get_vals("SUA_Cars_Cleaned",     "drivetrain")
+ger_fuels <- get_vals("Germany_Cars_Cleaned", "fuel_type")
+ger_trans <- get_vals("Germany_Cars_Cleaned", "transmission_type")
+ind_brands <- get_vals("India_Cars_Cleaned", "brand")
+ind_fuels <- get_vals("India_Cars_Cleaned", "fuel_type")
+ind_trans <- get_vals("India_Cars_Cleaned", "transmission_type")
+ind_body <- get_vals("India_Cars_Cleaned", "body_type")
+ind_states <- get_vals("India_Cars_Cleaned", "state")
+ind_seller <- get_vals("India_Cars_Cleaned", "seller_type")
+ind_drive <- get_vals("India_Cars_Cleaned", "drivetrain")
+sua_brands <- get_vals("SUA_Cars_Cleaned", "brand")
+sua_fuels <- get_vals("SUA_Cars_Cleaned", "fuel_type")
+sua_trans <- get_vals("SUA_Cars_Cleaned", "transmission_type")
+sua_drive <- get_vals("SUA_Cars_Cleaned", "drivetrain")
 
 # ==============================================================================
 # UI
@@ -69,8 +69,8 @@ ui <- dashboardPage(
 
   dashboardSidebar(
     sidebarMenu(id = "main_menu",
-      menuItem("Dashboard",      tabName = "dashboard", icon = icon("chart-bar")),
-      menuItem("Predictor Pret", tabName = "predictor", icon = icon("calculator"))
+                menuItem("Dashboard", tabName = "dashboard", icon = icon("chart-bar")),
+                menuItem("Predictor Pret", tabName = "predictor", icon = icon("calculator"))
     ),
     hr(),
     selectInput("piata", "Selecteaza Piata:",
@@ -92,202 +92,202 @@ ui <- dashboardPage(
       # ============================ TAB DASHBOARD ==============================
       # =========================================================================
       tabItem(tabName = "dashboard",
-        h2(textOutput("titlu_dinamic")),
-        fluidRow(
-          valueBoxOutput("kpi_listings", width = 4),
-          valueBoxOutput("kpi_price",    width = 4),
-          valueBoxOutput("kpi_km",       width = 4)
-        ),
-        fluidRow(
-          valueBoxOutput("kpi_age",          width = 4),
-          valueBoxOutput("kpi_pop_model",    width = 4),
-          valueBoxOutput("kpi_pop_listings", width = 4)
-        ),
-        fluidRow(
-          valueBoxOutput("kpi_consum", width = 4),
-          valueBoxOutput("kpi_spec1",  width = 4),
-          valueBoxOutput("kpi_spec2",  width = 4)
-        ),
-        fluidRow(
-          box(title = "Distributia Preturilor (EUR)", status = "primary",
-              solidHeader = TRUE, width = 12,
-              plotOutput("price_dist_plot", height = "300px"))
-        ),
-        fluidRow(
-          box(title = "Caracteristici Brand si Piata", status = "info",
-              solidHeader = TRUE, width = 12, uiOutput("market_tabs_ui"))
-        )
+              h2(textOutput("titlu_dinamic")),
+              fluidRow(
+                valueBoxOutput("kpi_listings", width = 4),
+                valueBoxOutput("kpi_price", width = 4),
+                valueBoxOutput("kpi_km", width = 4)
+              ),
+              fluidRow(
+                valueBoxOutput("kpi_age", width = 4),
+                valueBoxOutput("kpi_pop_model", width = 4),
+                valueBoxOutput("kpi_pop_listings", width = 4)
+              ),
+              fluidRow(
+                valueBoxOutput("kpi_consum", width = 4),
+                valueBoxOutput("kpi_spec1", width = 4),
+                valueBoxOutput("kpi_spec2", width = 4)
+              ),
+              fluidRow(
+                box(title = "Distributia Preturilor (EUR)", status = "primary",
+                    solidHeader = TRUE, width = 12,
+                    plotOutput("price_dist_plot", height = "300px"))
+              ),
+              fluidRow(
+                box(title = "Caracteristici Brand si Piata", status = "info",
+                    solidHeader = TRUE, width = 12, uiOutput("market_tabs_ui"))
+              )
       ),
 
       # =========================================================================
       # ============================ TAB PREDICTOR ==============================
       # =========================================================================
       tabItem(tabName = "predictor",
-        h2("Predictor Pret (Random Forest)"),
-        tabsetPanel(
+              h2("Predictor Pret (Random Forest)"),
+              tabsetPanel(
 
-          tabPanel("Germania",
-            fluidRow(
-              column(6,
-                selectInput("pred_ger_brand", "Brand:",            choices = ger_brands),
-                uiOutput("pred_ger_model_ui"),
-                numericInput("pred_ger_km",     "Kilometraj (km):",          value = 100000, min = 0, step = 10000),
-                numericInput("pred_ger_year",   "An fabricatie:",            value = 2015),
-                selectInput("pred_ger_fuel",    "Combustibil:",              choices = ger_fuels),
-                selectInput("pred_ger_trans",   "Transmisie:",               choices = ger_trans),
-                
-                checkboxInput("pred_ger_use_ps", "Specific Putere (PS)", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ger_use_ps == true",
-                  numericInput("pred_ger_ps", "Putere (PS):", value = 120, min = 1, max = 1000)
-                ),
-                
-                checkboxInput("pred_ger_use_engine", "Specific Capacitate cilindrica (L)", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ger_use_engine == true",
-                  numericInput("pred_ger_engine", "Capacitate cilindrica (L):", value = 1.6, min = 0.5, step = 0.1)
-                ),
-                
-                checkboxInput("pred_ger_use_cons", "Specific Consum", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ger_use_cons == true",
-                  numericInput("pred_ger_consumption", "Consum (l/100km):", value = 6.0, min = 1, step = 0.1)
-                ),
-                
-                checkboxInput("pred_ger_use_co2", "Specific Emisii CO2", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ger_use_co2 == true",
-                  numericInput("pred_ger_co2", "Emisii CO2 (g/km):", value = 140, min = 0)
-                )
-              ),
-              column(6,
-                actionButton("train_ger", "Antreneaza Model", icon = icon("cogs"),
-                             class = "btn-warning btn-block"),
-                br(),
-                verbatimTextOutput("train_ger_status", placeholder = TRUE),
-                actionButton("pred_ger_btn", "Calculeaza Pret", icon = icon("calculator"),
-                             class = "btn-success btn-block"),
-                uiOutput("pred_ger_result")
-              )
-            )
-          ),
+                tabPanel("Germania",
+                         fluidRow(
+                           column(6,
+                                  selectInput("pred_ger_brand", "Brand:", choices = ger_brands),
+                                  uiOutput("pred_ger_model_ui"),
+                                  numericInput("pred_ger_km", "Kilometraj (km):", value = 100000, min = 0, step = 10000),
+                                  numericInput("pred_ger_year", "An fabricatie:", value = 2015),
+                                  selectInput("pred_ger_fuel", "Combustibil:", choices = ger_fuels),
+                                  selectInput("pred_ger_trans", "Transmisie:", choices = ger_trans),
 
-          tabPanel("India",
-            fluidRow(
-              column(6,
-                selectInput("pred_ind_brand", "Brand:",            choices = ind_brands),
-                uiOutput("pred_ind_model_ui"),
-                numericInput("pred_ind_km",     "Kilometraj (km):",           value = 60000, min = 0, step = 10000),
-                numericInput("pred_ind_year",   "An fabricatie:",             value = 2018),
-                selectInput("pred_ind_fuel",    "Combustibil:",               choices = ind_fuels),
-                selectInput("pred_ind_trans",   "Transmisie:",                choices = ind_trans),
-                
-                checkboxInput("pred_ind_use_ps", "Specific Putere (PS)", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_ps == true",
-                  numericInput("pred_ind_ps", "Putere (PS):", value = 80, min = 1, max = 500)
-                ),
-                
-                checkboxInput("pred_ind_use_engine", "Specific Capacitate cilindrica (L)", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_engine == true",
-                  numericInput("pred_ind_engine", "Capacitate cilindrica (L):", value = 1.5, min = 0.5, step = 0.1)
-                ),
-                
-                checkboxInput("pred_ind_use_body", "Specific Tip caroserie", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_body == true",
-                  selectInput("pred_ind_body", "Tip caroserie:", choices = ind_body)
-                ),
-                
-                checkboxInput("pred_ind_use_cons", "Specific Consum", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_cons == true",
-                  numericInput("pred_ind_consumption", "Consum (l/100km):", value = 5.4, min = 1, step = 0.1)
-                ),
-                
-                checkboxInput("pred_ind_use_owner", "Specific Proprietar unic", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_owner == true",
-                  selectInput("pred_ind_owner", "Un proprietar:", choices = c("Yes", "No"))
-                ),
-                
-                checkboxInput("pred_ind_use_drive", "Specific Tractiune", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_drive == true",
-                  selectInput("pred_ind_drive", "Tractiune:", choices = ind_drive)
-                ),
-                
-                checkboxInput("pred_ind_use_seller", "Specific Tip vanzator", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_seller == true",
-                  selectInput("pred_ind_seller", "Tip vanzator:", choices = ind_seller)
-                ),
-                
-                checkboxInput("pred_ind_use_state", "Specific Stat", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_ind_use_state == true",
-                  selectInput("pred_ind_state", "Stat:", choices = ind_states)
-                )
-              ),
-              column(6,
-                actionButton("train_ind", "Antreneaza Model", icon = icon("cogs"),
-                             class = "btn-warning btn-block"),
-                br(),
-                verbatimTextOutput("train_ind_status", placeholder = TRUE),
-                actionButton("pred_ind_btn", "Calculeaza Pret", icon = icon("calculator"),
-                             class = "btn-success btn-block"),
-                uiOutput("pred_ind_result")
-              )
-            )
-          ),
+                                  checkboxInput("pred_ger_use_ps", "Specific Putere (PS)", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ger_use_ps == true",
+                                    numericInput("pred_ger_ps", "Putere (PS):", value = 120, min = 1, max = 1000)
+                                  ),
 
-          tabPanel("SUA",
-            fluidRow(
-              column(6,
-                selectInput("pred_sua_brand", "Brand:",            choices = sua_brands),
-                uiOutput("pred_sua_model_ui"),
-                numericInput("pred_sua_km",     "Kilometraj (km):",          value = 80000, min = 0, step = 10000),
-                numericInput("pred_sua_year",   "An fabricatie:",            value = 2017),
-                selectInput("pred_sua_fuel",    "Combustibil:",              choices = sua_fuels),
-                selectInput("pred_sua_trans",   "Transmisie:",               choices = sua_trans),
-                
-                checkboxInput("pred_sua_use_engine", "Specific Capacitate cilindrica (L)", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_sua_use_engine == true",
-                  numericInput("pred_sua_engine", "Capacitate cilindrica (L):", value = 2.5, min = 0.5, step = 0.1)
+                                  checkboxInput("pred_ger_use_engine", "Specific Capacitate cilindrica (L)", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ger_use_engine == true",
+                                    numericInput("pred_ger_engine", "Capacitate cilindrica (L):", value = 1.6, min = 0.5, step = 0.1)
+                                  ),
+
+                                  checkboxInput("pred_ger_use_cons", "Specific Consum", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ger_use_cons == true",
+                                    numericInput("pred_ger_consumption", "Consum (l/100km):", value = 6.0, min = 1, step = 0.1)
+                                  ),
+
+                                  checkboxInput("pred_ger_use_co2", "Specific Emisii CO2", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ger_use_co2 == true",
+                                    numericInput("pred_ger_co2", "Emisii CO2 (g/km):", value = 140, min = 0)
+                                  )
+                           ),
+                           column(6,
+                                  actionButton("train_ger", "Antreneaza Model", icon = icon("cogs"),
+                                               class = "btn-warning btn-block"),
+                                  br(),
+                                  verbatimTextOutput("train_ger_status", placeholder = TRUE),
+                                  actionButton("pred_ger_btn", "Calculeaza Pret", icon = icon("calculator"),
+                                               class = "btn-success btn-block"),
+                                  uiOutput("pred_ger_result")
+                           )
+                         )
                 ),
-                
-                checkboxInput("pred_sua_use_cons", "Specific Consum", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_sua_use_cons == true",
-                  numericInput("pred_sua_consumption", "Consum (l/100km):", value = 10.1, min = 1, step = 0.1)
+
+                tabPanel("India",
+                         fluidRow(
+                           column(6,
+                                  selectInput("pred_ind_brand", "Brand:", choices = ind_brands),
+                                  uiOutput("pred_ind_model_ui"),
+                                  numericInput("pred_ind_km", "Kilometraj (km):", value = 60000, min = 0, step = 10000),
+                                  numericInput("pred_ind_year", "An fabricatie:", value = 2018),
+                                  selectInput("pred_ind_fuel", "Combustibil:", choices = ind_fuels),
+                                  selectInput("pred_ind_trans", "Transmisie:", choices = ind_trans),
+
+                                  checkboxInput("pred_ind_use_ps", "Specific Putere (PS)", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_ps == true",
+                                    numericInput("pred_ind_ps", "Putere (PS):", value = 80, min = 1, max = 500)
+                                  ),
+
+                                  checkboxInput("pred_ind_use_engine", "Specific Capacitate cilindrica (L)", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_engine == true",
+                                    numericInput("pred_ind_engine", "Capacitate cilindrica (L):", value = 1.5, min = 0.5, step = 0.1)
+                                  ),
+
+                                  checkboxInput("pred_ind_use_body", "Specific Tip caroserie", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_body == true",
+                                    selectInput("pred_ind_body", "Tip caroserie:", choices = ind_body)
+                                  ),
+
+                                  checkboxInput("pred_ind_use_cons", "Specific Consum", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_cons == true",
+                                    numericInput("pred_ind_consumption", "Consum (l/100km):", value = 5.4, min = 1, step = 0.1)
+                                  ),
+
+                                  checkboxInput("pred_ind_use_owner", "Specific Proprietar unic", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_owner == true",
+                                    selectInput("pred_ind_owner", "Un proprietar:", choices = c("Yes", "No"))
+                                  ),
+
+                                  checkboxInput("pred_ind_use_drive", "Specific Tractiune", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_drive == true",
+                                    selectInput("pred_ind_drive", "Tractiune:", choices = ind_drive)
+                                  ),
+
+                                  checkboxInput("pred_ind_use_seller", "Specific Tip vanzator", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_seller == true",
+                                    selectInput("pred_ind_seller", "Tip vanzator:", choices = ind_seller)
+                                  ),
+
+                                  checkboxInput("pred_ind_use_state", "Specific Stat", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_ind_use_state == true",
+                                    selectInput("pred_ind_state", "Stat:", choices = ind_states)
+                                  )
+                           ),
+                           column(6,
+                                  actionButton("train_ind", "Antreneaza Model", icon = icon("cogs"),
+                                               class = "btn-warning btn-block"),
+                                  br(),
+                                  verbatimTextOutput("train_ind_status", placeholder = TRUE),
+                                  actionButton("pred_ind_btn", "Calculeaza Pret", icon = icon("calculator"),
+                                               class = "btn-success btn-block"),
+                                  uiOutput("pred_ind_result")
+                           )
+                         )
                 ),
-                
-                checkboxInput("pred_sua_use_drive", "Specific Tractiune", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_sua_use_drive == true",
-                  selectInput("pred_sua_drive", "Tractiune:", choices = sua_drive)
-                ),
-                
-                checkboxInput("pred_sua_use_owner", "Specific Proprietar unic", value = FALSE),
-                conditionalPanel(
-                  condition = "input.pred_sua_use_owner == true",
-                  selectInput("pred_sua_owner", "Un singur proprietar:", choices = c("Yes", "No"))
+
+                tabPanel("SUA",
+                         fluidRow(
+                           column(6,
+                                  selectInput("pred_sua_brand", "Brand:", choices = sua_brands),
+                                  uiOutput("pred_sua_model_ui"),
+                                  numericInput("pred_sua_km", "Kilometraj (km):", value = 80000, min = 0, step = 10000),
+                                  numericInput("pred_sua_year", "An fabricatie:", value = 2017),
+                                  selectInput("pred_sua_fuel", "Combustibil:", choices = sua_fuels),
+                                  selectInput("pred_sua_trans", "Transmisie:", choices = sua_trans),
+
+                                  checkboxInput("pred_sua_use_engine", "Specific Capacitate cilindrica (L)", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_sua_use_engine == true",
+                                    numericInput("pred_sua_engine", "Capacitate cilindrica (L):", value = 2.5, min = 0.5, step = 0.1)
+                                  ),
+
+                                  checkboxInput("pred_sua_use_cons", "Specific Consum", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_sua_use_cons == true",
+                                    numericInput("pred_sua_consumption", "Consum (l/100km):", value = 10.1, min = 1, step = 0.1)
+                                  ),
+
+                                  checkboxInput("pred_sua_use_drive", "Specific Tractiune", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_sua_use_drive == true",
+                                    selectInput("pred_sua_drive", "Tractiune:", choices = sua_drive)
+                                  ),
+
+                                  checkboxInput("pred_sua_use_owner", "Specific Proprietar unic", value = FALSE),
+                                  conditionalPanel(
+                                    condition = "input.pred_sua_use_owner == true",
+                                    selectInput("pred_sua_owner", "Un singur proprietar:", choices = c("Yes", "No"))
+                                  )
+                           ),
+                           column(6,
+                                  actionButton("train_sua", "Antreneaza Model", icon = icon("cogs"),
+                                               class = "btn-warning btn-block"),
+                                  br(),
+                                  verbatimTextOutput("train_sua_status", placeholder = TRUE),
+                                  actionButton("pred_sua_btn", "Calculeaza Pret", icon = icon("calculator"),
+                                               class = "btn-success btn-block"),
+                                  uiOutput("pred_sua_result")
+                           )
+                         )
                 )
-              ),
-              column(6,
-                actionButton("train_sua", "Antreneaza Model", icon = icon("cogs"),
-                             class = "btn-warning btn-block"),
-                br(),
-                verbatimTextOutput("train_sua_status", placeholder = TRUE),
-                actionButton("pred_sua_btn", "Calculeaza Pret", icon = icon("calculator"),
-                             class = "btn-success btn-block"),
-                uiOutput("pred_sua_result")
               )
-            )
-          )
-        )
       )
     )
   )
@@ -389,8 +389,10 @@ server <- function(input, output, session) {
       valueBox(if (is.nan(v) || v <= 0) "N/A" else paste0(round(v), " PS"),
                paste("Putere Medie", sfx()), icon = icon("bolt"), color = "orange")
     } else {
-      dc <- df %>% filter(!is.na(drivetrain), drivetrain != "", drivetrain != "Unknown") %>%
-        count(drivetrain) %>% arrange(desc(n))
+      dc <- df %>%
+        filter(!is.na(drivetrain), drivetrain != "", drivetrain != "Unknown") %>%
+        count(drivetrain) %>%
+        arrange(desc(n))
       valueBox(if (nrow(dc) == 0) "N/A" else dc$drivetrain[1],
                paste("Tractiune Majoritara", sfx()), icon = icon("cog"), color = "teal")
     }
@@ -402,14 +404,16 @@ server <- function(input, output, session) {
       valueBox(if (is.nan(v) || v <= 0) "N/A" else paste0(round(v), " PS"),
                paste("Putere Medie", sfx()), icon = icon("bolt"), color = "orange")
     } else if (input$piata == "India") {
-      bc <- df %>% filter(!is.na(body_type), body_type != "") %>%
-        count(body_type) %>% arrange(desc(n))
+      bc <- df %>%
+        filter(!is.na(body_type), body_type != "") %>%
+        count(body_type) %>%
+        arrange(desc(n))
       valueBox(if (nrow(bc) == 0) "N/A" else bc$body_type[1],
                paste("Caroserie Majoritara", sfx()), icon = icon("car-side"), color = "navy")
     } else {
       vd <- df %>% filter(!is.na(one_owner), one_owner != "Unknown")
       val <- if (nrow(vd) == 0) "N/A"
-             else paste0(round(sum(vd$one_owner == "Yes") / nrow(vd) * 100, 1), "%")
+      else paste0(round(sum(vd$one_owner == "Yes") / nrow(vd) * 100, 1), "%")
       valueBox(val, paste("Un Proprietar", sfx()), icon = icon("user-check"), color = "green")
     }
   })
@@ -424,10 +428,10 @@ server <- function(input, output, session) {
     lim <- quantile(df$price_in_euro, 0.98, na.rm = TRUE)
     ggplot(df, aes(x = price_in_euro)) +
       geom_histogram(fill = "steelblue", bins = 80, na.rm = TRUE) +
-      geom_vline(xintercept = med, color = "darkred",   linetype = "dashed", linewidth = 0.9) +
+      geom_vline(xintercept = med, color = "darkred", linetype = "dashed", linewidth = 0.9) +
       geom_vline(xintercept = avg, color = "darkgreen", linetype = "dotted", linewidth = 0.9) +
       annotate("text", x = med, y = Inf, label = paste0("Mediana: ", fmt(med)),
-               vjust = 2,   hjust = -0.1, color = "darkred") +
+               vjust = 2, hjust = -0.1, color = "darkred") +
       annotate("text", x = avg, y = Inf, label = paste0("Media: ", fmt(avg)),
                vjust = 3.5, hjust = -0.1, color = "darkgreen") +
       scale_x_continuous(labels = function(x) format(x, big.mark = ","),
@@ -457,7 +461,9 @@ server <- function(input, output, session) {
 
   # Helper: bar plot orizontal cu numere (top N)
   bar_plot <- function(df, col, y_label = "Nr. listari", n_top = 10) {
-    df %>% count(.data[[col]]) %>% top_n(n_top, n) %>%
+    df %>%
+      count(.data[[col]]) %>%
+      top_n(n_top, n) %>%
       ggplot(aes(x = reorder(.data[[col]], n), y = n)) +
       geom_col(fill = "steelblue", width = 0.7) +
       geom_text(aes(label = format(n, big.mark = ",")), hjust = -0.1, size = 3.8) +
@@ -475,7 +481,7 @@ server <- function(input, output, session) {
     bar_plot(df, col, lbl, n_top = 5)
   })
   output$trans_plot <- renderPlot({ df <- car_data(); req(nrow(df) > 0); bar_plot(df, "transmission_type") })
-  output$fuel_plot  <- renderPlot({ df <- car_data(); req(nrow(df) > 0); bar_plot(df, "fuel_type") })
+  output$fuel_plot <- renderPlot({ df <- car_data(); req(nrow(df) > 0); bar_plot(df, "fuel_type") })
 
   output$india_extra_plot <- renderPlot({
     df <- car_data()
@@ -498,7 +504,8 @@ server <- function(input, output, session) {
     validate(need("one_owner" %in% names(df), "Lipsa coloana"))
     df_p <- df %>% filter(!is.na(one_owner), one_owner != "", one_owner != "Unknown")
     validate(need(nrow(df_p) > 0, "Fara date"))
-    df_p %>% count(one_owner) %>%
+    df_p %>%
+      count(one_owner) %>%
       ggplot(aes(x = one_owner, y = n, fill = one_owner)) +
       geom_col(width = 0.55, show.legend = FALSE) +
       geom_text(aes(label = format(n, big.mark = ",")), vjust = -0.5, size = 4) +
@@ -514,16 +521,16 @@ server <- function(input, output, session) {
     req(input$piata)
     tab_lbl <- if (!is.null(input$brand) && input$brand == "Toate Brandurile") "Branduri Populare" else "Modele Populare"
     comune <- list(
-      tabPanel(tab_lbl,         plotOutput("models_plot",    height = "250px")),
+      tabPanel(tab_lbl, plotOutput("models_plot", height = "250px")),
       tabPanel("An Fabricatie", plotOutput("year_dist_plot", height = "250px")),
-      tabPanel("Transmisie",    plotOutput("trans_plot",     height = "250px")),
-      tabPanel("Combustibil",   plotOutput("fuel_plot",      height = "250px"))
+      tabPanel("Transmisie", plotOutput("trans_plot", height = "250px")),
+      tabPanel("Combustibil", plotOutput("fuel_plot", height = "250px"))
     )
     extra <- switch(input$piata,
-      "India" = list(tabPanel("Tip Caroserie", plotOutput("india_extra_plot",    height = "250px"))),
-      "SUA"   = list(tabPanel("Tractiune",     plotOutput("sua_drivetrain_plot", height = "250px")),
-                     tabPanel("Un Proprietar", plotOutput("sua_owner_plot",      height = "250px"))),
-      list()
+                    "India" = list(tabPanel("Tip Caroserie", plotOutput("india_extra_plot", height = "250px"))),
+                    "SUA" = list(tabPanel("Tractiune", plotOutput("sua_drivetrain_plot", height = "250px")),
+                                 tabPanel("Un Proprietar", plotOutput("sua_owner_plot", height = "250px"))),
+                    list()
     )
     do.call(tabBox, c(list(width = 12), comune, extra))
   })
@@ -531,7 +538,7 @@ server <- function(input, output, session) {
   # ============================================================================
   # ========================== PARTEA 2: PREDICTOR =============================
   # ============================================================================
-  # Random Forest cu 400 arbori si interval 50% (cuartilele 25%-75%)
+  # Random Forest: Germania 300 arbori, India 500, SUA 200 | Interval ±10% in jurul medianei
 
   # Helper: lista modele pentru un brand (pentru dropdown reactiv)
   get_models <- function(tbl, brand) {
@@ -544,40 +551,42 @@ server <- function(input, output, session) {
 
   # Helper: calculeaza media unei valori din baza de date pentru imputare la predictie (daca utilizatorul nu o specifica)
   get_db_avg <- function(tbl, col, brand, model, fuel_type, fallback_val) {
-    if (!is.null(fuel_type) && fuel_type == "Electric" && col %in% c("engine_type", "fuel_consumption_l_100km", "co2_g")) return(0)
+    if (!is.null(fuel_type) &&
+      fuel_type == "Electric" &&
+      col %in% c("engine_type", "fuel_consumption_l_100km", "co2_g")) return(0)
     con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    
+
     # Incercam dupa model + brand
     res <- dbGetQuery(con, paste0(
       "SELECT AVG(`", col, "`) FROM `", tbl, "` WHERE brand = ? AND model = ? AND `", col, "` IS NOT NULL AND `", col, "` > 0"
     ), params = list(brand, model))[[1]]
     if (!is.na(res) && length(res) > 0 && res > 0) return(res)
-    
+
     # Incercam dupa brand
     res <- dbGetQuery(con, paste0(
       "SELECT AVG(`", col, "`) FROM `", tbl, "` WHERE brand = ? AND `", col, "` IS NOT NULL AND `", col, "` > 0"
     ), params = list(brand))[[1]]
     if (!is.na(res) && length(res) > 0 && res > 0) return(res)
-    
+
     return(fallback_val)
   }
 
   # Helper: gaseste cel mai frecvent element (modul statistic) pentru o categorie din baza de date
   get_db_mode <- function(tbl, col, brand, model, fallback_val) {
     con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    
+
     # Incercam dupa model + brand
     res <- dbGetQuery(con, paste0(
       "SELECT `", col, "`, COUNT(*) as c FROM `", tbl, "` WHERE brand = ? AND model = ? AND `", col, "` IS NOT NULL AND `", col, "` != '' GROUP BY `", col, "` ORDER BY c DESC LIMIT 1"
     ), params = list(brand, model))[[1]]
     if (length(res) > 0 && !is.na(res) && res != "") return(res)
-    
+
     # Incercam dupa brand
     res <- dbGetQuery(con, paste0(
       "SELECT `", col, "`, COUNT(*) as c FROM `", tbl, "` WHERE brand = ? AND `", col, "` IS NOT NULL AND `", col, "` != '' GROUP BY `", col, "` ORDER BY c DESC LIMIT 1"
     ), params = list(brand))[[1]]
     if (length(res) > 0 && !is.na(res) && res != "") return(res)
-    
+
     return(fallback_val)
   }
 
@@ -587,7 +596,7 @@ server <- function(input, output, session) {
       mutate(engine_type = ifelse(fuel_type == "Electric", 0, engine_type),
              age = 2023 - year) %>%
       select(-year)
-      
+
     # Corectie electrici pentru consum si co2 (daca exista in setul de date)
     if ("fuel_consumption_l_100km" %in% names(df)) {
       df <- df %>% mutate(fuel_consumption_l_100km = ifelse(fuel_type == "Electric", 0, fuel_consumption_l_100km))
@@ -595,7 +604,7 @@ server <- function(input, output, session) {
     if ("co2_g" %in% names(df)) {
       df <- df %>% mutate(co2_g = ifelse(fuel_type == "Electric", 0, co2_g))
     }
-    
+
     # Imputare ierarhica engine_type (daca exista)
     if ("engine_type" %in% names(df)) {
       df <- df %>%
@@ -611,7 +620,7 @@ server <- function(input, output, session) {
       df <- df %>%
         mutate(engine_type = ifelse(is.na(engine_type), global_eng, engine_type))
     }
-    
+
     # Imputare ierarhica consum (daca exista)
     if ("fuel_consumption_l_100km" %in% names(df)) {
       df <- df %>%
@@ -627,7 +636,7 @@ server <- function(input, output, session) {
       df <- df %>%
         mutate(fuel_consumption_l_100km = ifelse(is.na(fuel_consumption_l_100km), global_cons, fuel_consumption_l_100km))
     }
-    
+
     # Imputare ierarhica co2 (daca exista)
     if ("co2_g" %in% names(df)) {
       df <- df %>%
@@ -643,9 +652,11 @@ server <- function(input, output, session) {
       df <- df %>%
         mutate(co2_g = ifelse(is.na(co2_g), global_co2, co2_g))
     }
-    
+
     # 2. Doar randuri valide (outliers deja eliminati in pasul SQL de curatare)
-    df <- df %>% filter(!is.na(price_in_euro), price_in_euro > 0) %>% drop_na()
+    df <- df %>%
+      filter(!is.na(price_in_euro), price_in_euro > 0) %>%
+      drop_na()
     # 3. Transforma textul in factori
     for (c in factor_cols) df[[c]] <- as.factor(df[[c]])
     # 4. Antreneaza Random Forest cu hyperparametrii din studii
@@ -661,7 +672,7 @@ server <- function(input, output, session) {
     for (c in factor_cols) lv[[c]] <- levels(df[[c]])
     levels_rv(lv)
     # 6. Status: R² OOB, top caracteristici cu impact
-    r2  <- round(1 - m$prediction.error / var(df$price_in_euro), 3)
+    r2 <- round(1 - m$prediction.error / var(df$price_in_euro), 3)
     imp <- sort(importance(m), decreasing = TRUE)
     pct <- round(100 * imp / sum(imp), 1)
     imp_str <- paste(names(pct), paste0(pct, "%"), sep = ": ", collapse = " | ")
@@ -716,7 +727,7 @@ server <- function(input, output, session) {
 
   # -------- GERMANIA: antreneaza + prezice --------
   observeEvent(input$train_ger, {
-    withProgress(message = "Antrenare RF Germania (250 arbori)", value = NULL, {
+    withProgress(message = "Antrenare RF Germania (300 arbori)", value = NULL, {
       con <- dbConnect(RSQLite::SQLite(), DB)
       df <- dbGetQuery(con, paste(
         "SELECT price_in_euro, km, year, power_ps, engine_type, brand, model,",
@@ -734,37 +745,37 @@ server <- function(input, output, session) {
     }
     req(input$pred_ger_model)
     lvl <- levels_ger()
-    
+
     # Preiau valori manuale sau din baza de date
     ps_val <- if (input$pred_ger_use_ps) {
       as.numeric(input$pred_ger_ps)
     } else {
-      get_db_avg("Germany_Cars_Cleaned", "power_ps", 
+      get_db_avg("Germany_Cars_Cleaned", "power_ps",
                  input$pred_ger_brand, input$pred_ger_model, input$pred_ger_fuel, 120)
     }
-    
+
     engine_val <- if (input$pred_ger_use_engine) {
       as.numeric(input$pred_ger_engine)
     } else {
-      get_db_avg("Germany_Cars_Cleaned", "engine_type", 
+      get_db_avg("Germany_Cars_Cleaned", "engine_type",
                  input$pred_ger_brand, input$pred_ger_model, input$pred_ger_fuel, 1.6)
     }
     if (input$pred_ger_fuel == "Electric") engine_val <- 0
-    
+
     cons_val <- if (input$pred_ger_use_cons) {
       as.numeric(input$pred_ger_consumption)
     } else {
-      get_db_avg("Germany_Cars_Cleaned", "fuel_consumption_l_100km", 
+      get_db_avg("Germany_Cars_Cleaned", "fuel_consumption_l_100km",
                  input$pred_ger_brand, input$pred_ger_model, input$pred_ger_fuel, 6.1)
     }
-    
+
     co2_val <- if (input$pred_ger_use_co2) {
       as.numeric(input$pred_ger_co2)
     } else {
-      get_db_avg("Germany_Cars_Cleaned", "co2_g", 
+      get_db_avg("Germany_Cars_Cleaned", "co2_g",
                  input$pred_ger_brand, input$pred_ger_model, input$pred_ger_fuel, 146.5)
     }
-    
+
     date_noi <- data.frame(
       km = as.numeric(input$pred_ger_km),
       age = as.integer(2026 - input$pred_ger_year),
@@ -804,60 +815,60 @@ server <- function(input, output, session) {
     }
     req(input$pred_ind_model)
     lvl <- levels_ind()
-    
+
     # Obținere valori manuale sau din baza de date
     ps_val <- if (input$pred_ind_use_ps) {
       as.numeric(input$pred_ind_ps)
     } else {
-      get_db_avg("India_Cars_Cleaned", "power_ps", 
+      get_db_avg("India_Cars_Cleaned", "power_ps",
                  input$pred_ind_brand, input$pred_ind_model, input$pred_ind_fuel, 80)
     }
-    
+
     engine_val <- if (input$pred_ind_use_engine) {
       as.numeric(input$pred_ind_engine)
     } else {
-      get_db_avg("India_Cars_Cleaned", "engine_type", 
+      get_db_avg("India_Cars_Cleaned", "engine_type",
                  input$pred_ind_brand, input$pred_ind_model, input$pred_ind_fuel, 1.5)
     }
     if (input$pred_ind_fuel == "Electric") engine_val <- 0
-    
+
     cons_val <- if (input$pred_ind_use_cons) {
       as.numeric(input$pred_ind_consumption)
     } else {
-      get_db_avg("India_Cars_Cleaned", "fuel_consumption_l_100km", 
+      get_db_avg("India_Cars_Cleaned", "fuel_consumption_l_100km",
                  input$pred_ind_brand, input$pred_ind_model, input$pred_ind_fuel, 5.4)
     }
-    
+
     body_val <- if (input$pred_ind_use_body) {
       input$pred_ind_body
     } else {
       get_db_mode("India_Cars_Cleaned", "body_type", input$pred_ind_brand, input$pred_ind_model, "Hatchback")
     }
-    
+
     owner_val <- if (input$pred_ind_use_owner) {
       input$pred_ind_owner
     } else {
       get_db_mode("India_Cars_Cleaned", "one_owner", input$pred_ind_brand, input$pred_ind_model, "Yes")
     }
-    
+
     drive_val <- if (input$pred_ind_use_drive) {
       input$pred_ind_drive
     } else {
       get_db_mode("India_Cars_Cleaned", "drivetrain", input$pred_ind_brand, input$pred_ind_model, "FWD")
     }
-    
+
     seller_val <- if (input$pred_ind_use_seller) {
       input$pred_ind_seller
     } else {
       get_db_mode("India_Cars_Cleaned", "seller_type", input$pred_ind_brand, input$pred_ind_model, "Dealer")
     }
-    
+
     state_val <- if (input$pred_ind_use_state) {
       input$pred_ind_state
     } else {
       get_db_mode("India_Cars_Cleaned", "state", input$pred_ind_brand, input$pred_ind_model, "delhi")
     }
-    
+
     date_noi <- data.frame(
       km = as.numeric(input$pred_ind_km),
       age = as.integer(2026 - input$pred_ind_year),
@@ -901,35 +912,35 @@ server <- function(input, output, session) {
     }
     req(input$pred_sua_model)
     lvl <- levels_sua()
-    
+
     # Obținere valori manuale sau din baza de date
     engine_val <- if (input$pred_sua_use_engine) {
       as.numeric(input$pred_sua_engine)
     } else {
-      get_db_avg("SUA_Cars_Cleaned", "engine_type", 
+      get_db_avg("SUA_Cars_Cleaned", "engine_type",
                  input$pred_sua_brand, input$pred_sua_model, input$pred_sua_fuel, 2.5)
     }
     if (input$pred_sua_fuel == "Electric") engine_val <- 0
-    
+
     cons_val <- if (input$pred_sua_use_cons) {
       as.numeric(input$pred_sua_consumption)
     } else {
-      get_db_avg("SUA_Cars_Cleaned", "fuel_consumption_l_100km", 
+      get_db_avg("SUA_Cars_Cleaned", "fuel_consumption_l_100km",
                  input$pred_sua_brand, input$pred_sua_model, input$pred_sua_fuel, 10.1)
     }
-    
+
     drive_val <- if (input$pred_sua_use_drive) {
       input$pred_sua_drive
     } else {
       get_db_mode("SUA_Cars_Cleaned", "drivetrain", input$pred_sua_brand, input$pred_sua_model, "FWD")
     }
-    
+
     owner_val <- if (input$pred_sua_use_owner) {
       input$pred_sua_owner
     } else {
       get_db_mode("SUA_Cars_Cleaned", "one_owner", input$pred_sua_brand, input$pred_sua_model, "Yes")
     }
-    
+
     date_noi <- data.frame(
       km = as.numeric(input$pred_sua_km),
       age = as.integer(2026 - input$pred_sua_year),
@@ -946,6 +957,7 @@ server <- function(input, output, session) {
                    quantiles = 0.5)$predictions[1, 1]
     pred_sua(list(low = med * 0.9, med = med, high = med * 1.1))
   })
+
 }
 
 shinyApp(ui = ui, server = server)
