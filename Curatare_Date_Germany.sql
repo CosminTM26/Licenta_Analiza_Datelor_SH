@@ -2980,6 +2980,115 @@ WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
 drop index idx_cars_lookup1;
 
 -- ============================================================
+-- IMPUTARE CATEGORIALE PRIN IERARHIE (MODE) - GERMANIA
+-- Ierarhie: 1. Brand + Model | 2. Model | 3. Global
+-- ============================================================
+
+-- Creare indecsi temporari pentru optimizare viteza
+CREATE INDEX IF NOT EXISTS temp_idx_ger_bm ON Germany_Cars_Cleaned (brand, model);
+CREATE INDEX IF NOT EXISTS temp_idx_ger_m ON Germany_Cars_Cleaned (model);
+
+-- ------------------------------------------------------------
+-- A. Imputare fuel_type
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE Germany_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM Germany_Cars_Cleaned AS sub
+                 WHERE sub.brand = Germany_Cars_Cleaned.brand
+                   AND sub.model = Germany_Cars_Cleaned.model
+                   AND sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown'
+;
+
+-- Pas 2: Modul pe Model (daca brand+model nu a avut destule date)
+UPDATE Germany_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM Germany_Cars_Cleaned AS sub
+                 WHERE sub.model = Germany_Cars_Cleaned.model
+                   AND sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown'
+;
+
+-- Pas 3: Modul Global
+UPDATE Germany_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM Germany_Cars_Cleaned AS sub
+                 WHERE sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown'
+;
+
+
+-- ------------------------------------------------------------
+-- B. Imputare transmission_type
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE Germany_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM Germany_Cars_Cleaned AS sub
+                         WHERE sub.brand = Germany_Cars_Cleaned.brand
+                           AND sub.model = Germany_Cars_Cleaned.model
+                           AND sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown'
+;
+
+-- Pas 2: Modul pe Model
+UPDATE Germany_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM Germany_Cars_Cleaned AS sub
+                         WHERE sub.model = Germany_Cars_Cleaned.model
+                           AND sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown';
+
+-- Pas 3: Modul Global
+UPDATE Germany_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM Germany_Cars_Cleaned AS sub
+                         WHERE sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown';
+
+-- Stergere indecsi temporari
+DROP INDEX IF EXISTS temp_idx_ger_bm;
+DROP INDEX IF EXISTS temp_idx_ger_m;
+-- ============================================================
 -- PASUL 10: VERIFICARE FINALA
 -- Numar total de randuri dupa curatare
 -- ============================================================
@@ -2994,7 +3103,7 @@ WHERE km > 450000
    OR engine_type > 6.5
    OR power_ps > 730
    OR price_in_euro < 650
-   OR price_in_euro > 399665
+   OR price_in_euro > 229900
    OR fuel_consumption_l_100km < 1.1
    OR fuel_consumption_l_100km > 18.4
    OR co2_g < 26
@@ -3003,3 +3112,8 @@ WHERE km > 450000
 -- Verificare rapidă a volumului rămas
 SELECT COUNT(*) AS total_ramase_germania
 FROM Germany_Cars_Cleaned;
+
+
+select *
+from Germany_Cars_Cleaned
+where year = 2012

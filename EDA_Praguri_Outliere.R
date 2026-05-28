@@ -56,7 +56,7 @@ germany_data |>
     price_sub_p1 = sum(price_in_euro <
                          quantile(price_in_euro, 0.001, na.rm = TRUE),
                        na.rm = TRUE),
-    price_p99 = quantile(price_in_euro, 0.999, na.rm = TRUE),
+    price_p99 = quantile(price_in_euro, 0.995, na.rm = TRUE),
     price_peste_p99 = sum(price_in_euro >
                             quantile(price_in_euro, 0.999, na.rm = TRUE),
                           na.rm = TRUE),

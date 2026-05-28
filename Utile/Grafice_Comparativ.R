@@ -13,12 +13,12 @@ source("Utile/Grafice_Helpers.R")
 # Nivele - ordinea standard pentru afisare in facet-uri
 nivele <- c("Germania", "SUA", "India")
 
-# ---- Incarcare + filtrare cele 3 piete ----
-ger <- incarca_piata("Germany_Cars_Cleaned", ps = "obligatoriu")
-sua <- incarca_piata("SUA_Cars_Cleaned",     ps = "fara")
-ind <- incarca_piata("India_Cars_Cleaned",   ps = "optional")
+# ---- Incarcare 3 piete (date EXACT din baza de date) ----
+ger <- incarca_piata("Germany_Cars_Cleaned") %>% filter(year <= 2023)
+sua <- incarca_piata("SUA_Cars_Cleaned") %>% filter(year <= 2023)
+ind <- incarca_piata("India_Cars_Cleaned") %>% filter(year <= 2023)
 
-cat("Randuri filtrate:  Germania:", nrow(ger),
+cat("Randuri din DB:  Germania:", nrow(ger),
     "| SUA:", nrow(sua), "| India:", nrow(ind), "\n\n")
 
 # ============================================================
@@ -26,23 +26,70 @@ cat("Randuri filtrate:  Germania:", nrow(ger),
 # TEORIE: Storchmann - pante mai abrupte = depreciere mai rapida
 #   Germania/SUA = panta ABRUPTA; India = mai APLATIZATA
 # ============================================================
+# Capam preturile per piata cu percentila 99% (fara log10 - axe naturale)
+# Helper-e locale pentru axa X dinamica (cu pragul de 1% ca prima eticheta)
+get_breaks_comp <- function(limits) {
+  if (any(is.na(limits))) {
+    return(seq(2000, 2023, by = 5))
+  }
+  lim_min <- round(limits[1])
+  lim_max <- 2023
+  if (is.na(lim_min)) {
+    return(seq(2000, 2023, by = 5))
+  }
+  brks <- pretty(c(lim_min, lim_max), n = 6)
+  brks <- c(lim_min, brks[brks > lim_min + 1 & brks < lim_max], lim_max)
+  unique(round(brks))
+}
+
+get_labels_comp <- function(breaks) {
+  if (length(breaks) == 0 || any(is.na(breaks))) {
+    return(as.character(breaks))
+  }
+  sapply(breaks, function(x) {
+    if (is.na(x)) {
+      return(NA_character_)
+    } else if (x == breaks[1]) {
+      paste0("<", round(x))
+    } else {
+      as.character(round(x))
+    }
+  })
+}
+
+ger_p <- ger %>% mutate(
+  price_plot = pmin(price_in_euro, quantile(price_in_euro, 0.99, na.rm = TRUE), na.rm = TRUE),
+  year_plot = pmax(year, quantile(year, 0.01, na.rm = TRUE), na.rm = TRUE),
+  piata = "Germania"
+)
+sua_p <- sua %>% mutate(
+  price_plot = pmin(price_in_euro, quantile(price_in_euro, 0.99, na.rm = TRUE), na.rm = TRUE),
+  year_plot = pmax(year, quantile(year, 0.01, na.rm = TRUE), na.rm = TRUE),
+  piata = "SUA"
+)
+ind_p <- ind %>% mutate(
+  price_plot = pmin(price_in_euro, quantile(price_in_euro, 0.99, na.rm = TRUE), na.rm = TRUE),
+  year_plot = pmax(year, quantile(year, 0.01, na.rm = TRUE), na.rm = TRUE),
+  piata = "India"
+)
+
 p1 <- bind_rows(
-    ger %>% select(varsta, price_in_euro) %>% mutate(piata = "Germania"),
-    sua %>% select(varsta, price_in_euro) %>% mutate(piata = "SUA"),
-    ind %>% select(varsta, price_in_euro) %>% mutate(piata = "India")
+    ger_p %>% select(year_plot, price_plot, piata),
+    sua_p %>% select(year_plot, price_plot, piata),
+    ind_p %>% select(year_plot, price_plot, piata)
   ) %>%
-  filter(varsta >= 0, varsta <= 30) %>%
   mutate(piata = factor(piata, levels = nivele)) %>%
-  ggplot(aes(x = varsta, y = price_in_euro, color = piata)) +
+  ggplot(aes(x = year_plot, y = price_plot, color = piata)) +
   geom_point(alpha = 0.08, size = 0.5) +
-  geom_smooth(method = "loess", se = TRUE,
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE,
               linewidth = 1, color = "black") +
-  facet_wrap(~ piata, scales = "free_y") +
-  scale_y_log10(labels = scales::comma) +
+  facet_wrap(~ piata, scales = "free") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = get_breaks_comp, labels = get_labels_comp, limits = c(NA, 2023)) +
   scale_color_manual(values = culori_piete, guide = "none") +
-  labs(title = "Curbele de depreciere - comparatie 3 piete",
-       subtitle = "Pante mai abrupte = depreciere mai rapida (Storchmann 2004)",
-       x = "Varsta (ani)", y = "Pret (EUR, log10)") +
+  labs(title = "Evolutia preturilor in functie de anul fabricatiei - 3 piete",
+       subtitle = "Preturile cresc pentru modelele mai noi; cap la 99% pe pret si 1% pe an",
+       x = "An fabricatie", y = "Pret (EUR)") +
   tema + theme(strip.text = element_text(face = "bold", size = 13))
 print(p1)
 
@@ -54,7 +101,7 @@ print(p1)
 
 # Helper local: calculeaza corelatiile pentru o piata
 calc_cor <- function(df, piata) {
-  vars <- c("price_in_euro", "km", "varsta",
+  vars <- c("price_in_euro", "km", "year",
             "engine_type", "fuel_consumption_l_100km")
   df %>%
     select(any_of(vars)) %>%
@@ -71,7 +118,7 @@ to_friendly <- function(v) {
   recode(v,
     "price_in_euro" = "Pret",
     "km" = "Km",
-    "varsta" = "Varsta",
+    "year" = "An fabricatie",
     "engine_type" = "Cilindree",
     "fuel_consumption_l_100km" = "Consum"
   )
@@ -106,20 +153,31 @@ print(p2)
 #   SUA   = distributie larga (premium prezent)
 #   Germania = bimodala (mainstream + premium)
 # ============================================================
-p3 <- bind_rows(
+date_combinate <- bind_rows(
     ger %>% select(price_in_euro) %>% mutate(piata = "Germania"),
     sua %>% select(price_in_euro) %>% mutate(piata = "SUA"),
     ind %>% select(price_in_euro) %>% mutate(piata = "India")
-  ) %>%
-  mutate(piata = factor(piata, levels = nivele)) %>%
-  ggplot(aes(x = price_in_euro, fill = piata, color = piata)) +
+  ) %>% mutate(piata = factor(piata, levels = nivele))
+
+limita_99 <- quantile(date_combinate$price_in_euro, 0.99, na.rm = TRUE)
+marcaje <- pretty(c(0, limita_99), n = 8)
+marcaje <- c(marcaje[marcaje < limita_99 * 0.95], limita_99)
+
+p3 <- date_combinate %>%
+  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE)) %>%
+  ggplot(aes(x = price_plot, fill = piata, color = piata)) +
   geom_density(alpha = 0.3, linewidth = 0.8) +
-  scale_x_log10(labels = scales::comma) +
+  scale_x_continuous(
+    breaks = marcaje,
+    labels = function(x) ifelse(x == limita_99,
+                                paste0(">", scales::comma(round(x))),
+                                scales::comma(round(x)))
+  ) +
   scale_fill_manual(values = culori_piete) +
   scale_color_manual(values = culori_piete) +
   labs(title = "Densitatea preturilor - comparatie 3 piete",
-       subtitle = "Scala log10; forma distributiei reflecta nivelul economic",
-       x = "Pret (EUR, log10)", y = "Densitate",
+       subtitle = "Forma distributiei reflecta nivelul economic; ultima zona = peste percentila 99%",
+       x = "Pret (EUR)", y = "Densitate",
        fill = "Piata", color = "Piata") +
   tema
 print(p3)

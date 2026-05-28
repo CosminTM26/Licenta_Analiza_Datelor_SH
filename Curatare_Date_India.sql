@@ -1090,7 +1090,217 @@ WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
   AND fuel_type NOT IN ('Electric', 'CNG');
 
 drop index idx_cars_lookup1_India;
+-- ============================================================
+-- IMPUTARE CATEGORIALE PRIN IERARHIE (MODE) - INDIA
+-- Ierarhie: 1. Brand + Model | 2. Model | 3. Global
+-- ============================================================
 
+-- Creare indecsi temporari pentru optimizare viteza
+CREATE INDEX IF NOT EXISTS temp_idx_ind_bm ON India_Cars_Cleaned (brand, model);
+CREATE INDEX IF NOT EXISTS temp_idx_ind_m ON India_Cars_Cleaned (model);
+
+-- ------------------------------------------------------------
+-- A. Imputare body_type
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE India_Cars_Cleaned
+SET body_type = (SELECT sub.body_type
+                 FROM India_Cars_Cleaned AS sub
+                 WHERE sub.brand = India_Cars_Cleaned.brand
+                   AND sub.model = India_Cars_Cleaned.model
+                   AND sub.body_type IS NOT NULL
+                   AND sub.body_type <> 'Unknown'
+                   AND sub.body_type <> ''
+                 GROUP BY sub.body_type
+                 ORDER BY COUNT(*) DESC, sub.body_type
+                 LIMIT 1)
+WHERE body_type IS NULL
+   OR body_type = 'Unknown'
+;
+
+-- Pas 2: Modul pe Model
+UPDATE India_Cars_Cleaned
+SET body_type = (SELECT sub.body_type
+                 FROM India_Cars_Cleaned AS sub
+                 WHERE sub.model = India_Cars_Cleaned.model
+                   AND sub.body_type IS NOT NULL
+                   AND sub.body_type <> 'Unknown'
+                   AND sub.body_type <> ''
+                 GROUP BY sub.body_type
+                 ORDER BY COUNT(*) DESC, sub.body_type
+                 LIMIT 1)
+WHERE body_type IS NULL
+   OR body_type = 'Unknown'
+;
+
+-- Pas 3: Modul Global
+UPDATE India_Cars_Cleaned
+SET body_type = (SELECT sub.body_type
+                 FROM India_Cars_Cleaned AS sub
+                 WHERE sub.body_type IS NOT NULL
+                   AND sub.body_type <> 'Unknown'
+                   AND sub.body_type <> ''
+                 GROUP BY sub.body_type
+                 ORDER BY COUNT(*) DESC, sub.body_type
+                 LIMIT 1)
+WHERE body_type IS NULL
+   OR body_type = 'Unknown'
+;
+
+
+-- ------------------------------------------------------------
+-- B. Imputare drivetrain
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE India_Cars_Cleaned
+SET drivetrain = (SELECT sub.drivetrain
+                  FROM India_Cars_Cleaned AS sub
+                  WHERE sub.brand = India_Cars_Cleaned.brand
+                    AND sub.model = India_Cars_Cleaned.model
+                    AND sub.drivetrain IS NOT NULL
+                    AND sub.drivetrain <> 'Unknown'
+                    AND sub.drivetrain <> ''
+                  GROUP BY sub.drivetrain
+                  ORDER BY COUNT(*) DESC, sub.drivetrain
+                  LIMIT 1)
+WHERE drivetrain IS NULL
+   OR drivetrain = 'Unknown'
+;
+
+-- Pas 2: Modul pe Model
+UPDATE India_Cars_Cleaned
+SET drivetrain = (SELECT sub.drivetrain
+                  FROM India_Cars_Cleaned AS sub
+                  WHERE sub.model = India_Cars_Cleaned.model
+                    AND sub.drivetrain IS NOT NULL
+                    AND sub.drivetrain <> 'Unknown'
+                    AND sub.drivetrain <> ''
+                  GROUP BY sub.drivetrain
+                  ORDER BY COUNT(*) DESC, sub.drivetrain
+                  LIMIT 1)
+WHERE drivetrain IS NULL
+   OR drivetrain = 'Unknown'
+;
+
+-- Pas 3: Modul Global
+UPDATE India_Cars_Cleaned
+SET drivetrain = (SELECT sub.drivetrain
+                  FROM India_Cars_Cleaned AS sub
+                  WHERE sub.drivetrain IS NOT NULL
+                    AND sub.drivetrain <> 'Unknown'
+                    AND sub.drivetrain <> ''
+                  GROUP BY sub.drivetrain
+                  ORDER BY COUNT(*) DESC, sub.drivetrain
+                  LIMIT 1)
+WHERE drivetrain IS NULL
+   OR drivetrain = 'Unknown'
+;
+
+
+-- ------------------------------------------------------------
+-- C. Imputare fuel_type
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE India_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM India_Cars_Cleaned AS sub
+                 WHERE sub.brand = India_Cars_Cleaned.brand
+                   AND sub.model = India_Cars_Cleaned.model
+                   AND sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown'
+;
+
+-- Pas 2: Modul pe Model
+UPDATE India_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM India_Cars_Cleaned AS sub
+                 WHERE sub.model = India_Cars_Cleaned.model
+                   AND sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown'
+;
+
+-- Pas 3: Modul Global
+UPDATE India_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM India_Cars_Cleaned AS sub
+                 WHERE sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown'
+;
+
+
+-- ------------------------------------------------------------
+-- D. Imputare transmission_type
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE India_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM India_Cars_Cleaned AS sub
+                         WHERE sub.brand = India_Cars_Cleaned.brand
+                           AND sub.model = India_Cars_Cleaned.model
+                           AND sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown'
+   OR transmission_type = '';
+
+-- Pas 2: Modul pe Model
+UPDATE India_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM India_Cars_Cleaned AS sub
+                         WHERE sub.model = India_Cars_Cleaned.model
+                           AND sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown'
+;
+
+-- Pas 3: Modul Global
+UPDATE India_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM India_Cars_Cleaned AS sub
+                         WHERE sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown'
+;
+
+-- Stergere indecsi temporari
+DROP INDEX IF EXISTS temp_idx_ind_bm;
+DROP INDEX IF EXISTS temp_idx_ind_m;
 -- ============================================================
 -- PASUL 11: ELIMINARE OUTLIERI
 -- Praguri asimetrice P0.1 / P99.9 per piata
@@ -1110,3 +1320,6 @@ WHERE km > 324049
 select count(*)
 from India_Cars_Cleaned;
 
+select *
+from India_Cars_Cleaned
+where body_type = 'Convertibles'

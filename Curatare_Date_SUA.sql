@@ -5698,6 +5698,159 @@ WHERE (fuel_consumption_l_100km IS NULL OR fuel_consumption_l_100km = 0)
 
 drop index idx_cars_lookup1_SUA;
 
+
+-- ============================================================
+-- IMPUTARE CATEGORIALE PRIN IERARHIE (MODE) - SUA
+-- Ierarhie: 1. Brand + Model | 2. Model | 3. Global
+-- ============================================================
+
+-- Creare indecsi temporari pentru optimizare viteza
+CREATE INDEX IF NOT EXISTS temp_idx_sua_bm ON SUA_Cars_Cleaned (brand, model);
+CREATE INDEX IF NOT EXISTS temp_idx_sua_m ON SUA_Cars_Cleaned (model);
+
+-- ------------------------------------------------------------
+-- A. Imputare drivetrain
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE SUA_Cars_Cleaned
+SET drivetrain = (SELECT sub.drivetrain
+                  FROM SUA_Cars_Cleaned AS sub
+                  WHERE sub.brand = SUA_Cars_Cleaned.brand
+                    AND sub.model = SUA_Cars_Cleaned.model
+                    AND sub.drivetrain IS NOT NULL
+                    AND sub.drivetrain <> 'Unknown'
+                    AND sub.drivetrain <> ''
+                  GROUP BY sub.drivetrain
+                  ORDER BY COUNT(*) DESC, sub.drivetrain
+                  LIMIT 1)
+WHERE drivetrain IS NULL
+   OR drivetrain = 'Unknown';
+
+-- Pas 2: Modul pe Model
+UPDATE SUA_Cars_Cleaned
+SET drivetrain = (SELECT sub.drivetrain
+                  FROM SUA_Cars_Cleaned AS sub
+                  WHERE sub.model = SUA_Cars_Cleaned.model
+                    AND sub.drivetrain IS NOT NULL
+                    AND sub.drivetrain <> 'Unknown'
+                    AND sub.drivetrain <> ''
+                  GROUP BY sub.drivetrain
+                  ORDER BY COUNT(*) DESC, sub.drivetrain
+                  LIMIT 1)
+WHERE drivetrain IS NULL
+   OR drivetrain = 'Unknown';
+
+-- Pas 3: Modul Global
+UPDATE SUA_Cars_Cleaned
+SET drivetrain = (SELECT sub.drivetrain
+                  FROM SUA_Cars_Cleaned AS sub
+                  WHERE sub.drivetrain IS NOT NULL
+                    AND sub.drivetrain <> 'Unknown'
+                    AND sub.drivetrain <> ''
+                  GROUP BY sub.drivetrain
+                  ORDER BY COUNT(*) DESC, sub.drivetrain
+                  LIMIT 1)
+WHERE drivetrain IS NULL
+   OR drivetrain = 'Unknown';
+
+
+-- ------------------------------------------------------------
+-- B. Imputare fuel_type
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE SUA_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM SUA_Cars_Cleaned AS sub
+                 WHERE sub.brand = SUA_Cars_Cleaned.brand
+                   AND sub.model = SUA_Cars_Cleaned.model
+                   AND sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown';
+
+-- Pas 2: Modul pe Model
+UPDATE SUA_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM SUA_Cars_Cleaned AS sub
+                 WHERE sub.model = SUA_Cars_Cleaned.model
+                   AND sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown';
+
+-- Pas 3: Modul Global
+UPDATE SUA_Cars_Cleaned
+SET fuel_type = (SELECT sub.fuel_type
+                 FROM SUA_Cars_Cleaned AS sub
+                 WHERE sub.fuel_type IS NOT NULL
+                   AND sub.fuel_type <> 'Unknown'
+                   AND sub.fuel_type <> ''
+                 GROUP BY sub.fuel_type
+                 ORDER BY COUNT(*) DESC, sub.fuel_type
+                 LIMIT 1)
+WHERE fuel_type IS NULL
+   OR fuel_type = 'Unknown';
+
+
+-- ------------------------------------------------------------
+-- C. Imputare transmission_type
+-- ------------------------------------------------------------
+
+-- Pas 1: Modul pe Brand + Model
+UPDATE SUA_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM SUA_Cars_Cleaned AS sub
+                         WHERE sub.brand = SUA_Cars_Cleaned.brand
+                           AND sub.model = SUA_Cars_Cleaned.model
+                           AND sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown';
+
+-- Pas 2: Modul pe Model
+UPDATE SUA_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM SUA_Cars_Cleaned AS sub
+                         WHERE sub.model = SUA_Cars_Cleaned.model
+                           AND sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown';
+
+-- Pas 3: Modul Global
+UPDATE SUA_Cars_Cleaned
+SET transmission_type = (SELECT sub.transmission_type
+                         FROM SUA_Cars_Cleaned AS sub
+                         WHERE sub.transmission_type IS NOT NULL
+                           AND sub.transmission_type <> 'Unknown'
+                           AND sub.transmission_type <> ''
+                         GROUP BY sub.transmission_type
+                         ORDER BY COUNT(*) DESC, sub.transmission_type
+                         LIMIT 1)
+WHERE transmission_type IS NULL
+   OR transmission_type = 'Unknown';
+
+-- Stergere indecsi temporari
+DROP INDEX IF EXISTS temp_idx_sua_bm;
+DROP INDEX IF EXISTS temp_idx_sua_m;
 -- ============================================================
 -- PASUL 13: ELIMINARE OUTLIERI
 -- Praguri asimetrice P0.1 / P99.9 per piata

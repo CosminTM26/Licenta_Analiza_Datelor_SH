@@ -12,29 +12,60 @@
 source("Utile/Grafice_Helpers.R")
 
 # ---- Incarcare + filtrare outliere ----
-df <- incarca_piata("India_Cars_Cleaned", ps = "optional")
-cat("India - randuri dupa filtrare:", nrow(df), "\n")
+df <- incarca_piata("India_Cars_Cleaned") %>%
+  filter(year <= 2023) %>%
+  mutate(age = 2023 - year)
+cat("India - randuri din baza de date (pana in 2023):", nrow(df), "\n")
 
 # ============================================================
 # GRAFIC 1: Histograma pret (distributie de baza)
+# Ultima bara grupeaza preturile peste percentila 99% (ex: >150,000 EUR)
+# Nu pierdem date - doar "impingem" outlierele intr-o singura bara vizibila
 # ============================================================
+limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
+marcaje <- pretty(c(0, limita_99), n = 8)
+marcaje <- c(marcaje[marcaje < limita_99 * 0.95], limita_99)
+
 p1 <- df %>%
-  ggplot(aes(x = price_in_euro)) +
+  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE)) %>%
+  ggplot(aes(x = price_plot)) +
   geom_histogram(bins = 50, fill = culori_piete["India"], color = "white") +
+  scale_x_continuous(
+    breaks = marcaje,
+    labels = function(x) ifelse(x == limita_99,
+                                paste0(">", scales::comma(round(x))),
+                                scales::comma(round(x)))
+  ) +
+  scale_y_continuous(labels = scales::comma) +
   labs(title = "Distributia preturilor - India",
-       subtitle = paste("N =", nrow(df), "vehicule"),
+       subtitle = paste0("N = ", nrow(df), " vehicule (ultima bara = preturi peste percentila 99%)"),
        x = "Pret (EUR)", y = "Numar masini") +
   tema
 print(p1)
 
 # ============================================================
-# GRAFIC 2: Histograma varsta (distributie de baza)
+# GRAFIC 2: Histograma varsta masini (distributie de baza)
+# Ultima bara grupeaza masinile cu varsta peste percentila 99%
 # ============================================================
+limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
+marcaje_varsta <- pretty(c(0, limita_99_age), n = 8)
+marcaje_varsta <- c(marcaje_varsta[marcaje_varsta < limita_99_age * 0.95], limita_99_age)
+marcaje_varsta <- unique(round(marcaje_varsta))
+
 p2 <- df %>%
-  ggplot(aes(x = varsta)) +
-  geom_histogram(bins = 25, fill = culori_piete["India"], color = "white") +
+  mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE)) %>%
+  ggplot(aes(x = age_plot)) +
+  geom_histogram(binwidth = 1, center = 0, fill = culori_piete["India"], color = "white") +
+  scale_x_continuous(
+    breaks = marcaje_varsta,
+    labels = function(x) ifelse(x == limita_99_age,
+                                paste0(">", round(x)),
+                                as.character(round(x))),
+    limits = c(-0.5, limita_99_age + 0.5)
+  ) +
+  scale_y_continuous(labels = scales::comma) +
   labs(title = "Distributia varstei masinilor - India",
-       subtitle = "Varsta = 2023 - anul fabricatiei",
+       subtitle = paste0("Ultima bara = varsta peste ", round(limita_99_age), " ani (arata retentia masinilor in piata)"),
        x = "Varsta (ani)", y = "Numar masini") +
   tema
 print(p2)
@@ -52,7 +83,7 @@ p3 <- df %>%
   geom_col(fill = culori_piete["India"]) +
   geom_text(aes(label = scales::comma(n)), hjust = -0.1, size = 3.5) +
   coord_flip() +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)), labels = scales::comma) +
   labs(title = "Distributia pe tip caroserie - India",
        subtitle = "Dominanta Hatchback confirma teoria frugal innovation",
        x = NULL, y = "Numar masini") +
@@ -69,12 +100,23 @@ top_body <- df %>%
   slice_max(n, n = 6) %>%
   pull(body_type)
 
+limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
+marcaje_pret <- pretty(c(0, limita_99), n = 8)
+marcaje_pret <- c(marcaje_pret[marcaje_pret < limita_99 * 0.95], limita_99)
+
 p4 <- df %>%
   filter(body_type %in% top_body) %>%
-  mutate(body_type = fct_reorder(body_type, price_in_euro, median)) %>%
-  ggplot(aes(x = body_type, y = price_in_euro, fill = body_type)) +
+  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE),
+         body_type = fct_reorder(body_type, price_plot, median)) %>%
+  ggplot(aes(x = body_type, y = price_plot, fill = body_type)) +
   geom_boxplot(outlier.alpha = 0.2) +
   scale_fill_brewer(palette = "Set2", guide = "none") +
+  scale_y_continuous(
+    breaks = marcaje_pret,
+    labels = function(y) ifelse(y == limita_99,
+                                paste0(">", scales::comma(round(y))),
+                                scales::comma(round(y)))
+  ) +
   labs(title = "Pret median pe tip caroserie - India",
        subtitle = "Hatchback = accesibil; SUV = top de gama",
        x = NULL, y = "Pret (EUR)") +
@@ -82,18 +124,36 @@ p4 <- df %>%
 print(p4)
 
 # ============================================================
-# GRAFIC 5: Scatter - Curba depreciere India
-# TEORIE: Storchmann (2004) - panta MAI PLATA decat in piete mature
+# GRAFIC 5: Scatter - Curba de depreciere (Pret vs Varsta) - India
+# TEORIE: Storchmann (2004) - depreciere mai lenta in piete emergente (~15% anual)
 # ============================================================
+limita_99_p <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
+marcaje_yp <- pretty(c(0, limita_99_p), n = 8)
+marcaje_yp <- c(marcaje_yp[marcaje_yp < limita_99_p * 0.95], limita_99_p)
+
 p5 <- df %>%
-  ggplot(aes(x = varsta, y = price_in_euro)) +
+  mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE),
+         price_plot = pmin(price_in_euro, limita_99_p, na.rm = TRUE)) %>%
+  ggplot(aes(x = age_plot, y = price_plot)) +
   geom_point(alpha = 0.15, color = culori_piete["India"], size = 0.8) +
-  geom_smooth(method = "loess", color = "black",
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), color = "black",
               se = TRUE, linewidth = 1) +
-  scale_y_log10(labels = scales::comma) +
-  labs(title = "Curba de depreciere - India",
-       subtitle = "Axa Y log10; linia LOESS = trend median",
-       x = "Varsta (ani)", y = "Pret (EUR, log10)") +
+  scale_x_continuous(
+    breaks = marcaje_varsta,
+    labels = function(x) ifelse(x == limita_99_age,
+                                paste0(">", round(x)),
+                                as.character(round(x))),
+    limits = c(0, limita_99_age)
+  ) +
+  scale_y_continuous(
+    breaks = marcaje_yp,
+    labels = function(y) ifelse(y == limita_99_p,
+                                paste0(">", scales::comma(round(y))),
+                                scales::comma(round(y)))
+  ) +
+  labs(title = "Curba de depreciere (Pret vs Varsta) - India",
+       subtitle = "Linia GAM = trend median; depreciere mai lenta in piata emergenta (Storchmann, 2004)",
+       x = "Varsta (ani)", y = "Pret (EUR)") +
   tema
 print(p5)
 
@@ -111,7 +171,7 @@ p6 <- df %>%
   geom_col(fill = culori_piete["India"]) +
   geom_text(aes(label = scales::comma(n)), hjust = -0.1, size = 3.5) +
   coord_flip() +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)), labels = scales::comma) +
   labs(title = "Top 10 cele mai tranzactionate branduri - India",
        subtitle = "Maruti Suzuki domina piata, confirmand 'The Maruti Story'",
        x = NULL, y = "Numar masini") +
