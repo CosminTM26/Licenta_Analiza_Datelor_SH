@@ -35,4 +35,7 @@ Utile/appexplicatie.R
 *.log
 *.RDataFiles
 *.utile
-.remember
+*.remember
+*.claude
+*.py
+.Utile
