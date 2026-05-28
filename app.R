@@ -2,11 +2,6 @@
 # Dashboard Auto SH + Predictor Pret (Random Forest)
 # Licenta Cosmin
 # ==============================================================================
-# Structura aplicatiei:
-#   PARTEA 1 (Dashboard)  - KPI-uri + grafice descriptive pe piata aleasa
-#   PARTEA 2 (Predictor)  - Random Forest pentru fiecare piata (Germania/India/SUA)
-#                           cu acelasi tipar de cod: campuri baza -> RF -> predictie
-# ==============================================================================
 
 library(shiny)
 library(shinydashboard)
@@ -18,73 +13,66 @@ library(ranger)
 options(scipen = 999)
 options(ranger.num.threads = 10)
 
+
 # ==============================================================================
-# HELPER COMUNI
+# INCARCARE DATE DIN SQLITE (in memorie)
 # ==============================================================================
 
 DB <- "identifier.sqlite"
 
-# Formatare numere cu separator de mii (ex. 12345 -> "12,345")
+con <- dbConnect(RSQLite::SQLite(), DB)
+germany_data <- dbReadTable(con, "Germany_Cars_Cleaned")
+india_data   <- dbReadTable(con, "India_Cars_Cleaned")
+sua_data     <- dbReadTable(con, "SUA_Cars_Cleaned")
+dbDisconnect(con)
+
+
+# ==============================================================================
+# HELPER-E GENERALE
+# ==============================================================================
+
 fmt <- function(x) {
   if (is.na(x) || is.nan(x)) return("N/A")
   format(round(x), big.mark = ",")
 }
 
-# Mapare piata (afisaj) -> tabel SQLite (real)
-tabel_piata <- function(piata) {
-  switch(piata, "India" = "India_Cars_Cleaned",
-         "Germania" = "Germany_Cars_Cleaned", "SUA" = "SUA_Cars_Cleaned")
-}
+ger_brands <- unique(germany_data$brand) %>% sort()
+ger_fuels  <- unique(germany_data$fuel_type) %>% sort()
+ger_trans  <- unique(germany_data$transmission_type) %>% sort()
 
-# Citeste valori distincte dintr-o coloana (pentru selectInput-uri)
-get_vals <- function(tbl, col) {
-  if (!file.exists(DB)) return(character(0))
-  con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-  if (!dbExistsTable(con, tbl)) return(character(0))
-  dbGetQuery(con, paste0(
-    "SELECT DISTINCT `", col, "` FROM `", tbl,
-    "` WHERE `", col, "` IS NOT NULL AND `", col, "` != '' ORDER BY `", col, "`"
-  ))[[1]]
-}
+ind_brands <- unique(india_data$brand) %>% sort()
+ind_fuels  <- unique(india_data$fuel_type) %>% sort()
+ind_trans  <- unique(india_data$transmission_type) %>% sort()
+ind_body   <- unique(india_data$body_type) %>% sort()
+ind_states <- unique(india_data$state) %>% sort()
+ind_seller <- unique(india_data$seller_type) %>% sort()
+ind_drive  <- unique(india_data$drivetrain) %>% sort()
 
-# Preincarca valorile fixe pentru selectInput-uri (la pornirea aplicatiei)
-ger_brands <- get_vals("Germany_Cars_Cleaned", "brand")
-ger_fuels <- get_vals("Germany_Cars_Cleaned", "fuel_type")
-ger_trans <- get_vals("Germany_Cars_Cleaned", "transmission_type")
-ind_brands <- get_vals("India_Cars_Cleaned", "brand")
-ind_fuels <- get_vals("India_Cars_Cleaned", "fuel_type")
-ind_trans <- get_vals("India_Cars_Cleaned", "transmission_type")
-ind_body <- get_vals("India_Cars_Cleaned", "body_type")
-ind_states <- get_vals("India_Cars_Cleaned", "state")
-ind_seller <- get_vals("India_Cars_Cleaned", "seller_type")
-ind_drive <- get_vals("India_Cars_Cleaned", "drivetrain")
-sua_brands <- get_vals("SUA_Cars_Cleaned", "brand")
-sua_fuels <- get_vals("SUA_Cars_Cleaned", "fuel_type")
-sua_trans <- get_vals("SUA_Cars_Cleaned", "transmission_type")
-sua_drive <- get_vals("SUA_Cars_Cleaned", "drivetrain")
+sua_brands <- unique(sua_data$brand) %>% sort()
+sua_fuels  <- unique(sua_data$fuel_type) %>% sort()
+sua_trans  <- unique(sua_data$transmission_type) %>% sort()
+sua_drive  <- unique(sua_data$drivetrain) %>% sort()
+
 
 # ==============================================================================
-# HELPER-E UI PENTRU PREDICTOR (toate cele 3 piete au aceeasi structura)
+# HELPER-E UI PENTRU PREDICTOR
 # ==============================================================================
 
-# Campurile de baza ale unui predictor (brand, model, km, year, fuel, transmisie)
-# Sunt identice pentru toate cele 3 piete, doar valorile implicite difera
-campuri_baza <- function(piata, brands, fuels, trans, year_default, km_default) {
+campuri_baza <- function(piata, brands, fuels, trans, year_default, km_default, min_year, max_year) {
   id <- function(s) paste0("pred_", piata, "_", s)
   tagList(
     selectInput(id("brand"), "Brand:", choices = brands),
     uiOutput(id("model_ui")),
     numericInput(id("km"), "Kilometraj (km):", value = km_default, min = 0, step = 10000),
-    numericInput(id("year"), "An fabricatie:", value = year_default),
+    numericInput(id("year"), "An fabricatie:", value = year_default, min = min_year, max = max_year, step = 1),
     selectInput(id("fuel"), "Combustibil:", choices = fuels),
     selectInput(id("trans"), "Transmisie:", choices = trans)
   )
 }
 
-# Camp optional numeric: checkbox "Specific X" + numericInput vizibil cand e bifat
 camp_num <- function(piata, nume, label_cb, label_inp, default, min_val = 1, step = 0.1) {
   id_inp <- paste0("pred_", piata, "_", nume)
-  id_cb <- paste0("pred_", piata, "_use_", nume)
+  id_cb  <- paste0("pred_", piata, "_use_", nume)
   tagList(
     checkboxInput(id_cb, label_cb, value = FALSE),
     conditionalPanel(condition = paste0("input.", id_cb, " == true"),
@@ -92,10 +80,9 @@ camp_num <- function(piata, nume, label_cb, label_inp, default, min_val = 1, ste
   )
 }
 
-# Camp optional categoric: checkbox "Specific X" + selectInput vizibil cand e bifat
 camp_sel <- function(piata, nume, label_cb, label_inp, choices) {
   id_inp <- paste0("pred_", piata, "_", nume)
-  id_cb <- paste0("pred_", piata, "_use_", nume)
+  id_cb  <- paste0("pred_", piata, "_use_", nume)
   tagList(
     checkboxInput(id_cb, label_cb, value = FALSE),
     conditionalPanel(condition = paste0("input.", id_cb, " == true"),
@@ -103,7 +90,6 @@ camp_sel <- function(piata, nume, label_cb, label_inp, choices) {
   )
 }
 
-# Coloana din dreapta: buton antreneaza + status + buton predictie + rezultat
 coloana_actiuni <- function(piata) {
   tagList(
     actionButton(paste0("train_", piata), "Antreneaza Model",
@@ -116,111 +102,70 @@ coloana_actiuni <- function(piata) {
   )
 }
 
+
 # ==============================================================================
-# HELPER-E MACHINE LEARNING (folosite in observerele de antrenare)
+# HELPER-E MACHINE LEARNING (Random Forest)
 # ==============================================================================
 
-# Imputare ierarhica pentru o coloana cu NA: median brand+model -> median global -> fallback
-imputare_ierarhica <- function(df, col, fallback) {
-  if (!col %in% names(df)) return(df)
-  # Pas 1: completeaza NA cu mediana pe grupul brand+model
-  df <- df %>%
-    group_by(brand, model) %>%
-    mutate(across(all_of(col), ~ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
-    ungroup()
-  # Pas 2: ce a ramas NA -> median global, sau fallback daca nu exista
-  global_med <- median(df[[col]], na.rm = TRUE)
-  if (is.na(global_med)) global_med <- fallback
-  df[[col]][is.na(df[[col]])] <- global_med
-  df
-}
+train_rf <- function(date, coloane_factor, nr_arbori, model_rv, levels_rv, status_rv) {
+  coloane_electric <- intersect(c("engine_type", "fuel_consumption_l_100km", "co2_g"), names(date))
 
-# Pentru masini electrice: engine/consum/co2 = 0 (nu se aplica)
-electric_zero <- function(df) {
-  for (col in c("engine_type", "fuel_consumption_l_100km", "co2_g")) {
-    if (col %in% names(df)) df[[col]][df$fuel_type == "Electric"] <- 0
-  }
-  df
-}
-
-# Antrenare Random Forest cu hyperparametri din studii (Wright & Konig 2019)
-# - quantreg = TRUE: salveaza predictia fiecarui arbore -> putem cere mediana
-# - respect.unordered.factors = "order": Target Encoding nativ pentru marca/model
-# - max.depth + min.node.size: limita complexitatea ca sa nu supraadapteze
-train_rf <- function(df, factor_cols, n_trees, model_rv, levels_rv, status_rv) {
-  # Feature engineering: inlocuim "year" cu "age" (= 2023 - year, datele sunt din 2023)
-  df$age <- 2023 - df$year
-  df$year <- NULL
-
-  # Pregatire date: corectie electrici + imputare valori lipsa
-  df <- electric_zero(df)
-  df <- imputare_ierarhica(df, "engine_type", 1.6)
-  df <- imputare_ierarhica(df, "fuel_consumption_l_100km", 6.0)
-  df <- imputare_ierarhica(df, "co2_g", 146.0)
-
-  # Curatare finala + transformare text in factori
-  df <- df %>%
+  date <- date %>%
+    mutate(age = 2023 - year, year = NULL) %>%
+    mutate(across(all_of(coloane_electric), ~if_else(fuel_type == "Electric" & is.na(.), 0, .))) %>%
     filter(!is.na(price_in_euro), price_in_euro > 0) %>%
-    drop_na()
-  for (c in factor_cols) df[[c]] <- as.factor(df[[c]])
+    drop_na() %>%
+    mutate(across(all_of(coloane_factor), as.factor))
 
-  # Antrenare Random Forest
-  m <- ranger(price_in_euro ~ ., data = df,
-              num.trees = n_trees, max.depth = 20, min.node.size = 2,
-              quantreg = TRUE, importance = "impurity",
-              respect.unordered.factors = "order", seed = 42, verbose = FALSE)
+  padure <- ranger(price_in_euro ~ ., data = date,
+                   num.trees = nr_arbori, max.depth = 20, min.node.size = 2,
+                   quantreg = TRUE, importance = "impurity",
+                   respect.unordered.factors = "order", seed = 42)
 
-  # Salveaza modelul si nivelele factor (necesare la predictie)
-  model_rv(m)
-  lv <- list()
-  for (c in factor_cols) lv[[c]] <- levels(df[[c]])
-  levels_rv(lv)
+  model_rv(padure)
+  levels_rv(lapply(date[coloane_factor], levels))
 
-  # Status: R² OOB + top caracteristici cu impact in decizie
-  r2 <- round(1 - m$prediction.error / var(df$price_in_euro), 3)
-  imp <- sort(importance(m), decreasing = TRUE)
-  pct <- round(100 * imp / sum(imp), 1)
-  imp_str <- paste(names(pct), paste0(pct, "%"), sep = ": ", collapse = " | ")
-  status_rv(paste0("Antrenat pe ", fmt(nrow(df)), " masini (", n_trees, " arbori). ",
-                   "R² OOB = ", r2, "\nCum decide modelul: ", imp_str))
+  r2 <- round(padure$r.squared, 3)
+  importanta <- sort(importance(padure), decreasing = TRUE)
+  procente <- round(100 * importanta / sum(importanta), 1)
+  text_importanta <- paste(names(procente), paste0(procente, "%"), sep = ": ", collapse = " | ")
+  status_rv(paste0("Antrenat pe ", fmt(nrow(date)), " masini (", nr_arbori, " arbori). ",
+                   "R² OOB = ", r2,
+                   "\nCum decide modelul: ", text_importanta))
 }
 
-# Antrenare completa pentru o piata: descarca date din SQLite, eventual filtreaza, antreneaza
-antreneaza_piata <- function(piata_nume, tabel, sql_cols, factori, n_trees,
-                             model_rv, levels_rv, status_rv, filtru = NULL) {
-  withProgress(message = paste0("Antrenare RF ", piata_nume, " (", n_trees, " arbori)"),
+antreneaza_piata <- function(piata_nume, date_piata, coloane_pastrate, coloane_factor,
+                             nr_arbori, model_rv, levels_rv, status_rv, filtru = NULL) {
+  withProgress(message = paste0("Antrenare RF ", piata_nume, " (", nr_arbori, " arbori)"),
     value = NULL, {
-    con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    df <- dbGetQuery(con, paste("SELECT", paste(sql_cols, collapse = ", "), "FROM", tabel))
-    if (!is.null(filtru)) df <- filtru(df)
-    train_rf(df, factori, n_trees, model_rv, levels_rv, status_rv)
+    date_antrenare <- date_piata %>% select(all_of(coloane_pastrate))
+    if (!is.null(filtru)) date_antrenare <- filtru(date_antrenare)
+    train_rf(date_antrenare, coloane_factor, nr_arbori, model_rv, levels_rv, status_rv)
   })
 }
 
-# Predictie cu interval +/-10% in jurul medianei
 prezice_pret <- function(model, date_noi, pred_rv) {
-  med <- predict(model, data = date_noi, type = "quantiles",
-                 quantiles = 0.5)$predictions[1, 1]
-  pred_rv(list(low = med * 0.9, med = med, high = med * 1.1))
+  pret <- predict(model, data = date_noi,
+                  type = "quantiles", quantiles = 0.5)$predictions[1, 1]
+  pred_rv(list(low = pret * 0.9, med = pret, high = pret * 1.1))
 }
 
+
 # ==============================================================================
-# HELPER-E GRAFICE (utilitare pentru axe si tema comuna)
+# HELPER-E GRAFICE
 # ==============================================================================
 
-# Tick-uri pe axa numerica: include 0 si max, plus diviziuni intermediare
-# (folosit pentru axa Y la histograme/bar charts ca sa se vada clar valoarea maxima)
 breaks_cu_max <- function(max_val, n = 10) {
   ticks <- pretty(c(0, max_val), n = n)
   ticks <- ticks[ticks > 0 & ticks < (max_val - max_val * 0.035)]
   c(0, ticks, max_val)
 }
 
-# Tema standard pentru toate graficele (theme_minimal + margini configurabile)
 tema_plot <- function(top = 10, right = 25, bottom = 10, left = 10) {
   theme_minimal(base_size = 13) +
     theme(plot.margin = margin(t = top, r = right, b = bottom, l = left))
 }
+
 
 # ==============================================================================
 # UI
@@ -241,7 +186,6 @@ ui <- dashboardPage(
   ),
 
   dashboardBody(
-    # Spacing + valueBox font responsive cu clamp() (scalare automata dupa latimea ecranului)
     tags$head(tags$style(HTML("
       .content-wrapper { padding: 20px; }
       .box { margin-bottom: 25px; }
@@ -254,9 +198,7 @@ ui <- dashboardPage(
 
     tabItems(
 
-      # =========================================================================
-      # ============================ TAB DASHBOARD ==============================
-      # =========================================================================
+      # --- DASHBOARD ---
       tabItem(tabName = "dashboard",
               h2(textOutput("titlu_dinamic")),
               fluidRow(
@@ -285,22 +227,17 @@ ui <- dashboardPage(
               )
       ),
 
-      # =========================================================================
-      # ============================ TAB PREDICTOR ==============================
-      # =========================================================================
-      # Toate cele 3 piete urmeaza acelasi tipar:
-      #   coloana stanga = campuri baza + campuri optionale (specifice pietei)
-      #   coloana dreapta = butoane + status + rezultat
+      # --- PREDICTOR ---
       tabItem(tabName = "predictor",
               h2("Predictor Pret (Random Forest)"),
               tabsetPanel(
 
-                # -------- GERMANIA --------
                 tabPanel("Germania",
                          fluidRow(
                            column(6,
                                   campuri_baza("ger", ger_brands, ger_fuels, ger_trans,
-                                               year_default = 2015, km_default = 100000),
+                                               year_default = 2015, km_default = 100000,
+                                               min_year = 1995, max_year = 2026),
                                   camp_num("ger", "ps", "Specific Putere (PS)", "Putere (PS):", 120, min_val = 1, step = 1),
                                   camp_num("ger", "engine", "Specific Capacitate cilindrica", "Capacitate cilindrica (L):", 1.6, min_val = 0.5, step = 0.1),
                                   camp_num("ger", "cons", "Specific Consum", "Consum (l/100km):", 6.0, min_val = 1, step = 0.1),
@@ -310,12 +247,12 @@ ui <- dashboardPage(
                          )
                 ),
 
-                # -------- INDIA --------
                 tabPanel("India",
                          fluidRow(
                            column(6,
                                   campuri_baza("ind", ind_brands, ind_fuels, ind_trans,
-                                               year_default = 2018, km_default = 60000),
+                                               year_default = 2018, km_default = 60000,
+                                               min_year = 1983, max_year = 2026),
                                   camp_num("ind", "ps", "Specific Putere (PS)", "Putere (PS):", 80, min_val = 1, step = 1),
                                   camp_num("ind", "engine", "Specific Capacitate cilindrica", "Capacitate cilindrica (L):", 1.5, min_val = 0.5, step = 0.1),
                                   camp_sel("ind", "body", "Specific Tip caroserie", "Tip caroserie:", ind_body),
@@ -329,12 +266,12 @@ ui <- dashboardPage(
                          )
                 ),
 
-                # -------- SUA --------
                 tabPanel("SUA",
                          fluidRow(
                            column(6,
                                   campuri_baza("sua", sua_brands, sua_fuels, sua_trans,
-                                               year_default = 2017, km_default = 80000),
+                                               year_default = 2017, km_default = 80000,
+                                               min_year = 1915, max_year = 2026),
                                   camp_num("sua", "engine", "Specific Capacitate cilindrica", "Capacitate cilindrica (L):", 2.5, min_val = 0.5, step = 0.1),
                                   camp_num("sua", "cons", "Specific Consum", "Consum (l/100km):", 10.1, min_val = 1, step = 0.1),
                                   camp_sel("sua", "drive", "Specific Tractiune", "Tractiune:", sua_drive),
@@ -349,37 +286,36 @@ ui <- dashboardPage(
   )
 )
 
+
 # ==============================================================================
 # SERVER
 # ==============================================================================
 
 server <- function(input, output, session) {
 
-  # ============================================================================
-  # ========================== PARTEA 1: DASHBOARD =============================
-  # ============================================================================
+  # --- DASHBOARD ---
 
-  # Selector dinamic brand (lista de branduri depinde de piata aleasa)
   output$brand_selector <- renderUI({
     req(input$piata)
-    con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    brands <- dbGetQuery(con, paste0(
-      "SELECT DISTINCT brand FROM `", tabel_piata(input$piata), "` ORDER BY brand"))$brand
+    date <- switch(input$piata,
+                   "India" = india_data,
+                   "Germania" = germany_data,
+                   "SUA" = sua_data)
+    marci <- unique(date$brand) %>% sort()
     selectInput("brand", "Selecteaza Brand:",
-                c("Toate Brandurile", brands), "Toate Brandurile")
+                c("Toate Brandurile", marci), "Toate Brandurile")
   })
 
-  # Sursa reactiva de date pentru dashboard (filtreaza dupa piata + brand)
   car_data <- reactive({
     req(input$piata, input$brand)
-    tbl <- tabel_piata(input$piata)
-    con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    if (input$brand == "Toate Brandurile") {
-      dbGetQuery(con, paste0("SELECT * FROM `", tbl, "`"))
-    } else {
-      dbGetQuery(con, paste0("SELECT * FROM `", tbl, "` WHERE brand = ?"),
-                 params = list(input$brand))
+    date <- switch(input$piata,
+                   "India" = india_data,
+                   "Germania" = germany_data,
+                   "SUA" = sua_data)
+    if (input$brand != "Toate Brandurile") {
+      date <- date %>% filter(brand == input$brand)
     }
+    date
   })
 
   output$titlu_dinamic <- renderText({
@@ -388,230 +324,233 @@ server <- function(input, output, session) {
     else paste("Analiza Brand:", input$brand, paste0("(", input$piata, ")"))
   })
 
-  # Sufix KPI: "Piata" cand toate brandurile sunt incluse, "Brand" altfel
   sfx <- function() if (input$brand == "Toate Brandurile") "Piata" else "Brand"
 
+
   # --- KPI-uri ---
+
   output$kpi_listings <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
-    valueBox(fmt(nrow(df)), paste("Listari", sfx()), icon = icon("car"), color = "blue")
+    date <- car_data(); req(nrow(date) > 0)
+    valueBox(fmt(nrow(date)), paste("Listari", sfx()), icon = icon("car"), color = "blue")
   })
   output$kpi_price <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
-    valueBox(paste0(fmt(mean(df$price_in_euro, na.rm = TRUE)), " EUR"),
+    date <- car_data(); req(nrow(date) > 0)
+    valueBox(paste0(fmt(mean(date$price_in_euro, na.rm = TRUE)), " EUR"),
              paste("Pret Mediu", sfx()), icon = icon("euro-sign"), color = "green")
   })
   output$kpi_km <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
-    valueBox(paste0(fmt(mean(df$km, na.rm = TRUE)), " km"),
+    date <- car_data(); req(nrow(date) > 0)
+    valueBox(paste0(fmt(mean(date$km, na.rm = TRUE)), " km"),
              paste("Kilometraj Mediu", sfx()), icon = icon("road"), color = "purple")
   })
   output$kpi_age <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
-    valueBox(paste0(round(2023 - mean(df$year, na.rm = TRUE), 1), " ani"),
+    date <- car_data(); req(nrow(date) > 0)
+    valueBox(paste0(round(2023 - mean(date$year, na.rm = TRUE), 1), " ani"),
              paste("Varsta Medie", sfx()), icon = icon("calendar-alt"), color = "yellow")
   })
   output$kpi_pop_model <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
-    col <- if (input$brand == "Toate Brandurile") "brand" else "model"
-    lbl <- if (input$brand == "Toate Brandurile") "Brand Popular" else "Model Popular"
-    top <- df %>% count(.data[[col]]) %>% arrange(desc(n))
-    valueBox(if (nrow(top) > 0) top[[col]][1] else "N/A", lbl,
+    date <- car_data(); req(nrow(date) > 0)
+    coloana <- if (input$brand == "Toate Brandurile") "brand" else "model"
+    eticheta <- if (input$brand == "Toate Brandurile") "Brand Popular" else "Model Popular"
+    cel_mai_frecvent <- date %>% count(.data[[coloana]], sort = TRUE) %>% slice(1) %>% pull(.data[[coloana]])
+    valueBox(if (length(cel_mai_frecvent) > 0) cel_mai_frecvent else "N/A", eticheta,
              icon = icon("star"), color = "orange")
   })
   output$kpi_pop_listings <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
-    col <- if (input$brand == "Toate Brandurile") "brand" else "model"
-    lbl <- if (input$brand == "Toate Brandurile") "Listari Brand Popular" else "Listari Model Popular"
-    top <- df %>% count(.data[[col]]) %>% arrange(desc(n))
-    nl <- if (nrow(top) > 0) top$n[1] else 0
-    pct <- round((nl / nrow(df)) * 100, 1)
-    valueBox(paste0(fmt(nl), " (", pct, "%)"), lbl, icon = icon("list"), color = "blue")
+    date <- car_data(); req(nrow(date) > 0)
+    coloana <- if (input$brand == "Toate Brandurile") "brand" else "model"
+    eticheta <- if (input$brand == "Toate Brandurile") "Listari Brand Popular" else "Listari Model Popular"
+    nr_listari <- date %>% count(.data[[coloana]], sort = TRUE) %>% slice(1) %>% pull(n)
+    if (length(nr_listari) == 0) nr_listari <- 0
+    procent <- round((nr_listari / nrow(date)) * 100, 1)
+    valueBox(paste0(fmt(nr_listari), " (", procent, "%)"), eticheta, icon = icon("list"), color = "blue")
   })
   output$kpi_consum <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
-    v <- mean(df$fuel_consumption_l_100km, na.rm = TRUE)
-    val <- if (is.nan(v) || v <= 0) "N/A" else paste0(round(v, 1), " l/100km")
-    valueBox(val, paste("Consum Mediu", sfx()), icon = icon("gas-pump"), color = "aqua")
+    date <- car_data(); req(nrow(date) > 0)
+    valoare <- mean(date$fuel_consumption_l_100km, na.rm = TRUE)
+    text <- if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare, 1), " l/100km")
+    valueBox(text, paste("Consum Mediu", sfx()), icon = icon("gas-pump"), color = "aqua")
   })
   output$kpi_spec1 <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
+    date <- car_data(); req(nrow(date) > 0)
     if (input$piata == "Germania") {
-      v <- mean(df$co2_g, na.rm = TRUE)
-      valueBox(if (is.nan(v) || v <= 0) "N/A" else paste0(round(v, 1), " g/km"),
+      valoare <- mean(date$co2_g, na.rm = TRUE)
+      valueBox(if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare, 1), " g/km"),
                paste("CO2 Mediu", sfx()), icon = icon("leaf"), color = "olive")
     } else if (input$piata == "India") {
-      v <- mean(df$power_ps, na.rm = TRUE)
-      valueBox(if (is.nan(v) || v <= 0) "N/A" else paste0(round(v), " PS"),
+      valoare <- mean(date$power_ps, na.rm = TRUE)
+      valueBox(if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare), " PS"),
                paste("Putere Medie", sfx()), icon = icon("bolt"), color = "orange")
     } else {
-      dc <- df %>%
+      tractiune_top <- date %>%
         filter(!is.na(drivetrain), drivetrain != "", drivetrain != "Unknown") %>%
-        count(drivetrain) %>%
-        arrange(desc(n))
-      valueBox(if (nrow(dc) == 0) "N/A" else dc$drivetrain[1],
+        count(drivetrain, sort = TRUE) %>%
+        slice(1) %>%
+        pull(drivetrain)
+      valueBox(if (length(tractiune_top) == 0) "N/A" else tractiune_top,
                paste("Tractiune Majoritara", sfx()), icon = icon("cog"), color = "teal")
     }
   })
   output$kpi_spec2 <- renderValueBox({
-    df <- car_data(); req(nrow(df) > 0)
+    date <- car_data(); req(nrow(date) > 0)
     if (input$piata == "Germania") {
-      v <- mean(df$power_ps, na.rm = TRUE)
-      valueBox(if (is.nan(v) || v <= 0) "N/A" else paste0(round(v), " PS"),
+      valoare <- mean(date$power_ps, na.rm = TRUE)
+      valueBox(if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare), " PS"),
                paste("Putere Medie", sfx()), icon = icon("bolt"), color = "orange")
     } else if (input$piata == "India") {
-      bc <- df %>%
+      caroserie_top <- date %>%
         filter(!is.na(body_type), body_type != "") %>%
-        count(body_type) %>%
-        arrange(desc(n))
-      valueBox(if (nrow(bc) == 0) "N/A" else bc$body_type[1],
+        count(body_type, sort = TRUE) %>%
+        slice(1) %>%
+        pull(body_type)
+      valueBox(if (length(caroserie_top) == 0) "N/A" else caroserie_top,
                paste("Caroserie Majoritara", sfx()), icon = icon("car-side"), color = "navy")
     } else {
-      vd <- df %>% filter(!is.na(one_owner), one_owner != "Unknown")
-      val <- if (nrow(vd) == 0) "N/A"
-      else paste0(round(sum(vd$one_owner == "Yes") / nrow(vd) * 100, 1), "%")
-      valueBox(val, paste("Un Proprietar", sfx()), icon = icon("user-check"), color = "green")
+      date_valide <- date %>% filter(!is.na(one_owner), one_owner != "Unknown")
+      text <- if (nrow(date_valide) == 0) "N/A"
+      else paste0(round(sum(date_valide$one_owner == "Yes") / nrow(date_valide) * 100, 1), "%")
+      valueBox(text, paste("Un Proprietar", sfx()), icon = icon("user-check"), color = "green")
     }
   })
 
+
   # --- GRAFICE ---
 
-  # Distributia preturilor (histograma, limita la percentila 99% pentru lizibilitate)
   output$price_dist_plot <- renderPlot({
-    df <- car_data(); req(nrow(df) > 0)
-    med <- median(df$price_in_euro, na.rm = TRUE)
-    avg <- mean(df$price_in_euro, na.rm = TRUE)
-    lim <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
-    min_pret <- max(0, floor(min(df$price_in_euro, na.rm = TRUE) / 1000) * 1000)
+    date <- car_data(); req(nrow(date) > 0)
+    mediana <- median(date$price_in_euro, na.rm = TRUE)
+    medie <- mean(date$price_in_euro, na.rm = TRUE)
+    limita_99 <- quantile(date$price_in_euro, 0.99, na.rm = TRUE)
+    pret_minim <- max(0, floor(min(date$price_in_euro, na.rm = TRUE) / 1000) * 1000)
 
-    # Recodificam preturile peste lim la valoarea lim pentru a le grupa in ultima bara
-    df$price_plot <- pmin(df$price_in_euro, lim, na.rm = TRUE)
+    marcaje <- pretty(c(pret_minim, limita_99), n = 12)
+    marcaje <- marcaje[marcaje > pret_minim & marcaje < (limita_99 - (limita_99 - pret_minim) * 0.035)]
+    marcaje_x <- c(pret_minim, marcaje, limita_99)
 
-    # Tick-uri personalizate pe axa X (include min_pret si lim, cu spatiere)
-    ticks <- pretty(c(min_pret, lim), n = 12)
-    ticks <- ticks[ticks > min_pret & ticks < (lim - (lim - min_pret) * 0.035)]
-    custom_breaks <- c(min_pret, ticks, lim)
-
-    ggplot(df, aes(x = price_plot)) +
+    date %>%
+      mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE)) %>%
+      ggplot(aes(x = price_plot)) +
       geom_histogram(fill = "steelblue", color = "white", linewidth = 0.3, bins = 100, na.rm = TRUE) +
-      geom_vline(xintercept = med, color = "darkred", linetype = "dashed", linewidth = 0.9) +
-      geom_vline(xintercept = avg, color = "darkgreen", linetype = "dotted", linewidth = 0.9) +
-      annotate("text", x = med, y = Inf, label = paste0("Mediana: ", fmt(med)),
+      geom_vline(xintercept = mediana, color = "darkred", linetype = "dashed", linewidth = 0.9) +
+      geom_vline(xintercept = medie, color = "darkgreen", linetype = "dotted", linewidth = 0.9) +
+      annotate("text", x = mediana, y = Inf, label = paste0("Mediana: ", fmt(mediana)),
                vjust = 2, hjust = -0.1, color = "darkred") +
-      annotate("text", x = avg, y = Inf, label = paste0("Media: ", fmt(avg)),
+      annotate("text", x = medie, y = Inf, label = paste0("Media: ", fmt(medie)),
                vjust = 3.5, hjust = -0.1, color = "darkgreen") +
-      scale_x_continuous(breaks = custom_breaks,
+      scale_x_continuous(breaks = marcaje_x,
                          labels = function(x) {
-                           labs <- format(round(x), big.mark = ",")
-                           labs[abs(x - lim) < 1e-3] <- paste0(">", labs[abs(x - lim) < 1e-3])
-                           labs
+                           etichete <- format(round(x), big.mark = ",")
+                           etichete[abs(x - limita_99) < 1e-3] <- paste0(">", etichete[abs(x - limita_99) < 1e-3])
+                           etichete
                          },
-                         limits = c(min_pret, lim), expand = c(0, 0)) +
+                         limits = c(pret_minim, limita_99), expand = c(0, 0)) +
       scale_y_continuous(breaks = function(x) pretty(x, n = 10),
                          labels = function(x) format(x, big.mark = ",")) +
       labs(x = "Pret (EUR)", y = "Nr. masini") +
       tema_plot()
   })
 
-  # Distributia anilor de fabricatie (histograma cu etichete verticale)
   output$year_dist_plot <- renderPlot({
-    df <- car_data(); req(nrow(df) > 0)
-    df_f <- df %>% filter(year <= 2023)
+    date <- car_data(); req(nrow(date) > 0)
 
-    # Pragul de grupare = percentila 1% (anii sub prag intra in "Sub X")
-    min_an <- min(df_f$year, na.rm = TRUE)
-    prag   <- max(as.integer(quantile(df_f$year, 0.01, na.rm = TRUE)), min_an)
+    min_an <- min(date$year[date$year <= 2023], na.rm = TRUE)
+    prag <- max(as.integer(quantile(date$year[date$year <= 2023], 0.01, na.rm = TRUE)), min_an)
     are_grup <- prag > min_an
     grup_eticheta <- if (are_grup) paste("Sub", prag) else as.character(prag)
-
-    # Construim grupul si lista completa de categorii in ordine
-    df_f <- df_f %>%
-      mutate(year_group = ifelse(year < prag, grup_eticheta, as.character(year)))
     grupuri <- c(if (are_grup) grup_eticheta, as.character(prag:2023))
-    df_f$year_group <- factor(df_f$year_group, levels = grupuri)
-    df_f <- df_f %>% filter(!is.na(year_group))
 
-    # Frecventa per categorie + tick-uri X (prima, ultima si din 2 in 2)
-    plot_data <- df_f %>% count(year_group, .drop = FALSE)
-    max_count <- max(plot_data$n, na.rm = TRUE)
+    date_grafic <- date %>%
+      filter(year <= 2023) %>%
+      mutate(year_group = factor(
+        if_else(year < prag, grup_eticheta, as.character(year)),
+        levels = grupuri
+      )) %>%
+      filter(!is.na(year_group)) %>%
+      count(year_group, .drop = FALSE)
+
+    numar_max <- max(date_grafic$n, na.rm = TRUE)
     ani_mijloc <- if (prag + 1 <= 2021) as.character(seq(prag + 1, 2021, by = 2)) else character(0)
-    custom_breaks_x <- c(grup_eticheta, ani_mijloc, "2023")
+    marcaje_x <- c(grup_eticheta, ani_mijloc, "2023")
 
-    ggplot(plot_data, aes(x = year_group, y = n)) +
+    date_grafic %>%
+      ggplot(aes(x = year_group, y = n)) +
       geom_col(fill = "darkorange", color = "white", width = 0.8) +
       geom_text(aes(label = ifelse(n > 0, format(n, big.mark = ","), "")),
                 angle = 90, hjust = -0.1, size = 2.8, na.rm = TRUE) +
-      scale_x_discrete(breaks = custom_breaks_x) +
-      scale_y_continuous(breaks = breaks_cu_max(max_count),
+      scale_x_discrete(breaks = marcaje_x) +
+      scale_y_continuous(breaks = breaks_cu_max(numar_max),
                          labels = function(x) format(round(x), big.mark = ","),
-                         limits = c(0, max_count), expand = c(0, 0)) +
+                         limits = c(0, numar_max), expand = c(0, 0)) +
       coord_cartesian(clip = "off") +
       labs(x = "An Fabricatie", y = "Nr. masini") +
       tema_plot(top = 35, right = 15)
   })
 
-  # Bar plot orizontal cu numere (top N)
-  bar_plot <- function(df, col, y_label = "Nr. listari", n_top = 10) {
-    plot_data <- df %>% count(.data[[col]]) %>% top_n(n_top, n)
-    max_val <- max(plot_data$n, na.rm = TRUE)
+  bar_plot <- function(date, coloana, eticheta_y = "Nr. listari", top_n = 10) {
+    date_grafic <- date %>%
+      count(.data[[coloana]], sort = TRUE) %>%
+      slice_max(n, n = top_n, with_ties = FALSE)
+    valoare_max <- max(date_grafic$n, na.rm = TRUE)
 
-    ggplot(plot_data, aes(x = reorder(.data[[col]], n), y = n)) +
+    date_grafic %>%
+      ggplot(aes(x = reorder(.data[[coloana]], n), y = n)) +
       geom_col(fill = "steelblue", width = 0.7) +
       geom_text(aes(label = format(n, big.mark = ",")), hjust = -0.1, size = 3.8) +
       coord_flip(clip = "off") +
-      scale_y_continuous(breaks = breaks_cu_max(max_val),
+      scale_y_continuous(breaks = breaks_cu_max(valoare_max),
                          labels = function(x) format(round(x), big.mark = ","),
-                         limits = c(0, max_val), expand = c(0, 0)) +
-      labs(x = "", y = y_label) +
+                         limits = c(0, valoare_max), expand = c(0, 0)) +
+      labs(x = "", y = eticheta_y) +
       tema_plot(right = 55)
   }
 
   output$models_plot <- renderPlot({
-    df <- car_data(); req(nrow(df) > 0)
-    col <- if (input$brand == "Toate Brandurile") "brand" else "model"
-    lbl <- if (input$brand == "Toate Brandurile") "Top 5 Branduri" else "Top 5 Modele"
-    bar_plot(df, col, lbl, n_top = 5)
+    date <- car_data(); req(nrow(date) > 0)
+    coloana <- if (input$brand == "Toate Brandurile") "brand" else "model"
+    eticheta <- if (input$brand == "Toate Brandurile") "Top 5 Branduri" else "Top 5 Modele"
+    bar_plot(date, coloana, eticheta, top_n = 5)
   })
-  output$trans_plot <- renderPlot({ df <- car_data(); req(nrow(df) > 0); bar_plot(df, "transmission_type") })
-  output$fuel_plot <- renderPlot({ df <- car_data(); req(nrow(df) > 0); bar_plot(df, "fuel_type") })
+  output$trans_plot <- renderPlot({ date <- car_data(); req(nrow(date) > 0); bar_plot(date, "transmission_type") })
+  output$fuel_plot  <- renderPlot({ date <- car_data(); req(nrow(date) > 0); bar_plot(date, "fuel_type") })
 
   output$india_extra_plot <- renderPlot({
-    df <- car_data()
-    validate(need("body_type" %in% names(df), "Lipsa coloana"))
-    df_p <- df %>% filter(!is.na(body_type), body_type != "")
-    validate(need(nrow(df_p) > 0, "Fara date"))
-    bar_plot(df_p, "body_type", "Nr. masini")
+    date <- car_data()
+    validate(need("body_type" %in% names(date), "Lipsa coloana"))
+    date_filtrate <- date %>% filter(!is.na(body_type), body_type != "")
+    validate(need(nrow(date_filtrate) > 0, "Fara date"))
+    bar_plot(date_filtrate, "body_type", "Nr. masini")
   })
 
   output$sua_drivetrain_plot <- renderPlot({
-    df <- car_data()
-    validate(need("drivetrain" %in% names(df), "Lipsa coloana"))
-    df_p <- df %>% filter(!is.na(drivetrain), drivetrain != "", drivetrain != "Unknown")
-    validate(need(nrow(df_p) > 0, "Fara date"))
-    bar_plot(df_p, "drivetrain", "Nr. masini")
+    date <- car_data()
+    validate(need("drivetrain" %in% names(date), "Lipsa coloana"))
+    date_filtrate <- date %>% filter(!is.na(drivetrain), drivetrain != "", drivetrain != "Unknown")
+    validate(need(nrow(date_filtrate) > 0, "Fara date"))
+    bar_plot(date_filtrate, "drivetrain", "Nr. masini")
   })
 
   output$sua_owner_plot <- renderPlot({
-    df <- car_data()
-    validate(need("one_owner" %in% names(df), "Lipsa coloana"))
-    df_p <- df %>% filter(!is.na(one_owner), one_owner != "", one_owner != "Unknown")
-    validate(need(nrow(df_p) > 0, "Fara date"))
+    date <- car_data()
+    validate(need("one_owner" %in% names(date), "Lipsa coloana"))
 
-    plot_data <- df_p %>% count(one_owner)
-    max_val <- max(plot_data$n, na.rm = TRUE)
+    date_grafic <- date %>%
+      filter(!is.na(one_owner), one_owner != "", one_owner != "Unknown") %>%
+      count(one_owner)
+    validate(need(nrow(date_grafic) > 0, "Fara date"))
+    valoare_max <- max(date_grafic$n, na.rm = TRUE)
 
-    ggplot(plot_data, aes(x = one_owner, y = n, fill = one_owner)) +
+    date_grafic %>%
+      ggplot(aes(x = one_owner, y = n, fill = one_owner)) +
       geom_col(width = 0.55, show.legend = FALSE) +
       geom_text(aes(label = format(n, big.mark = ",")), vjust = -0.5, size = 4) +
       scale_fill_manual(values = c("Yes" = "darkgreen", "No" = "darkred")) +
-      scale_y_continuous(breaks = breaks_cu_max(max_val),
+      scale_y_continuous(breaks = breaks_cu_max(valoare_max),
                          labels = function(x) format(round(x), big.mark = ","),
-                         limits = c(0, max_val), expand = c(0, 0)) +
+                         limits = c(0, valoare_max), expand = c(0, 0)) +
       labs(x = "Un singur proprietar?", y = "Nr. masini") +
       tema_plot(top = 35, right = 15)
   })
 
-  # Tab-uri dinamice (extra-graficele difera per piata)
   output$market_tabs_ui <- renderUI({
     req(input$piata)
     tab_lbl <- if (!is.null(input$brand) && input$brand == "Toate Brandurile") "Branduri Populare" else "Modele Populare"
@@ -629,78 +568,58 @@ server <- function(input, output, session) {
     do.call(tabBox, c(list(width = 12), comune, extra))
   })
 
-  # ============================================================================
-  # ========================== PARTEA 2: PREDICTOR =============================
-  # ============================================================================
-  # Random Forest: Germania 300 arbori, India 500, SUA 200 | Interval +/-10%
-  # Toate cele 3 piete urmeaza acelasi tipar (vezi structura tabPanel si observere)
 
-  # Lista de modele pentru un brand (pentru dropdown reactiv)
-  get_models <- function(tbl, brand) {
-    con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    dbGetQuery(con, paste0(
-      "SELECT DISTINCT model FROM `", tbl,
-      "` WHERE brand = ? AND model IS NOT NULL AND model != '' ORDER BY model"
-    ), params = list(brand))$model
+  # --- PREDICTOR: helper-e si stari reactive ---
+
+  get_avg <- function(date, coloana, marca, model_ales, combustibil = NULL) {
+    if (!is.null(combustibil) && combustibil == "Electric" &&
+        coloana %in% c("engine_type", "fuel_consumption_l_100km", "co2_g")) return(0)
+
+    media <- function(d) d %>% summarise(mean(.data[[coloana]], na.rm = TRUE)) %>% pull()
+
+    rezultat <- date %>% filter(brand == !!marca, model == !!model_ales,
+                                !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>% media()
+    if (!is.na(rezultat) && rezultat > 0) return(rezultat)
+
+    rezultat <- date %>% filter(brand == !!marca,
+                                !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>% media()
+    if (!is.na(rezultat) && rezultat > 0) return(rezultat)
+
+    mean(date[[coloana]], na.rm = TRUE)
   }
 
-  # Imputare DB la predictie: media unei coloane pentru (brand+model) sau (brand)
-  # Folosit cand utilizatorul nu specifica manual valoarea
-  get_db_avg <- function(tbl, col, brand, model, fuel_type, fallback) {
-    if (!is.null(fuel_type) &&
-      fuel_type == "Electric" &&
-      col %in% c("engine_type", "fuel_consumption_l_100km", "co2_g")) return(0)
-    con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    # Pas 1: media pentru brand+model
-    res <- dbGetQuery(con, paste0(
-      "SELECT AVG(`", col, "`) FROM `", tbl,
-      "` WHERE brand = ? AND model = ? AND `", col, "` IS NOT NULL AND `", col, "` > 0"
-    ), params = list(brand, model))[[1]]
-    if (!is.na(res) && length(res) > 0 && res > 0) return(res)
-    # Pas 2: media pentru brand
-    res <- dbGetQuery(con, paste0(
-      "SELECT AVG(`", col, "`) FROM `", tbl,
-      "` WHERE brand = ? AND `", col, "` IS NOT NULL AND `", col, "` > 0"
-    ), params = list(brand))[[1]]
-    if (!is.na(res) && length(res) > 0 && res > 0) return(res)
-    fallback
+  get_mode <- function(date, coloana, marca, model_ales) {
+    cel_mai_frecvent <- function(d) d %>% count(.data[[coloana]]) %>%
+      slice_max(n, n = 1, with_ties = FALSE) %>% pull(.data[[coloana]])
+
+    rezultat <- date %>% filter(brand == !!marca, model == !!model_ales,
+                                !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
+                cel_mai_frecvent()
+    if (length(rezultat) > 0) return(as.character(rezultat))
+
+    rezultat <- date %>% filter(brand == !!marca,
+                                !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
+                cel_mai_frecvent()
+    if (length(rezultat) > 0) return(as.character(rezultat))
+
+    as.character(date %>% filter(!is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
+                 cel_mai_frecvent())
   }
 
-  # Imputare DB la predictie: cel mai frecvent (modul statistic) pentru o categorie
-  get_db_mode <- function(tbl, col, brand, model, fallback) {
-    con <- dbConnect(RSQLite::SQLite(), DB); on.exit(dbDisconnect(con))
-    res <- dbGetQuery(con, paste0(
-      "SELECT `", col, "`, COUNT(*) as c FROM `", tbl,
-      "` WHERE brand = ? AND model = ? AND `", col, "` IS NOT NULL AND `", col, "` != ''",
-      " GROUP BY `", col, "` ORDER BY c DESC LIMIT 1"
-    ), params = list(brand, model))[[1]]
-    if (length(res) > 0 && !is.na(res) && res != "") return(res)
-    res <- dbGetQuery(con, paste0(
-      "SELECT `", col, "`, COUNT(*) as c FROM `", tbl,
-      "` WHERE brand = ? AND `", col, "` IS NOT NULL AND `", col, "` != ''",
-      " GROUP BY `", col, "` ORDER BY c DESC LIMIT 1"
-    ), params = list(brand))[[1]]
-    if (length(res) > 0 && !is.na(res) && res != "") return(res)
-    fallback
-  }
-
-  # Valoare numerica: input manual (daca user a bifat) sau media din DB
-  val_num <- function(piata, nume, tbl, col, brand, model, fuel, fallback) {
+  val_num <- function(piata, nume, date, coloana, marca, model_ales, combustibil = NULL) {
     if (isTRUE(input[[paste0("pred_", piata, "_use_", nume)]])) {
       as.numeric(input[[paste0("pred_", piata, "_", nume)]])
-    } else get_db_avg(tbl, col, brand, model, fuel, fallback)
+    } else get_avg(date, coloana, marca, model_ales, combustibil)
   }
 
-  # Valoare categorica: input manual (daca user a bifat) sau modul din DB
-  val_cat <- function(piata, nume, tbl, col, brand, model, fallback) {
+  val_cat <- function(piata, nume, date, coloana, marca, model_ales) {
     if (isTRUE(input[[paste0("pred_", piata, "_use_", nume)]])) {
       input[[paste0("pred_", piata, "_", nume)]]
-    } else get_db_mode(tbl, col, brand, model, fallback)
+    } else get_mode(date, coloana, marca, model_ales)
   }
 
-  # Verificare ca modelul a fost antrenat inainte de predictie
-  verifica_model <- function(model) {
-    if (is.null(model)) {
+  verifica_model <- function(model_antrenat) {
+    if (is.null(model_antrenat)) {
       showNotification("Antreneaza modelul mai intai (butonul portocaliu)!",
                        type = "warning", duration = 5)
       return(FALSE)
@@ -708,17 +627,15 @@ server <- function(input, output, session) {
     TRUE
   }
 
-  # Caseta verde cu rezultatul predictiei
-  result_box <- function(p) {
-    if (is.null(p)) return(NULL)
+  result_box <- function(predictie) {
+    if (is.null(predictie)) return(NULL)
     valueBox(
-      paste0(fmt(p$med), " EUR"),
-      paste0("Interval +/- 10%: ", fmt(p$low), " - ", fmt(p$high), " EUR"),
+      paste0(fmt(predictie$med), " EUR"),
+      paste0("Interval +/- 10%: ", fmt(predictie$low), " - ", fmt(predictie$high), " EUR"),
       icon = icon("euro-sign"), color = "green", width = 12
     )
   }
 
-  # --- Stari reactive: model antrenat, nivele factor, ultima predictie, mesaj status ---
   model_ger <- reactiveVal(); levels_ger <- reactiveVal(); pred_ger <- reactiveVal()
   model_ind <- reactiveVal(); levels_ind <- reactiveVal(); pred_ind <- reactiveVal()
   model_sua <- reactiveVal(); levels_sua <- reactiveVal(); pred_sua <- reactiveVal()
@@ -734,146 +651,178 @@ server <- function(input, output, session) {
   output$pred_ind_result <- renderUI({ result_box(pred_ind()) })
   output$pred_sua_result <- renderUI({ result_box(pred_sua()) })
 
-  # Dropdown-uri model: se actualizeaza cand schimbi brandul (acelasi tipar pentru toate pietele)
-  register_model_dropdown <- function(piata, tabel) {
+  register_model_dropdown <- function(piata, date_piata) {
     output[[paste0("pred_", piata, "_model_ui")]] <- renderUI({
-      brand_input <- input[[paste0("pred_", piata, "_brand")]]
-      req(brand_input)
+      marca_aleasa <- input[[paste0("pred_", piata, "_brand")]]
+      req(marca_aleasa)
+      modele <- date_piata %>%
+        filter(brand == marca_aleasa, !is.na(model), model != "") %>%
+        pull(model) %>%
+        unique() %>%
+        sort()
       selectInput(paste0("pred_", piata, "_model"), "Model:",
-                  choices = get_models(tabel, brand_input))
+                  choices = modele)
     })
   }
-  register_model_dropdown("ger", "Germany_Cars_Cleaned")
-  register_model_dropdown("ind", "India_Cars_Cleaned")
-  register_model_dropdown("sua", "SUA_Cars_Cleaned")
 
-  # ============================================================================
-  # ============================== GERMANIA ====================================
-  # ============================================================================
+  register_model_dropdown("ger", germany_data)
+  register_model_dropdown("ind", india_data)
+  register_model_dropdown("sua", sua_data)
+
+
+  # --- GERMANIA ---
+
   observeEvent(input$train_ger, {
-    antreneaza_piata("Germania", "Germany_Cars_Cleaned",
-                     sql_cols = c("price_in_euro", "km", "year", "power_ps", "engine_type",
-                                  "brand", "model", "fuel_type", "transmission_type",
-                                  "co2_g", "fuel_consumption_l_100km"),
-                     factori = c("brand", "model", "fuel_type", "transmission_type"),
-                     n_trees = 300,
+    antreneaza_piata("Germania", germany_data,
+                     coloane_pastrate = c("price_in_euro", "km", "year", "power_ps", "engine_type",
+                                          "brand", "model", "fuel_type", "transmission_type",
+                                          "co2_g", "fuel_consumption_l_100km"),
+                     coloane_factor = c("brand", "model", "fuel_type", "transmission_type"),
+                     nr_arbori = 300,
                      model_rv = model_ger, levels_rv = levels_ger, status_rv = status_ger)
   })
 
   observeEvent(input$pred_ger_btn, {
     if (!verifica_model(model_ger())) return()
     req(input$pred_ger_model)
-    lvl <- levels_ger(); TBL <- "Germany_Cars_Cleaned"
-    br <- input$pred_ger_brand; mo <- input$pred_ger_model; fu <- input$pred_ger_fuel
 
-    ps_val <- val_num("ger", "ps", TBL, "power_ps", br, mo, fu, 120)
-    engine_val <- val_num("ger", "engine", TBL, "engine_type", br, mo, fu, 1.6)
-    cons_val <- val_num("ger", "cons", TBL, "fuel_consumption_l_100km", br, mo, fu, 6.1)
-    co2_val <- val_num("ger", "co2", TBL, "co2_g", br, mo, fu, 146.5)
-    if (fu == "Electric") engine_val <- 0
+    nivele <- levels_ger()
+    date_piata <- germany_data
+    marca <- input$pred_ger_brand
+    model_ales <- input$pred_ger_model
+    combustibil <- input$pred_ger_fuel
+
+    ps_val     <- val_num("ger", "ps",     date_piata, "power_ps",                 marca, model_ales, combustibil)
+    engine_val <- val_num("ger", "engine", date_piata, "engine_type",              marca, model_ales, combustibil)
+    cons_val   <- val_num("ger", "cons",   date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
+    co2_val    <- val_num("ger", "co2",    date_piata, "co2_g",                    marca, model_ales, combustibil)
+    if (combustibil == "Electric") engine_val <- 0
+
+    km_total <- as.numeric(input$pred_ger_km)
+    year_input <- as.integer(input$pred_ger_year)
+    year_clamped <- pmax(1995, pmin(2026, year_input))
+    age_val <- as.integer(2026 - year_clamped)
 
     date_noi <- data.frame(
-      km = as.numeric(input$pred_ger_km),
-      age = as.integer(2026 - input$pred_ger_year),
+      km = km_total,
+      age = age_val,
       power_ps = ps_val,
       engine_type = engine_val,
       fuel_consumption_l_100km = cons_val,
       co2_g = co2_val,
-      brand = factor(br, levels = lvl$brand),
-      model = factor(mo, levels = lvl$model),
-      fuel_type = factor(fu, levels = lvl$fuel_type),
-      transmission_type = factor(input$pred_ger_trans, levels = lvl$transmission_type)
+      brand = factor(marca, levels = nivele$brand),
+      model = factor(model_ales, levels = nivele$model),
+      fuel_type = factor(combustibil, levels = nivele$fuel_type),
+      transmission_type = factor(input$pred_ger_trans, levels = nivele$transmission_type)
     )
     prezice_pret(model_ger(), date_noi, pred_ger)
   })
 
-  # ============================================================================
-  # =============================== INDIA ======================================
-  # ============================================================================
+
+  # --- INDIA ---
+
   observeEvent(input$train_ind, {
-    antreneaza_piata("India", "India_Cars_Cleaned",
-                     sql_cols = c("price_in_euro", "km", "year", "power_ps", "engine_type",
-                                  "brand", "model", "fuel_type", "transmission_type",
-                                  "body_type", "fuel_consumption_l_100km", "one_owner",
-                                  "drivetrain", "seller_type", "state"),
-                     factori = c("brand", "model", "fuel_type", "transmission_type", "body_type",
-                                 "one_owner", "drivetrain", "seller_type", "state"),
-                     n_trees = 500,
+    antreneaza_piata("India", india_data,
+                     coloane_pastrate = c("price_in_euro", "km", "year", "power_ps", "engine_type",
+                                          "brand", "model", "fuel_type", "transmission_type",
+                                          "body_type", "fuel_consumption_l_100km", "one_owner",
+                                          "drivetrain", "seller_type", "state"),
+                     coloane_factor = c("brand", "model", "fuel_type", "transmission_type", "body_type",
+                                        "one_owner", "drivetrain", "seller_type", "state"),
+                     nr_arbori = 500,
                      model_rv = model_ind, levels_rv = levels_ind, status_rv = status_ind)
   })
 
   observeEvent(input$pred_ind_btn, {
     if (!verifica_model(model_ind())) return()
     req(input$pred_ind_model)
-    lvl <- levels_ind(); TBL <- "India_Cars_Cleaned"
-    br <- input$pred_ind_brand; mo <- input$pred_ind_model; fu <- input$pred_ind_fuel
 
-    ps_val <- val_num("ind", "ps", TBL, "power_ps", br, mo, fu, 80)
-    engine_val <- val_num("ind", "engine", TBL, "engine_type", br, mo, fu, 1.5)
-    cons_val <- val_num("ind", "cons", TBL, "fuel_consumption_l_100km", br, mo, fu, 5.4)
-    body_val <- val_cat("ind", "body", TBL, "body_type", br, mo, "Hatchback")
-    owner_val <- val_cat("ind", "owner", TBL, "one_owner", br, mo, "Yes")
-    drive_val <- val_cat("ind", "drive", TBL, "drivetrain", br, mo, "FWD")
-    seller_val <- val_cat("ind", "seller", TBL, "seller_type", br, mo, "Dealer")
-    state_val <- val_cat("ind", "state", TBL, "state", br, mo, "delhi")
-    if (fu == "Electric") engine_val <- 0
+    nivele <- levels_ind()
+    date_piata <- india_data
+    marca <- input$pred_ind_brand
+    model_ales <- input$pred_ind_model
+    combustibil <- input$pred_ind_fuel
+
+    ps_val     <- val_num("ind", "ps",     date_piata, "power_ps",                 marca, model_ales, combustibil)
+    engine_val <- val_num("ind", "engine", date_piata, "engine_type",              marca, model_ales, combustibil)
+    cons_val   <- val_num("ind", "cons",   date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
+    body_val   <- val_cat("ind", "body",   date_piata, "body_type",   marca, model_ales)
+    owner_val  <- val_cat("ind", "owner",  date_piata, "one_owner",   marca, model_ales)
+    drive_val  <- val_cat("ind", "drive",  date_piata, "drivetrain",  marca, model_ales)
+    seller_val <- val_cat("ind", "seller", date_piata, "seller_type", marca, model_ales)
+    state_val  <- val_cat("ind", "state",  date_piata, "state",       marca, model_ales)
+    if (combustibil == "Electric") engine_val <- 0
+
+    km_total <- as.numeric(input$pred_ind_km)
+    year_input <- as.integer(input$pred_ind_year)
+    year_clamped <- pmax(1983, pmin(2026, year_input))
+    age_val <- as.integer(2026 - year_clamped)
 
     date_noi <- data.frame(
-      km = as.numeric(input$pred_ind_km),
-      age = as.integer(2026 - input$pred_ind_year),
+      km = km_total,
+      age = age_val,
       power_ps = ps_val,
       engine_type = engine_val,
       fuel_consumption_l_100km = cons_val,
-      brand = factor(br, levels = lvl$brand),
-      model = factor(mo, levels = lvl$model),
-      fuel_type = factor(fu, levels = lvl$fuel_type),
-      transmission_type = factor(input$pred_ind_trans, levels = lvl$transmission_type),
-      body_type = factor(body_val, levels = lvl$body_type),
-      one_owner = factor(owner_val, levels = lvl$one_owner),
-      drivetrain = factor(drive_val, levels = lvl$drivetrain),
-      seller_type = factor(seller_val, levels = lvl$seller_type),
-      state = factor(state_val, levels = lvl$state)
+      brand = factor(marca, levels = nivele$brand),
+      model = factor(model_ales, levels = nivele$model),
+      fuel_type = factor(combustibil, levels = nivele$fuel_type),
+      transmission_type = factor(input$pred_ind_trans, levels = nivele$transmission_type),
+      body_type = factor(body_val, levels = nivele$body_type),
+      one_owner = factor(owner_val, levels = nivele$one_owner),
+      drivetrain = factor(drive_val, levels = nivele$drivetrain),
+      seller_type = factor(seller_val, levels = nivele$seller_type),
+      state = factor(state_val, levels = nivele$state)
     )
     prezice_pret(model_ind(), date_noi, pred_ind)
   })
 
-  # ============================================================================
-  # ================================ SUA =======================================
-  # ============================================================================
+
+  # --- SUA ---
+
   observeEvent(input$train_sua, {
-    antreneaza_piata("SUA", "SUA_Cars_Cleaned",
-                     sql_cols = c("price_in_euro", "km", "year", "engine_type",
-                                  "brand", "model", "fuel_type", "transmission_type",
-                                  "drivetrain", "one_owner", "fuel_consumption_l_100km"),
-                     factori = c("brand", "model", "fuel_type", "transmission_type", "drivetrain", "one_owner"),
-                     n_trees = 200,
+    antreneaza_piata("SUA", sua_data,
+                     coloane_pastrate = c("price_in_euro", "km", "year", "engine_type",
+                                          "brand", "model", "fuel_type", "transmission_type",
+                                          "drivetrain", "one_owner", "fuel_consumption_l_100km"),
+                     coloane_factor = c("brand", "model", "fuel_type", "transmission_type", "drivetrain", "one_owner"),
+                     nr_arbori = 200,
                      model_rv = model_sua, levels_rv = levels_sua, status_rv = status_sua,
-                     filtru = function(df) df %>% filter(one_owner %in% c("Yes", "No")))
+                     filtru = function(d) d %>% filter(one_owner %in% c("Yes", "No")))
   })
 
   observeEvent(input$pred_sua_btn, {
     if (!verifica_model(model_sua())) return()
     req(input$pred_sua_model)
-    lvl <- levels_sua(); TBL <- "SUA_Cars_Cleaned"
-    br <- input$pred_sua_brand; mo <- input$pred_sua_model; fu <- input$pred_sua_fuel
 
-    engine_val <- val_num("sua", "engine", TBL, "engine_type", br, mo, fu, 2.5)
-    cons_val <- val_num("sua", "cons", TBL, "fuel_consumption_l_100km", br, mo, fu, 10.1)
-    drive_val <- val_cat("sua", "drive", TBL, "drivetrain", br, mo, "FWD")
-    owner_val <- val_cat("sua", "owner", TBL, "one_owner", br, mo, "Yes")
-    if (fu == "Electric") engine_val <- 0
+    nivele <- levels_sua()
+    date_piata <- sua_data
+    marca <- input$pred_sua_brand
+    model_ales <- input$pred_sua_model
+    combustibil <- input$pred_sua_fuel
+
+    engine_val <- val_num("sua", "engine", date_piata, "engine_type",              marca, model_ales, combustibil)
+    cons_val   <- val_num("sua", "cons",   date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
+    drive_val  <- val_cat("sua", "drive",  date_piata, "drivetrain",               marca, model_ales)
+    owner_val  <- val_cat("sua", "owner",  date_piata, "one_owner",                marca, model_ales)
+    if (combustibil == "Electric") engine_val <- 0
+
+    km_total <- as.numeric(input$pred_sua_km)
+    year_input <- as.integer(input$pred_sua_year)
+    year_clamped <- pmax(1915, pmin(2026, year_input))
+    age_val <- as.integer(2026 - year_clamped)
 
     date_noi <- data.frame(
-      km = as.numeric(input$pred_sua_km),
-      age = as.integer(2026 - input$pred_sua_year),
+      km = km_total,
+      age = age_val,
       engine_type = engine_val,
       fuel_consumption_l_100km = cons_val,
-      brand = factor(br, levels = lvl$brand),
-      model = factor(mo, levels = lvl$model),
-      fuel_type = factor(fu, levels = lvl$fuel_type),
-      transmission_type = factor(input$pred_sua_trans, levels = lvl$transmission_type),
-      drivetrain = factor(drive_val, levels = lvl$drivetrain),
-      one_owner = factor(owner_val, levels = lvl$one_owner)
+      brand = factor(marca, levels = nivele$brand),
+      model = factor(model_ales, levels = nivele$model),
+      fuel_type = factor(combustibil, levels = nivele$fuel_type),
+      transmission_type = factor(input$pred_sua_trans, levels = nivele$transmission_type),
+      drivetrain = factor(drive_val, levels = nivele$drivetrain),
+      one_owner = factor(owner_val, levels = nivele$one_owner)
     )
     prezice_pret(model_sua(), date_noi, pred_sua)
   })
