@@ -5867,6 +5867,14 @@ WHERE km > 442816
    OR fuel_consumption_l_100km > 19.6;
 
 -- ============================================================
+-- PASUL 13b: ELIMINARE ANI IMPOSIBILI (> 2023)
+-- Datele sunt colectate in 2023, deci orice an > 2023 e o eroare de introducere.
+-- ============================================================
+DELETE
+FROM SUA_Cars_Cleaned
+WHERE year > 2023;
+
+-- ============================================================
 -- PASUL 14: VERIFICARE FINALA
 -- Numar total de randuri dupa curatare
 -- ============================================================

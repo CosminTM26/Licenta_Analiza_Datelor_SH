@@ -6,14 +6,13 @@
 # Particularitate: SUA NU are power_ps -> folosim engine_type (cilindree)
 #
 # Rulare: source("Utile/Grafice_SUA.R")
-# Output: 5 grafice afisate in Plots pane (RStudio)
+# Output: 6 grafice afisate in Plots pane (RStudio)
 # ============================================================
 
 source("Utile/Grafice_Helpers.R")
 
-# ---- Incarcare + filtrare outliere ----
+# ---- Incarcare date (filtrarea anilor > 2023 e facuta in incarca_piata) ----
 df <- incarca_piata("SUA_Cars_Cleaned") %>%
-  filter(year <= 2023) %>%
   mutate(age = 2023 - year)
 cat("SUA - randuri din baza de date (pana in 2023):", nrow(df), "\n")
 
@@ -97,8 +96,10 @@ print(p3)
 # TEORIE: Ingrassia "more is more" - corelatie pozitiva puternica
 #   intre cilindree (proxy de putere) si pret
 # ============================================================
+# Doar motoare termice: excludem electricele (engine_type lipsa) ca sa nu
+# distorsioneze corelatia pozitiva litraj-pret cu un grup scump la litraj 0.
 df_engine <- df %>%
-  filter(!is.na(engine_type), engine_type >= 0.5, engine_type <= 8)
+  filter(!is.na(engine_type), engine_type > 0)
 
 cor_val <- round(cor(df_engine$engine_type,
                      df_engine$price_in_euro, use = "complete.obs"), 3)
@@ -121,7 +122,7 @@ p4 <- df_engine %>%
   ) +
   labs(title = "Cilindree vs Pret - SUA",
        subtitle = paste0("Corelatie Pearson r = ", cor_val,
-                         " (americanii pretiuesc motoarele mari)"),
+                         " (segment termic; electricele, fara cilindree, sunt omise)"),
        x = "Cilindree (litri)", y = "Pret (EUR)") +
   tema
 print(p4)
@@ -165,5 +166,35 @@ p5 <- df %>%
   tema
 print(p5)
 
-cat("\n=== SUA - 5 grafice in Plots pane ===\n")
+# ============================================================
+# GRAFIC 6: Boxplot - Pret vs Istoric proprietari (one_owner)
+# Variabila one_owner (Yes/No) e folosita direct ca factor de modelul RF.
+# Masinile cu un singur proprietar isi pastreaza valoarea mai bine.
+# (excludem 'Unknown', exact ca la antrenarea modelului)
+# ============================================================
+limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
+marcaje_pret <- pretty(c(0, limita_99), n = 8)
+marcaje_pret <- c(marcaje_pret[marcaje_pret < limita_99 * 0.95], limita_99)
+
+p6 <- df %>%
+  filter(one_owner %in% c("Yes", "No")) %>%
+  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE),
+         proprietari = recode(one_owner, "Yes" = "Un proprietar", "No" = "Mai multi proprietari"),
+         proprietari = fct_reorder(proprietari, price_plot, median)) %>%
+  ggplot(aes(x = proprietari, y = price_plot, fill = proprietari)) +
+  geom_boxplot(outlier.alpha = 0.1) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  scale_y_continuous(
+    breaks = marcaje_pret,
+    labels = function(y) ifelse(y == limita_99,
+                                paste0(">", scales::comma(round(y))),
+                                scales::comma(round(y)))
+  ) +
+  labs(title = "Pret vs istoric proprietari - SUA",
+       subtitle = "Un singur proprietar = pret median mai mare (variabila folosita de modelul RF)",
+       x = NULL, y = "Pret (EUR)") +
+  tema
+print(p6)
+
+cat("\n=== SUA - 6 grafice in Plots pane ===\n")
 cat("Corelatie Pearson cilindree-pret:", cor_val, "\n")

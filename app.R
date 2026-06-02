@@ -44,7 +44,6 @@ ind_brands <- unique(india_data$brand) %>% sort()
 ind_fuels  <- unique(india_data$fuel_type) %>% sort()
 ind_trans  <- unique(india_data$transmission_type) %>% sort()
 ind_body   <- unique(india_data$body_type) %>% sort()
-ind_states <- unique(india_data$state) %>% sort()
 ind_seller <- unique(india_data$seller_type) %>% sort()
 ind_drive  <- unique(india_data$drivetrain) %>% sort()
 
@@ -111,13 +110,17 @@ train_rf <- function(date, coloane_factor, nr_arbori, model_rv, levels_rv, statu
   coloane_electric <- intersect(c("engine_type", "fuel_consumption_l_100km", "co2_g"), names(date))
 
   date <- date %>%
+    # Datele sunt din 2023, deci la ANTRENARE varsta = 2023 - an fabricatie.
+    # La PREDICTIE folosim 2026 - an (vezi observatorii de mai jos), ca sa
+    # proiectam deprecierea pana in prezent. Diferenta este intentionata.
     mutate(age = 2023 - year, year = NULL) %>%
     mutate(across(all_of(coloane_electric), ~if_else(fuel_type == "Electric" & is.na(.), 0, .))) %>%
     filter(!is.na(price_in_euro), price_in_euro > 0) %>%
     drop_na() %>%
     mutate(across(all_of(coloane_factor), as.factor))
 
-  padure <- ranger(price_in_euro ~ ., data = date,
+  # Antrenam pe log(pret): stabilizeaza distributia asimetrica a preturilor (vezi DECIZII 13.5)
+  padure <- ranger(log(price_in_euro) ~ ., data = date,
                    num.trees = nr_arbori, max.depth = 20, min.node.size = 2,
                    quantreg = TRUE, importance = "impurity",
                    respect.unordered.factors = "order", seed = 42)
@@ -145,8 +148,9 @@ antreneaza_piata <- function(piata_nume, date_piata, coloane_pastrate, coloane_f
 }
 
 prezice_pret <- function(model, date_noi, pred_rv) {
-  pret <- predict(model, data = date_noi,
-                  type = "quantiles", quantiles = 0.5)$predictions[1, 1]
+  # exp() readuce predictia din scara log inapoi in EUR reali (mediana se pastreaza)
+  pret <- exp(predict(model, data = date_noi,
+                      type = "quantiles", quantiles = 0.5)$predictions[1, 1])
   pred_rv(list(low = pret * 0.9, med = pret, high = pret * 1.1))
 }
 
@@ -259,8 +263,7 @@ ui <- dashboardPage(
                                   camp_num("ind", "cons", "Specific Consum", "Consum (l/100km):", 5.4, min_val = 1, step = 0.1),
                                   camp_sel("ind", "owner", "Specific Proprietar unic", "Un proprietar:", c("Yes", "No")),
                                   camp_sel("ind", "drive", "Specific Tractiune", "Tractiune:", ind_drive),
-                                  camp_sel("ind", "seller", "Specific Tip vanzator", "Tip vanzator:", ind_seller),
-                                  camp_sel("ind", "state", "Specific Stat", "Stat:", ind_states)
+                                  camp_sel("ind", "seller", "Specific Tip vanzator", "Tip vanzator:", ind_seller)
                            ),
                            column(6, coloana_actiuni("ind"))
                          )
@@ -577,11 +580,11 @@ server <- function(input, output, session) {
 
     media <- function(d) d %>% summarise(mean(.data[[coloana]], na.rm = TRUE)) %>% pull()
 
-    rezultat <- date %>% filter(brand == !!marca, model == !!model_ales,
+    rezultat <- date %>% filter(brand == marca, model == model_ales,
                                 !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>% media()
     if (!is.na(rezultat) && rezultat > 0) return(rezultat)
 
-    rezultat <- date %>% filter(brand == !!marca,
+    rezultat <- date %>% filter(brand == marca,
                                 !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>% media()
     if (!is.na(rezultat) && rezultat > 0) return(rezultat)
 
@@ -592,12 +595,12 @@ server <- function(input, output, session) {
     cel_mai_frecvent <- function(d) d %>% count(.data[[coloana]]) %>%
       slice_max(n, n = 1, with_ties = FALSE) %>% pull(.data[[coloana]])
 
-    rezultat <- date %>% filter(brand == !!marca, model == !!model_ales,
+    rezultat <- date %>% filter(brand == marca, model == model_ales,
                                 !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
                 cel_mai_frecvent()
     if (length(rezultat) > 0) return(as.character(rezultat))
 
-    rezultat <- date %>% filter(brand == !!marca,
+    rezultat <- date %>% filter(brand == marca,
                                 !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
                 cel_mai_frecvent()
     if (length(rezultat) > 0) return(as.character(rezultat))
@@ -701,7 +704,7 @@ server <- function(input, output, session) {
     km_total <- as.numeric(input$pred_ger_km)
     year_input <- as.integer(input$pred_ger_year)
     year_clamped <- pmax(1995, pmin(2026, year_input))
-    age_val <- as.integer(2026 - year_clamped)
+    age_val <- as.integer(2026 - year_clamped)  # 2026 (an curent), nu 2023: proiectam deprecierea pana azi
 
     date_noi <- data.frame(
       km = km_total,
@@ -726,9 +729,9 @@ server <- function(input, output, session) {
                      coloane_pastrate = c("price_in_euro", "km", "year", "power_ps", "engine_type",
                                           "brand", "model", "fuel_type", "transmission_type",
                                           "body_type", "fuel_consumption_l_100km", "one_owner",
-                                          "drivetrain", "seller_type", "state"),
+                                          "drivetrain", "seller_type"),
                      coloane_factor = c("brand", "model", "fuel_type", "transmission_type", "body_type",
-                                        "one_owner", "drivetrain", "seller_type", "state"),
+                                        "one_owner", "drivetrain", "seller_type"),
                      nr_arbori = 500,
                      model_rv = model_ind, levels_rv = levels_ind, status_rv = status_ind)
   })
@@ -750,13 +753,12 @@ server <- function(input, output, session) {
     owner_val  <- val_cat("ind", "owner",  date_piata, "one_owner",   marca, model_ales)
     drive_val  <- val_cat("ind", "drive",  date_piata, "drivetrain",  marca, model_ales)
     seller_val <- val_cat("ind", "seller", date_piata, "seller_type", marca, model_ales)
-    state_val  <- val_cat("ind", "state",  date_piata, "state",       marca, model_ales)
     if (combustibil == "Electric") engine_val <- 0
 
     km_total <- as.numeric(input$pred_ind_km)
     year_input <- as.integer(input$pred_ind_year)
     year_clamped <- pmax(1983, pmin(2026, year_input))
-    age_val <- as.integer(2026 - year_clamped)
+    age_val <- as.integer(2026 - year_clamped)  # 2026 (an curent), nu 2023: proiectam deprecierea pana azi
 
     date_noi <- data.frame(
       km = km_total,
@@ -771,8 +773,7 @@ server <- function(input, output, session) {
       body_type = factor(body_val, levels = nivele$body_type),
       one_owner = factor(owner_val, levels = nivele$one_owner),
       drivetrain = factor(drive_val, levels = nivele$drivetrain),
-      seller_type = factor(seller_val, levels = nivele$seller_type),
-      state = factor(state_val, levels = nivele$state)
+      seller_type = factor(seller_val, levels = nivele$seller_type)
     )
     prezice_pret(model_ind(), date_noi, pred_ind)
   })
@@ -810,7 +811,7 @@ server <- function(input, output, session) {
     km_total <- as.numeric(input$pred_sua_km)
     year_input <- as.integer(input$pred_sua_year)
     year_clamped <- pmax(1915, pmin(2026, year_input))
-    age_val <- as.integer(2026 - year_clamped)
+    age_val <- as.integer(2026 - year_clamped)  # 2026 (an curent), nu 2023: proiectam deprecierea pana azi
 
     date_noi <- data.frame(
       km = km_total,

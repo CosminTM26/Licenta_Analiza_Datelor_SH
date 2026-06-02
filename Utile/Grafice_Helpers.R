@@ -16,8 +16,9 @@ culori_piete <- c("Germania" = "#1F3A5F",   # Deep navy slate
                   "SUA" = "#7B2D26",   # Deep burgundy
                   "India" = "#1F6650")   # Deep forest teal
 
-# ---- Incarca o piata din SQLite (date EXACT din baza de date) ----
-# Nu face filtrare/imputare/curatare - SQL a facut deja asta.
+# ---- Incarca o piata din SQLite ----
+# SQL a facut deja TOATA curatarea: imputare, deduplicare, taiere outlieri
+# si eliminare ani > 2023. Aici doar citim tabelul curat, fara alte filtrari.
 incarca_piata <- function(tabel) {
   con <- dbConnect(RSQLite::SQLite(), "identifier.sqlite")
   df <- dbReadTable(con, tabel)

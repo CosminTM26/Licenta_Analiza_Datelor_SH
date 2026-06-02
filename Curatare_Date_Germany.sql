@@ -3103,7 +3103,7 @@ WHERE km > 450000
    OR engine_type > 6.5
    OR power_ps > 730
    OR price_in_euro < 650
-   OR price_in_euro > 229900
+   OR price_in_euro > 399665
    OR fuel_consumption_l_100km < 1.1
    OR fuel_consumption_l_100km > 18.4
    OR co2_g < 26
@@ -3112,8 +3112,3 @@ WHERE km > 450000
 -- Verificare rapidă a volumului rămas
 SELECT COUNT(*) AS total_ramase_germania
 FROM Germany_Cars_Cleaned;
-
-
-select *
-from Germany_Cars_Cleaned
-where year = 2012

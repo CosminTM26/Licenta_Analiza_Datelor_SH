@@ -11,8 +11,9 @@
 
 source("Utile/Grafice_Helpers.R")
 
-# ---- Incarcare + filtrare outliere ----
-df <- incarca_piata("Germany_Cars_Cleaned") %>% filter(year <= 2023)
+# ---- Incarcare date (filtrarea anilor > 2023 e facuta in incarca_piata) ----
+df <- incarca_piata("Germany_Cars_Cleaned") %>%
+  mutate(age = 2023 - year)
 cat("Germania - randuri din baza de date (pana in 2023):", nrow(df), "\n")
 
 # ============================================================
@@ -42,29 +43,42 @@ p1 <- df %>%
 print(p1)
 
 # ============================================================
-# GRAFIC 2: Histograma an fabricatie (distributie de baza)
-# Prima bara grupeaza anii de fabricatie sub percentila 1%
+# GRAFIC 2: Curba de depreciere (Pret vs Varsta) - Germania
+# TEORIE: Storchmann (2004) - depreciere accentuata in piete mature.
+# Acelasi tip de grafic ca la SUA si India => comparabilitate intre piete.
 # ============================================================
-limita_1_y <- quantile(df$year, 0.01, na.rm = TRUE)
-marcaje_an <- pretty(c(limita_1_y, 2023), n = 8)
-marcaje_an <- c(limita_1_y, marcaje_an[marcaje_an > limita_1_y + 2 & marcaje_an < 2023], 2023)
-marcaje_an <- unique(marcaje_an)
+limita_99_p <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
+marcaje_yp <- pretty(c(0, limita_99_p), n = 8)
+marcaje_yp <- c(marcaje_yp[marcaje_yp < limita_99_p * 0.95], limita_99_p)
+
+limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
+marcaje_varsta <- pretty(c(0, limita_99_age), n = 8)
+marcaje_varsta <- c(marcaje_varsta[marcaje_varsta < limita_99_age * 0.95], limita_99_age)
+marcaje_varsta <- unique(round(marcaje_varsta))
 
 p2 <- df %>%
-  mutate(year_plot = pmax(year, limita_1_y, na.rm = TRUE)) %>%
-  ggplot(aes(x = year_plot)) +
-  geom_histogram(binwidth = 1, center = 0, fill = culori_piete["Germania"], color = "white") +
+  mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE),
+         price_plot = pmin(price_in_euro, limita_99_p, na.rm = TRUE)) %>%
+  ggplot(aes(x = age_plot, y = price_plot)) +
+  geom_point(alpha = 0.05, color = culori_piete["Germania"], size = 0.5) +
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), color = "black",
+              se = TRUE, linewidth = 1) +
   scale_x_continuous(
-    breaks = marcaje_an,
-    labels = function(x) ifelse(x == limita_1_y,
-                                paste0("<", round(x)),
+    breaks = marcaje_varsta,
+    labels = function(x) ifelse(x == limita_99_age,
+                                paste0(">", round(x)),
                                 as.character(round(x))),
-    limits = c(limita_1_y - 0.5, 2023 + 0.5)
+    limits = c(0, limita_99_age)
   ) +
-  scale_y_continuous(labels = scales::comma) +
-  labs(title = "Distributia anului de fabricatie - Germania",
-       subtitle = paste0("Prima bara = ani de fabricatie sub ", round(limita_1_y)),
-       x = "An fabricatie", y = "Numar masini") +
+  scale_y_continuous(
+    breaks = marcaje_yp,
+    labels = function(y) ifelse(y == limita_99_p,
+                                paste0(">", scales::comma(round(y))),
+                                scales::comma(round(y)))
+  ) +
+  labs(title = "Curba de depreciere (Pret vs Varsta) - Germania",
+       subtitle = "Linia GAM = trend; depreciere accentuata in piata matura (Storchmann, 2004)",
+       x = "Varsta (ani)", y = "Pret (EUR)") +
   tema
 print(p2)
 
@@ -107,7 +121,18 @@ print(p3)
 # TEORIE: Normele UE (EURO 5/6) penalizeaza masinile vechi;
 #   masinile mai vechi = motoare mai ineficiente = CO2 mai mare
 # ============================================================
-df_co2 <- df %>% filter(!is.na(co2_g), co2_g > 0)
+# Pastram electricele la co2 = 0 (bratul stang "eco-scump" al graficului):
+# le convertim NULL-ul in 0 (exact ca electric_zero din model), apoi scoatem
+# doar co2 lipsa real (masini termice fara valoare imputata).
+df_co2 <- df %>%
+  mutate(co2_g = if_else(fuel_type == "Electric" & is.na(co2_g), 0, co2_g)) %>%
+  filter(!is.na(co2_g))
+
+# Pragul de 1% pe an (prima eticheta devine "<an") - folosit pe axa X de mai jos
+limita_1_y <- quantile(df$year, 0.01, na.rm = TRUE)
+marcaje_an <- pretty(c(limita_1_y, 2023), n = 8)
+marcaje_an <- c(limita_1_y, marcaje_an[marcaje_an > limita_1_y + 2 & marcaje_an < 2023], 2023)
+marcaje_an <- unique(marcaje_an)
 
 limita_99_co2 <- quantile(df_co2$co2_g, 0.99, na.rm = TRUE)
 marcaje_co2 <- pretty(c(0, limita_99_co2), n = 8)
@@ -172,7 +197,7 @@ p5 <- df_co2 %>%
   ) +
   labs(title = "Emisii CO2 vs Pret - Germania",
        subtitle = paste0("Corelatie Pearson r = ", cor_co2_pret,
-                         " (efect indirect an fabricatie-tehnologie)"),
+                         " (electricele la CO2 = 0 = zona eco cu pret ridicat)"),
        x = "Emisii CO2 (g/km)", y = "Pret (EUR)") +
   tema
 print(p5)

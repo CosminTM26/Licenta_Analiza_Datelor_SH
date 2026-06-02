@@ -6,14 +6,13 @@
 #         Storchmann (2004) - depreciere lenta in piete emergente
 #
 # Rulare: source("Utile/Grafice_India.R")
-# Output: 6 grafice afisate in Plots pane (RStudio)
+# Output: 7 grafice afisate in Plots pane (RStudio)
 # ============================================================
 
 source("Utile/Grafice_Helpers.R")
 
-# ---- Incarcare + filtrare outliere ----
+# ---- Incarcare date (filtrarea anilor > 2023 e facuta in incarca_piata) ----
 df <- incarca_piata("India_Cars_Cleaned") %>%
-  filter(year <= 2023) %>%
   mutate(age = 2023 - year)
 cat("India - randuri din baza de date (pana in 2023):", nrow(df), "\n")
 
@@ -78,26 +77,27 @@ print(p2)
 p3 <- df %>%
   filter(!is.na(body_type), body_type != "") %>%
   count(body_type, sort = TRUE) %>%
+  slice_max(n, n = 5) %>%
   mutate(body_type = fct_reorder(body_type, n)) %>%
   ggplot(aes(x = body_type, y = n)) +
   geom_col(fill = culori_piete["India"]) +
   geom_text(aes(label = scales::comma(n)), hjust = -0.1, size = 3.5) +
   coord_flip() +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15)), labels = scales::comma) +
-  labs(title = "Distributia pe tip caroserie - India",
+  labs(title = "Top 5 tipuri de caroserie - India",
        subtitle = "Dominanta Hatchback confirma teoria frugal innovation",
        x = NULL, y = "Numar masini") +
   tema + theme(panel.grid.major.y = element_blank())
 print(p3)
 
 # ============================================================
-# GRAFIC 4: Boxplot - Pret pe tip caroserie (top 6)
+# GRAFIC 4: Boxplot - Pret pe tip caroserie (top 5)
 # Combina volumul (graf 3) cu pretul: Hatchback ieftin, SUV scump
 # ============================================================
 top_body <- df %>%
   filter(!is.na(body_type), body_type != "") %>%
   count(body_type, sort = TRUE) %>%
-  slice_max(n, n = 6) %>%
+  slice_max(n, n = 5) %>%
   pull(body_type)
 
 limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
@@ -117,7 +117,7 @@ p4 <- df %>%
                                 paste0(">", scales::comma(round(y))),
                                 scales::comma(round(y)))
   ) +
-  labs(title = "Pret median pe tip caroserie - India",
+  labs(title = "Pret median pe tip caroserie (top 5) - India",
        subtitle = "Hatchback = accesibil; SUV = top de gama",
        x = NULL, y = "Pret (EUR)") +
   tema
@@ -178,4 +178,32 @@ p6 <- df %>%
   tema + theme(panel.grid.major.y = element_blank())
 print(p6)
 
-cat("\n=== INDIA - 6 grafice in Plots pane ===\n")
+# ============================================================
+# GRAFIC 7: Boxplot - Pret vs Tipul vanzatorului (seller_type)
+# seller_type (Dealer / Individual) e folosit ca factor de modelul RF India.
+# Aceeasi logica ca one_owner la SUA: aratam ca am valorificat fiecare coloana.
+# ============================================================
+limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
+marcaje_pret <- pretty(c(0, limita_99), n = 8)
+marcaje_pret <- c(marcaje_pret[marcaje_pret < limita_99 * 0.95], limita_99)
+
+p7 <- df %>%
+  filter(!is.na(seller_type), seller_type != "") %>%
+  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE),
+         seller_type = fct_reorder(seller_type, price_plot, median)) %>%
+  ggplot(aes(x = seller_type, y = price_plot, fill = seller_type)) +
+  geom_boxplot(outlier.alpha = 0.1) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  scale_y_continuous(
+    breaks = marcaje_pret,
+    labels = function(y) ifelse(y == limita_99,
+                                paste0(">", scales::comma(round(y))),
+                                scales::comma(round(y)))
+  ) +
+  labs(title = "Pret vs tipul vanzatorului - India",
+       subtitle = "Dealerii au pret median mai mare decat vanzatorii privati (folosit de modelul RF)",
+       x = NULL, y = "Pret (EUR)") +
+  tema
+print(p7)
+
+cat("\n=== INDIA - 7 grafice in Plots pane ===\n")

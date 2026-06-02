@@ -27,61 +27,61 @@ dbDisconnect(con)
 
 print("=== GERMANIA ===")
 
-print("-- Coada superioara (doar P99) --")
-germany_data |>
+print("-- Coada superioara (doar P99.9) --")
+germany_data %>%
   summarise(
-    km_p99 = quantile(km, 0.999, na.rm = TRUE),
-    km_peste_p99 = sum(km > quantile(km, 0.999, na.rm = TRUE),
-                       na.rm = TRUE),
-    engine_p99 = round(quantile(engine_type, 0.999, na.rm = TRUE), 2),
-    engine_peste_p99 = sum(engine_type >
-                             quantile(engine_type, 0.999, na.rm = TRUE),
-                           na.rm = TRUE),
-    power_p99 = quantile(power_ps, 0.999, na.rm = TRUE),
-    power_peste_p99 = sum(power_ps >
-                            quantile(power_ps, 0.999, na.rm = TRUE),
-                          na.rm = TRUE)
-  ) |>
+    km_p99_9 = quantile(km, 0.999, na.rm = TRUE),
+    km_peste_p99_9 = sum(km > quantile(km, 0.999, na.rm = TRUE),
+                         na.rm = TRUE),
+    engine_p99_9 = round(quantile(engine_type, 0.999, na.rm = TRUE), 2),
+    engine_peste_p99_9 = sum(engine_type >
+                               quantile(engine_type, 0.999, na.rm = TRUE),
+                             na.rm = TRUE),
+    power_p99_9 = quantile(power_ps, 0.999, na.rm = TRUE),
+    power_peste_p99_9 = sum(power_ps >
+                              quantile(power_ps, 0.999, na.rm = TRUE),
+                            na.rm = TRUE)
+  ) %>%
   pivot_longer(
     cols = everything(),
     names_to = "Indicator_Statistic",
     values_to = "Valoare"
-  ) |>
+  ) %>%
   print()
 
-print("-- Ambele capete (P1 si P99) --")
-germany_data |>
+print("-- Ambele capete (P0.1 si P99.9) --")
+germany_data %>%
   summarise(
-    price_p1 = quantile(price_in_euro, 0.001, na.rm = TRUE),
-    price_sub_p1 = sum(price_in_euro <
-                         quantile(price_in_euro, 0.001, na.rm = TRUE),
-                       na.rm = TRUE),
-    price_p99 = quantile(price_in_euro, 0.995, na.rm = TRUE),
-    price_peste_p99 = sum(price_in_euro >
-                            quantile(price_in_euro, 0.999, na.rm = TRUE),
-                          na.rm = TRUE),
-    consum_p1 = round(
+    price_p0_1 = quantile(price_in_euro, 0.001, na.rm = TRUE),
+    price_sub_p0_1 = sum(price_in_euro <
+                           quantile(price_in_euro, 0.001, na.rm = TRUE),
+                         na.rm = TRUE),
+    price_p99_9 = quantile(price_in_euro, 0.999, na.rm = TRUE),
+    price_peste_p99_9 = sum(price_in_euro >
+                              quantile(price_in_euro, 0.999, na.rm = TRUE),
+                            na.rm = TRUE),
+    consum_p0_1 = round(
       quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE), 1),
-    consum_sub_p1 = sum(fuel_consumption_l_100km <
-                          quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE),
-                        na.rm = TRUE),
-    consum_p99 = round(
+    consum_sub_p0_1 = sum(fuel_consumption_l_100km <
+                            quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE),
+                          na.rm = TRUE),
+    consum_p99_9 = round(
       quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE), 1),
-    consum_peste_p99 = sum(fuel_consumption_l_100km >
-                             quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE),
-                           na.rm = TRUE),
-    co2_p1 = quantile(co2_g, 0.001, na.rm = TRUE),
-    co2_sub_p1 = sum(co2_g < quantile(co2_g, 0.001, na.rm = TRUE),
-                     na.rm = TRUE),
-    co2_p99 = quantile(co2_g, 0.999, na.rm = TRUE),
-    co2_peste_p99 = sum(co2_g > quantile(co2_g, 0.999, na.rm = TRUE),
-                        na.rm = TRUE)
-  ) |>
+    consum_peste_p99_9 = sum(fuel_consumption_l_100km >
+                               quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE),
+                             na.rm = TRUE),
+    co2_p0_1 = quantile(co2_g, 0.001, na.rm = TRUE),
+    co2_sub_p0_1 = sum(co2_g < quantile(co2_g, 0.001, na.rm = TRUE),
+                       na.rm = TRUE),
+    co2_p99_9 = quantile(co2_g, 0.999, na.rm = TRUE),
+    co2_peste_p99_9 = sum(co2_g > quantile(co2_g, 0.999, na.rm = TRUE),
+                          na.rm = TRUE)
+  ) %>%
   pivot_longer(
     cols = everything(),
     names_to = "Indicator_Statistic",
     values_to = "Valoare"
-  ) |>
+  ) %>%
   print()
 
 # ============================================================
@@ -90,51 +90,51 @@ germany_data |>
 
 print("=== SUA ===")
 
-print("-- Coada superioara (doar P99) --")
-sua_data |>
+print("-- Coada superioara (doar P99.9) --")
+sua_data %>%
   summarise(
-    km_p99 = quantile(km, 0.999, na.rm = TRUE),
-    km_peste_p99 = sum(km > quantile(km, 0.999, na.rm = TRUE),
-                       na.rm = TRUE),
-    engine_p99 = round(quantile(engine_type, 0.999, na.rm = TRUE), 2),
-    engine_peste_p99 = sum(engine_type >
-                             quantile(engine_type, 0.999, na.rm = TRUE),
-                           na.rm = TRUE)
-  ) |>
+    km_p99_9 = quantile(km, 0.999, na.rm = TRUE),
+    km_peste_p99_9 = sum(km > quantile(km, 0.999, na.rm = TRUE),
+                         na.rm = TRUE),
+    engine_p99_9 = round(quantile(engine_type, 0.999, na.rm = TRUE), 2),
+    engine_peste_p99_9 = sum(engine_type >
+                               quantile(engine_type, 0.999, na.rm = TRUE),
+                             na.rm = TRUE)
+  ) %>%
   pivot_longer(
     cols = everything(),
     names_to = "Indicator_Statistic",
     values_to = "Valoare"
-  ) |>
+  ) %>%
   print()
 
-print("-- Ambele capete (P1 si P99) --")
-sua_data |>
+print("-- Ambele capete (P0.1 si P99.9) --")
+sua_data %>%
   summarise(
-    price_p1 = quantile(price_in_euro, 0.001, na.rm = TRUE),
-    price_sub_p1 = sum(price_in_euro <
-                         quantile(price_in_euro, 0.001, na.rm = TRUE),
-                       na.rm = TRUE),
-    price_p99 = quantile(price_in_euro, 0.999, na.rm = TRUE),
-    price_peste_p99 = sum(price_in_euro >
-                            quantile(price_in_euro, 0.999, na.rm = TRUE),
-                          na.rm = TRUE),
-    consum_p1 = round(
+    price_p0_1 = quantile(price_in_euro, 0.001, na.rm = TRUE),
+    price_sub_p0_1 = sum(price_in_euro <
+                           quantile(price_in_euro, 0.001, na.rm = TRUE),
+                         na.rm = TRUE),
+    price_p99_9 = quantile(price_in_euro, 0.999, na.rm = TRUE),
+    price_peste_p99_9 = sum(price_in_euro >
+                              quantile(price_in_euro, 0.999, na.rm = TRUE),
+                            na.rm = TRUE),
+    consum_p0_1 = round(
       quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE), 1),
-    consum_sub_p1 = sum(fuel_consumption_l_100km <
-                          quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE),
-                        na.rm = TRUE),
-    consum_p99 = round(
+    consum_sub_p0_1 = sum(fuel_consumption_l_100km <
+                            quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE),
+                          na.rm = TRUE),
+    consum_p99_9 = round(
       quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE), 1),
-    consum_peste_p99 = sum(fuel_consumption_l_100km >
-                             quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE),
-                           na.rm = TRUE)
-  ) |>
+    consum_peste_p99_9 = sum(fuel_consumption_l_100km >
+                               quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE),
+                             na.rm = TRUE)
+  ) %>%
   pivot_longer(
     cols = everything(),
     names_to = "Indicator_Statistic",
     values_to = "Valoare"
-  ) |>
+  ) %>%
   print()
 
 # ============================================================
@@ -143,53 +143,53 @@ sua_data |>
 
 print("=== INDIA ===")
 
-print("-- Coada superioara (doar P99) --")
-india_data |>
+print("-- Coada superioara (doar P99.9) --")
+india_data %>%
   summarise(
-    km_p99 = quantile(km, 0.999, na.rm = TRUE),
-    km_peste_p99 = sum(km > quantile(km, 0.999, na.rm = TRUE),
-                       na.rm = TRUE),
-    engine_p99 = round(quantile(engine_type, 0.999, na.rm = TRUE), 2),
-    engine_peste_p99 = sum(engine_type >
-                             quantile(engine_type, 0.999, na.rm = TRUE),
-                           na.rm = TRUE),
-    power_p99 = quantile(power_ps, 0.999, na.rm = TRUE),
-    power_peste_p99 = sum(power_ps >
-                            quantile(power_ps, 0.999, na.rm = TRUE),
-                          na.rm = TRUE)
-  ) |>
+    km_p99_9 = quantile(km, 0.999, na.rm = TRUE),
+    km_peste_p99_9 = sum(km > quantile(km, 0.999, na.rm = TRUE),
+                         na.rm = TRUE),
+    engine_p99_9 = round(quantile(engine_type, 0.999, na.rm = TRUE), 2),
+    engine_peste_p99_9 = sum(engine_type >
+                               quantile(engine_type, 0.999, na.rm = TRUE),
+                             na.rm = TRUE),
+    power_p99_9 = quantile(power_ps, 0.999, na.rm = TRUE),
+    power_peste_p99_9 = sum(power_ps >
+                              quantile(power_ps, 0.999, na.rm = TRUE),
+                            na.rm = TRUE)
+  ) %>%
   pivot_longer(
     cols = everything(),
     names_to = "Indicator_Statistic",
     values_to = "Valoare"
-  ) |>
+  ) %>%
   print()
 
-print("-- Ambele capete (P1 si P99) --")
-india_data |>
+print("-- Ambele capete (P0.1 si P99.9) --")
+india_data %>%
   summarise(
-    price_p1 = quantile(price_in_euro, 0.001, na.rm = TRUE),
-    price_sub_p1 = sum(price_in_euro <
-                         quantile(price_in_euro, 0.001, na.rm = TRUE),
-                       na.rm = TRUE),
-    price_p99 = quantile(price_in_euro, 0.999, na.rm = TRUE),
-    price_peste_p99 = sum(price_in_euro >
-                            quantile(price_in_euro, 0.999, na.rm = TRUE),
-                          na.rm = TRUE),
-    consum_p1 = round(
+    price_p0_1 = quantile(price_in_euro, 0.001, na.rm = TRUE),
+    price_sub_p0_1 = sum(price_in_euro <
+                           quantile(price_in_euro, 0.001, na.rm = TRUE),
+                         na.rm = TRUE),
+    price_p99_9 = quantile(price_in_euro, 0.999, na.rm = TRUE),
+    price_peste_p99_9 = sum(price_in_euro >
+                              quantile(price_in_euro, 0.999, na.rm = TRUE),
+                            na.rm = TRUE),
+    consum_p0_1 = round(
       quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE), 1),
-    consum_sub_p1 = sum(fuel_consumption_l_100km <
-                          quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE),
-                        na.rm = TRUE),
-    consum_p99 = round(
+    consum_sub_p0_1 = sum(fuel_consumption_l_100km <
+                            quantile(fuel_consumption_l_100km, 0.001, na.rm = TRUE),
+                          na.rm = TRUE),
+    consum_p99_9 = round(
       quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE), 1),
-    consum_peste_p99 = sum(fuel_consumption_l_100km >
-                             quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE),
-                           na.rm = TRUE)
-  ) |>
+    consum_peste_p99_9 = sum(fuel_consumption_l_100km >
+                               quantile(fuel_consumption_l_100km, 0.999, na.rm = TRUE),
+                             na.rm = TRUE)
+  ) %>%
   pivot_longer(
     cols = everything(),
     names_to = "Indicator_Statistic",
     values_to = "Valoare"
-  ) |>
+  ) %>%
   print()

@@ -5,7 +5,7 @@
 -- Pasi: creare tabel (conversii INR→EUR, BHP→PS, cc→litri, kmpl→l/100km) →
 --       eliminare invalide → corectie brand → modele →
 --       culori → transmisie → combustibil → tractiune/proprietar/
---       caroserie/seller/state → imputare power_ps + engine_type +
+--       caroserie/seller → imputare power_ps + engine_type +
 --       consum → deduplicare → eliminare outlieri → verificare
 -- ============================================================
 
@@ -38,8 +38,7 @@ create table India_Cars_Cleaned
     one_owner                text,
     drivetrain               text,
     body_type                text,
-    seller_type              text,
-    state                    text
+    seller_type              text
 );
 
 insert into India_Cars_Cleaned
@@ -62,8 +61,7 @@ select id,
        owner_type_new                                           as one_owner,
        "Drive Type"                                             as drivetrain,
        bt                                                       as body_type,
-       seller_type_new                                          as seller_type,
-       state
+       seller_type_new                                          as seller_type
 from cars_details_merges;
 
 
@@ -823,12 +821,11 @@ SET fuel_type = CASE
 
 -- ============================================================
 -- PASUL 8: STANDARDIZARE TRACTIUNE, PROPRIETAR, CAROSERIE,
---          SELLER_TYPE, STATE
+--          SELLER_TYPE
 -- Drivetrain: "4 WD"/"4X4"/"4*4" → "4WD", etc.
 -- One_owner: "first" → "Yes", rest → "No", NULL → "Unknown"
 -- Body_type: "MUV"/"Minivans" → "Minivan"
 -- Seller_type: Dealer/Individual/Unknown
--- State: trim si NULL → "Unknown"
 -- ============================================================
 
 UPDATE India_Cars_Cleaned
@@ -886,14 +883,6 @@ SET seller_type = CASE
                       WHEN seller_type IS NULL OR TRIM(seller_type) = '' THEN 'Unknown'
                       ELSE seller_type
     END;
-
--- Standardizare state (trim si curat)
-UPDATE India_Cars_Cleaned
-SET state = TRIM(state);
-UPDATE India_Cars_Cleaned
-SET state = 'Unknown'
-WHERE state IS NULL
-   OR TRIM(state) = '';
 
 
 
@@ -1319,7 +1308,3 @@ WHERE km > 324049
 
 select count(*)
 from India_Cars_Cleaned;
-
-select *
-from India_Cars_Cleaned
-where body_type = 'Convertibles'
