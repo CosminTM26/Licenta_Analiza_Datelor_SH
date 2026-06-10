@@ -25,10 +25,20 @@ limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
 marcaje <- pretty(c(0, limita_99), n = 8)
 marcaje <- c(marcaje[marcaje < limita_99 * 0.95], limita_99)
 
+# Linii de referinta: mediana (negru, intrerupt) si media (gri, punctat)
+mediana_pret <- median(df$price_in_euro, na.rm = TRUE)
+media_pret <- mean(df$price_in_euro, na.rm = TRUE)
+
 p1 <- df %>%
   mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE)) %>%
   ggplot(aes(x = price_plot)) +
   geom_histogram(bins = 60, fill = culori_piete["Germania"], color = "white") +
+  geom_vline(xintercept = mediana_pret, color = "black", linetype = "dashed", linewidth = 0.8) +
+  geom_vline(xintercept = media_pret, color = "grey35", linetype = "dotted", linewidth = 0.8) +
+  annotate("text", x = mediana_pret, y = Inf, label = paste0("Mediana: ", scales::comma(round(mediana_pret))),
+           vjust = 2, hjust = -0.05, size = 3.5) +
+  annotate("text", x = media_pret, y = Inf, label = paste0("Media: ", scales::comma(round(media_pret))),
+           vjust = 3.8, hjust = -0.05, size = 3.5) +
   scale_x_continuous(
     breaks = marcaje,
     labels = function(x) ifelse(x == limita_99,
@@ -37,10 +47,10 @@ p1 <- df %>%
   ) +
   scale_y_continuous(labels = scales::comma) +
   labs(title = "Distributia preturilor - Germania",
-       subtitle = paste0("N = ", nrow(df), " vehicule (ultima bara = preturi peste percentila 99%)"),
        x = "Pret (EUR)", y = "Numar masini") +
   tema
 print(p1)
+salveaza_grafic('germania_p1.svg')
 
 # ============================================================
 # GRAFIC 2: Curba de depreciere (Pret vs Varsta) - Germania
@@ -52,8 +62,7 @@ marcaje_yp <- pretty(c(0, limita_99_p), n = 8)
 marcaje_yp <- c(marcaje_yp[marcaje_yp < limita_99_p * 0.95], limita_99_p)
 
 limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
-marcaje_varsta <- pretty(c(0, limita_99_age), n = 8)
-marcaje_varsta <- c(marcaje_varsta[marcaje_varsta < limita_99_age * 0.95], limita_99_age)
+marcaje_varsta <- c(seq(0, limita_99_age, by = 2), limita_99_age)
 marcaje_varsta <- unique(round(marcaje_varsta))
 
 p2 <- df %>%
@@ -77,10 +86,10 @@ p2 <- df %>%
                                 scales::comma(round(y)))
   ) +
   labs(title = "Curba de depreciere (Pret vs Varsta) - Germania",
-       subtitle = "Linia GAM = trend; depreciere accentuata in piata matura (Storchmann, 2004)",
        x = "Varsta (ani)", y = "Pret (EUR)") +
   tema
 print(p2)
+salveaza_grafic('germania_p2.svg')
 
 # ============================================================
 # GRAFIC 3: Boxplot - Pret pe brand (top 12)
@@ -111,10 +120,10 @@ p3 <- df %>%
   ) +
   coord_flip() +
   labs(title = "Pret median pe brand - Top 12 marci, Germania",
-       subtitle = "Brand-urile premium (BMW, Mercedes, Audi) domina",
        x = NULL, y = "Pret (EUR)") +
   tema
 print(p3)
+salveaza_grafic('germania_p3.svg')
 
 # ============================================================
 # GRAFIC 4: Scatter - CO2 vs An fabricatie
@@ -159,10 +168,10 @@ p4 <- df_co2 %>%
                                 as.character(round(y)))
   ) +
   labs(title = "Emisii CO2 vs An fabricatie - Germania",
-       subtitle = "Masinile vechi emit mai mult -> penalizate de UE",
        x = "An fabricatie", y = "Emisii CO2 (g/km)") +
   tema
 print(p4)
+salveaza_grafic('germania_p4.svg')
 
 # ============================================================
 # GRAFIC 5: Scatter - CO2 vs Pret
@@ -196,11 +205,10 @@ p5 <- df_co2 %>%
                                 scales::comma(round(y)))
   ) +
   labs(title = "Emisii CO2 vs Pret - Germania",
-       subtitle = paste0("Corelatie Pearson r = ", cor_co2_pret,
-                         " (electricele la CO2 = 0 = zona eco cu pret ridicat)"),
        x = "Emisii CO2 (g/km)", y = "Pret (EUR)") +
   tema
 print(p5)
+salveaza_grafic('germania_p5.svg')
 
 cat("\n=== GERMANIA - 5 grafice in Plots pane ===\n")
 cat("Corelatie Pearson CO2-pret:", cor_co2_pret, "\n")

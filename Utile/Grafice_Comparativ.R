@@ -79,11 +79,11 @@ p1 <- date_3piete %>%
                      labels = c("0", "5", "10", "15", "20", ">23")) +
   scale_color_manual(values = culori_piete, guide = "none") +
   labs(title = "Evolutia preturilor in functie de vechimea masinii - 3 piete",
-       subtitle = "Pret pe scara logaritmica (axa Y); esantion 8000/piata, trend pe toate datele",
        x = "Vechime (ani)", y = "Pret (EUR, scara logaritmica)") +
   tema +
   theme(strip.text = element_text(face = "bold", size = 13))
 print(p1)
+salveaza_grafic('comparativ_p1.png')
 
 # ============================================================
 # GRAFIC 2: Heatmap corelatii (facet 3 piete)
@@ -150,13 +150,13 @@ p2 <- bind_rows(
                        midpoint = 0, limits = c(-1, 1)) +
   facet_wrap(~piata, scales = "free") +
   labs(title = "Matricea de corelatie - 3 piete",
-       subtitle = "Rosu = pozitiva; Albastru = negativa; variabile specifice fiecarui model ML",
        x = NULL, y = NULL, fill = "Cor.") +
   tema +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         strip.text = element_text(face = "bold", size = 13),
         panel.grid = element_blank())
 print(p2)
+salveaza_grafic('comparativ_p2.svg')
 
 # ============================================================
 # GRAFIC 3: Boxplot comparativ pe scara logaritmica (3 piete)
@@ -193,10 +193,10 @@ p3 <- date_combinate %>%
                 labels = scales::comma) +
   scale_fill_manual(values = culori_piete, guide = "none") +
   labs(title = "Distributia preturilor pe scara logaritmica - 3 piete",
-       subtitle = "Scara log evidentiaza decalajul de putere de cumparare (Vest vs India)",
        x = NULL, y = "Pret (EUR, scara logaritmica)") +
   tema
 print(p3)
+salveaza_grafic('comparativ_p3.png')
 
 # ============================================================
 # ML COMPARATIV: Feature Importance si Actual vs Predicted
@@ -213,7 +213,8 @@ nume_prietenos_ml <- c(
 )
 
 # Helper pentru antrenare si predictie ML
-proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_factor) {
+# nr_arbori = acelasi numar de arbori ca in app.R (300 Germania / 500 India / 200 SUA)
+proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_factor, nr_arbori) {
   cat("Antrenare model Machine Learning pentru:", nume_piata, "...\n")
 
   coloane_electric <- intersect(c("engine_type", "fuel_consumption_l_100km", "co2_g"), names(date))
@@ -231,17 +232,20 @@ proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_fac
   train_df <- df_clean[index,]
   test_df <- df_clean[-index,]
 
-  # Limitare dimensiune train pentru viteza de executie (max 80k randuri)
-  if (nrow(train_df) > 80000) {
-    train_df <- train_df %>% slice_sample(n = 80000)
+  # Esantioane EGALE intre piete: max 30.000 randuri (cat trainul celei mai mici
+  # piete, India). Asa comparatia R2/RMSE/MAE intre piete e echitabila, iar
+  # cifrele pentru Germania/SUA sunt estimari prudente (app.R foloseste tot).
+  if (nrow(train_df) > 30000) {
+    train_df <- train_df %>% slice_sample(n = 30000)
   }
 
-  # Antrenare Random Forest pe log(pret) - stabilizeaza distributia asimetrica
-  # a preturilor (model ilustrativ pentru figura, nu identic cu cel din app.R)
+  # Antrenare Random Forest pe log(pret) - stabilizeaza distributia asimetrica.
+  # Aceeasi configuratie ca in app.R (arbori per piata, quantreg cu mediana);
+  # singura diferenta este esantionul de antrenare plafonat la 30k (vezi mai sus).
   model_rf <- ranger(log(price_in_euro) ~ ., data = train_df,
-                     num.trees = 100, max.depth = 20, min.node.size = 2,
+                     num.trees = nr_arbori, max.depth = 20, min.node.size = 2,
                      importance = "impurity", respect.unordered.factors = "order",
-                     seed = 42, num.threads = 10)
+                     quantreg = TRUE, seed = 42, num.threads = 10)
 
   # 1. Extragere importanta variabile
   imp <- importance(model_rf)
@@ -249,8 +253,9 @@ proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_fac
     mutate(procent = round(100 * importanta / sum(importanta), 1),
            piata = nume_piata)
 
-  # 2. Predictie pe test set
-  pred_log <- predict(model_rf, test_df)$predictions
+  # 2. Predictie pe test set - mediana arborilor (ca in app.R), nu media
+  pred_log <- as.numeric(predict(model_rf, test_df,
+                                 type = "quantiles", quantiles = 0.5)$predictions)
   pred_price <- exp(pred_log)
 
   df_pred <- tibble(
@@ -258,6 +263,16 @@ proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_fac
     predicted = pred_price,
     piata = nume_piata
   )
+
+  # 3. Metrici de evaluare pe setul de test (cifrele pentru Capitolul 4)
+  # R2 = proportia din variatia pretului explicata de model
+  ss_rez <- sum((df_pred$actual - df_pred$predicted)^2)
+  ss_tot <- sum((df_pred$actual - mean(df_pred$actual))^2)
+  r2 <- 1 - ss_rez / ss_tot
+  rmse <- sqrt(mean((df_pred$actual - df_pred$predicted)^2))
+  mae <- mean(abs(df_pred$actual - df_pred$predicted))
+  cat("  ", nume_piata, "- R2 test:", round(r2, 3),
+      "| RMSE:", round(rmse), "EUR | MAE:", round(mae), "EUR\n")
 
   # Esantionare predictii pentru plot (max 5000 puncte pentru claritate)
   df_pred_sample <- df_pred %>% slice_sample(n = min(5000, nrow(df_pred)))
@@ -268,16 +283,19 @@ proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_fac
 # Rulam pentru cele 3 piete
 res_ger <- proceseaza_piata_ml(ger, "Germania",
                                c("price_in_euro", "km", "year", "power_ps", "engine_type", "brand", "model", "fuel_type", "transmission_type", "co2_g", "fuel_consumption_l_100km"),
-                               c("brand", "model", "fuel_type", "transmission_type"))
+                               c("brand", "model", "fuel_type", "transmission_type"),
+                               nr_arbori = 300)
 
 res_ind <- proceseaza_piata_ml(ind, "India",
                                c("price_in_euro", "km", "year", "power_ps", "engine_type", "brand", "model", "fuel_type", "transmission_type", "body_type", "fuel_consumption_l_100km", "one_owner", "drivetrain", "seller_type"),
-                               c("brand", "model", "fuel_type", "transmission_type", "body_type", "one_owner", "drivetrain", "seller_type"))
+                               c("brand", "model", "fuel_type", "transmission_type", "body_type", "one_owner", "drivetrain", "seller_type"),
+                               nr_arbori = 500)
 
 sua_clean_ml <- sua %>% filter(one_owner %in% c("Yes", "No"))
 res_sua <- proceseaza_piata_ml(sua_clean_ml, "SUA",
                                c("price_in_euro", "km", "year", "engine_type", "brand", "model", "fuel_type", "transmission_type", "drivetrain", "one_owner", "fuel_consumption_l_100km"),
-                               c("brand", "model", "fuel_type", "transmission_type", "drivetrain", "one_owner"))
+                               c("brand", "model", "fuel_type", "transmission_type", "drivetrain", "one_owner"),
+                               nr_arbori = 200)
 
 # Combinam rezultatele pentru plotare
 imp_all <- bind_rows(res_ger$importanta, res_sua$importanta, res_ind$importanta) %>%
@@ -297,15 +315,15 @@ p4 <- imp_all %>%
   geom_text(aes(label = paste0(procent, "%")), hjust = -0.1, size = 3) +
   facet_wrap(~piata, scales = "free_y", ncol = 3) +
   scale_y_discrete(labels = function(x) sub("___.*", "", x)) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.30))) +
   scale_fill_manual(values = culori_piete, guide = "none") +
   labs(title = "Importanta variabilelor in stabilirea pretului - Random Forest",
-       subtitle = "Impurity Importance (%); Ierarhiile difera semnificativ intre piete (justifica tri-modelul)",
        x = "Importanta (% din total)", y = NULL) +
   tema +
   theme(panel.grid.major.y = element_blank(),
         strip.text = element_text(face = "bold", size = 13))
 print(p4)
+salveaza_grafic('comparativ_p4.svg')
 
 # ============================================================
 # GRAFIC 5: Actual vs Predicted (facet 3 piete)
@@ -319,11 +337,11 @@ p5 <- pred_all %>%
   scale_y_continuous(labels = scales::comma) +
   scale_color_manual(values = culori_piete, guide = "none") +
   labs(title = "Performanta predictiei ML: Pret Real vs Pret Prezist - 3 piete",
-       subtitle = "Linia rosie intrerupta = predictia perfecta (y = x); esantion 5000 masini din setul de test",
        x = "Pret Real (EUR)", y = "Pret Prezist (EUR)") +
   tema +
   theme(strip.text = element_text(face = "bold", size = 13))
 print(p5)
+salveaza_grafic('comparativ_p5.svg')
 
 # ============================================================
 # GRAFIC 6: Structura transmisiilor (cota de piata %) - 3 piete
@@ -355,8 +373,48 @@ p6 <- date_trans %>%
   scale_y_continuous(labels = scales::percent_format()) +
   scale_fill_manual(values = c("Manual" = "#4393C3", "Automatic" = "#D6604D", "Semi-automatic" = "#969696")) +
   labs(title = "Structura pietei auto dupa tipul de transmisie - 3 piete",
-       subtitle = "Cota de piata procentuala a transmisiilor; reflecta contraste economice si culturale majore",
        x = NULL, y = "Proportie (%)", fill = "Transmisie") +
   tema +
   theme(panel.grid.major.x = element_blank())
 print(p6)
+salveaza_grafic('comparativ_p6.svg')
+
+# ============================================================
+# GRAFIC 7: Structura combustibilului (cota de piata %) - 3 piete
+# Combustibilii rari (LPG, CNG, Hidrogen etc.) sunt grupati in "Altele".
+# Acelasi stil ca GRAFIC 6 (transmisii).
+# ============================================================
+date_fuel <- bind_rows(
+  ger %>%
+    select(fuel_type) %>%
+    mutate(piata = "Germania"),
+  sua %>%
+    select(fuel_type) %>%
+    mutate(piata = "SUA"),
+  ind %>%
+    select(fuel_type) %>%
+    mutate(piata = "India")
+) %>%
+  mutate(fuel_type = if_else(fuel_type %in% c("Petrol", "Diesel", "Hybrid", "Electric"),
+                             fuel_type, "Altele")) %>%
+  group_by(piata, fuel_type) %>%
+  summarise(n = n(), .groups = "drop_last") %>%
+  mutate(procent = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(piata = factor(piata, levels = nivele),
+         fuel_type = factor(fuel_type, levels = c("Petrol", "Diesel", "Hybrid", "Electric", "Altele")))
+
+p7 <- date_fuel %>%
+  ggplot(aes(x = piata, y = procent, fill = fuel_type)) +
+  geom_col(width = 0.55, color = "white", linewidth = 0.3) +
+  geom_text(aes(label = ifelse(procent > 0.02, paste0(round(procent * 100), "%"), "")),
+            position = position_stack(vjust = 0.5), color = "white", fontface = "bold", size = 3.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_manual(values = c("Petrol" = "#4393C3", "Diesel" = "#D6604D",
+                               "Hybrid" = "#5AAE61", "Electric" = "#9970AB", "Altele" = "#969696")) +
+  labs(title = "Structura pietei auto dupa tipul de combustibil - 3 piete",
+       x = NULL, y = "Proportie (%)", fill = "Combustibil") +
+  tema +
+  theme(panel.grid.major.x = element_blank())
+print(p7)
+salveaza_grafic('comparativ_p7.svg')

@@ -10,11 +10,11 @@ library(tidyverse)
 library(DBI)
 library(RSQLite)
 
-# ---- Paleta academica (mute, profesionala, color-blind friendly) ----
+# ---- Paleta inspirata din steagurile nationale ----
 # Aceleasi culori folosite peste tot (per-piata + comparativ)
-culori_piete <- c("Germania" = "#1F3A5F",   # Deep navy slate
-                  "SUA" = "#7B2D26",   # Deep burgundy
-                  "India" = "#1F6650")   # Deep forest teal
+culori_piete <- c("Germania" = "#DD0000",   # Rosu din steagul Germaniei
+                  "SUA" = "#0A3161",   # Albastru din steagul SUA (Old Glory Blue)
+                  "India" = "#046A38")   # Verde din steagul Indiei
 
 # ---- Incarca o piata din SQLite ----
 # SQL a facut deja TOATA curatarea: imputare, deduplicare, taiere outlieri
@@ -27,4 +27,21 @@ incarca_piata <- function(tabel) {
 }
 
 # ---- Tema standard pentru toate graficele ----
-tema <- theme_minimal(base_size = 12)
+# Titlul e centrat; graficele nu folosesc subtitluri (explicatiile sunt in lucrare)
+tema <- theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+salveaza_grafic <- function(nume_fisier, plot_obiect = last_plot(), latime = 16.5, inaltime = 8.25) {
+  # Note:
+  # - plot_obiect foloseste 'last_plot()' ca default (salveaza ultimul grafic afisat)
+  # - latime si inaltime sunt calibrate fix pe marginile paginii tale de Word
+
+  ggsave(
+    filename = nume_fisier,
+    plot = plot_obiect,
+    width = latime,
+    height = inaltime,
+    units = "cm",
+    dpi = 330
+  )
+}

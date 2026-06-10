@@ -40,3 +40,5 @@ Utile/appexplicatie.R
 *.py
 .Utile
 Utile/Tabel_KPI.R
+*.svg
+*.png

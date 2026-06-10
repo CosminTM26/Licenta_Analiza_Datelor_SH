@@ -5387,7 +5387,7 @@ SET transmission_type = CASE
                             WHEN UPPER(transmission_type) LIKE '%SEMI%AUTO%'
                                 OR UPPER(transmission_type) LIKE '%SEMI-AUTO%'
                                 OR UPPER(transmission_type) LIKE '%SEMI_AUTO%'
-                                OR UPPER(transmission_type) LIKE '%SEMI AUTOMATIC%' THEN 'Semi-automatic'
+                                OR UPPER(transmission_type) LIKE '%SEMI AUTOMATIC%' THEN 'Automatic'
 
     -- 2. MANUALE
                             WHEN UPPER(transmission_type) LIKE '%M/T%'
@@ -5880,4 +5880,3 @@ WHERE year > 2023;
 -- ============================================================
 select count(*)
 from SUA_Cars_Cleaned;
-

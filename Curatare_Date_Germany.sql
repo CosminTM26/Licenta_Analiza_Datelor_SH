@@ -411,7 +411,7 @@ UPDATE Germany_Cars_Cleaned
 SET transmission_type = CASE
                             WHEN UPPER(transmission_type) LIKE '%MANUAL%' THEN 'Manual'
                             WHEN UPPER(transmission_type) LIKE '%SEMI%AUTO%' OR
-                                 UPPER(transmission_type) LIKE '%SEMI-AUTO%' THEN 'Semi-automatic'
+                                 UPPER(transmission_type) LIKE '%SEMI-AUTO%' THEN 'Automatic'
                             WHEN UPPER(transmission_type) LIKE '%AUTOMATIC%' THEN 'Automatic'
                             WHEN transmission_type IS NULL OR TRIM(transmission_type) = '' THEN 'Unknown'
                             ELSE transmission_type
@@ -3112,3 +3112,7 @@ WHERE km > 450000
 -- Verificare rapidă a volumului rămas
 SELECT COUNT(*) AS total_ramase_germania
 FROM Germany_Cars_Cleaned;
+
+select *
+from Germany_Cars_Cleaned
+where transmission_type = 'Semi-automatic'

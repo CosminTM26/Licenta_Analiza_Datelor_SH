@@ -13,6 +13,11 @@ library(ranger)
 options(scipen = 999)
 options(ranger.num.threads = 10)
 
+# Paleta pe piete (aceleasi culori ca in Utile/Grafice_Helpers.R - steaguri nationale)
+culori_piete <- c("Germania" = "#DD0000",   # rosu steag
+                  "SUA" = "#0A3161",         # albastru steag
+                  "India" = "#046A38")       # verde steag
+
 
 # ==============================================================================
 # INCARCARE DATE DIN SQLITE (in memorie)
@@ -433,7 +438,7 @@ server <- function(input, output, session) {
     date %>%
       mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE)) %>%
       ggplot(aes(x = price_plot)) +
-      geom_histogram(fill = "steelblue", color = "white", linewidth = 0.3, bins = 100, na.rm = TRUE) +
+      geom_histogram(fill = culori_piete[[input$piata]], color = "white", linewidth = 0.3, bins = 100, na.rm = TRUE) +
       geom_vline(xintercept = mediana, color = "darkred", linetype = "dashed", linewidth = 0.9) +
       geom_vline(xintercept = medie, color = "darkgreen", linetype = "dotted", linewidth = 0.9) +
       annotate("text", x = mediana, y = Inf, label = paste0("Mediana: ", fmt(mediana)),
@@ -477,7 +482,7 @@ server <- function(input, output, session) {
 
     date_grafic %>%
       ggplot(aes(x = year_group, y = n)) +
-      geom_col(fill = "darkorange", color = "white", width = 0.8) +
+      geom_col(fill = culori_piete[[input$piata]], color = "white", width = 0.8) +
       geom_text(aes(label = ifelse(n > 0, format(n, big.mark = ","), "")),
                 angle = 90, hjust = -0.1, size = 2.8, na.rm = TRUE) +
       scale_x_discrete(breaks = marcaje_x) +
@@ -497,7 +502,7 @@ server <- function(input, output, session) {
 
     date_grafic %>%
       ggplot(aes(x = reorder(.data[[coloana]], n), y = n)) +
-      geom_col(fill = "steelblue", width = 0.7) +
+      geom_col(fill = culori_piete[[input$piata]], width = 0.7) +
       geom_text(aes(label = format(n, big.mark = ",")), hjust = -0.1, size = 3.8) +
       coord_flip(clip = "off") +
       scale_y_continuous(breaks = breaks_cu_max(valoare_max),

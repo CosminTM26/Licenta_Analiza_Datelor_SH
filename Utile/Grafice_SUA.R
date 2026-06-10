@@ -25,10 +25,20 @@ limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
 marcaje <- pretty(c(0, limita_99), n = 8)
 marcaje <- c(marcaje[marcaje < limita_99 * 0.95], limita_99)
 
+# Linii de referinta: mediana (negru, intrerupt) si media (gri, punctat)
+mediana_pret <- median(df$price_in_euro, na.rm = TRUE)
+media_pret <- mean(df$price_in_euro, na.rm = TRUE)
+
 p1 <- df %>%
   mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE)) %>%
   ggplot(aes(x = price_plot)) +
   geom_histogram(bins = 60, fill = culori_piete["SUA"], color = "white") +
+  geom_vline(xintercept = mediana_pret, color = "black", linetype = "dashed", linewidth = 0.8) +
+  geom_vline(xintercept = media_pret, color = "grey35", linetype = "dotted", linewidth = 0.8) +
+  annotate("text", x = mediana_pret, y = Inf, label = paste0("Mediana: ", scales::comma(round(mediana_pret))),
+           vjust = 2, hjust = -0.05, size = 3.5) +
+  annotate("text", x = media_pret, y = Inf, label = paste0("Media: ", scales::comma(round(media_pret))),
+           vjust = 3.8, hjust = -0.05, size = 3.5) +
   scale_x_continuous(
     breaks = marcaje,
     labels = function(x) ifelse(x == limita_99,
@@ -37,10 +47,11 @@ p1 <- df %>%
   ) +
   scale_y_continuous(labels = scales::comma) +
   labs(title = "Distributia preturilor - SUA",
-       subtitle = paste0("N = ", nrow(df), " vehicule (ultima bara = preturi peste percentila 99%)"),
+
        x = "Pret (EUR)", y = "Numar masini") +
   tema
 print(p1)
+salveaza_grafic('sua_p1.svg')
 
 # ============================================================
 # GRAFIC 2: Histograma rulaj (Kilometraj / Mileage)
@@ -51,10 +62,20 @@ marcaje_km <- pretty(c(0, limita_99_km), n = 6)
 marcaje_km <- c(marcaje_km[marcaje_km < limita_99_km * 0.95], limita_99_km)
 marcaje_km <- unique(round(marcaje_km))
 
+# Linii de referinta: mediana (negru, intrerupt) si media (gri, punctat)
+mediana_km <- median(df$km, na.rm = TRUE)
+media_km <- mean(df$km, na.rm = TRUE)
+
 p2 <- df %>%
   mutate(km_plot = pmin(km, limita_99_km, na.rm = TRUE)) %>%
   ggplot(aes(x = km_plot)) +
   geom_histogram(bins = 60, fill = culori_piete["SUA"], color = "white") +
+  geom_vline(xintercept = mediana_km, color = "black", linetype = "dashed", linewidth = 0.8) +
+  geom_vline(xintercept = media_km, color = "grey35", linetype = "dotted", linewidth = 0.8) +
+  annotate("text", x = mediana_km, y = Inf, label = paste0("Mediana: ", scales::comma(round(mediana_km)), " km"),
+           vjust = 2, hjust = -0.05, size = 3.5) +
+  annotate("text", x = media_km, y = Inf, label = paste0("Media: ", scales::comma(round(media_km)), " km"),
+           vjust = 3.8, hjust = -0.05, size = 3.5) +
   scale_x_continuous(
     breaks = marcaje_km,
     labels = function(x) ifelse(x == limita_99_km,
@@ -63,10 +84,11 @@ p2 <- df %>%
   ) +
   scale_y_continuous(labels = scales::comma) +
   labs(title = "Distributia rulajului (Kilometraj) - SUA",
-       subtitle = paste0("N = ", nrow(df), " vehicule (ultima bara = rulaje peste percentila 99%)"),
+
        x = "Rulaj (km)", y = "Numar masini") +
   tema
 print(p2)
+salveaza_grafic('sua_p2.svg')
 
 # ============================================================
 # GRAFIC 3: Bar - Distributia pe tip tractiune
@@ -76,20 +98,22 @@ print(p2)
 p3 <- df %>%
   filter(!is.na(drivetrain), drivetrain != "") %>%
   count(drivetrain, sort = TRUE) %>%
-  mutate(drivetrain = fct_reorder(drivetrain, n),
-         procent = round(100 * n / sum(n), 1)) %>%
+  mutate(procent = round(100 * n / sum(n), 1)) %>%   # procent din total (inainte de slice)
+  slice_max(n, n = 4) %>%                             # pastram doar top 4 tractiuni (scoatem 2WD)
+  mutate(drivetrain = fct_reorder(drivetrain, n)) %>%
   ggplot(aes(x = drivetrain, y = n)) +
   geom_col(fill = culori_piete["SUA"]) +
   geom_text(aes(label = paste0(scales::comma(n), " (", procent, "%)")),
             hjust = -0.1, size = 3.5) +
   coord_flip() +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.18)), labels = scales::comma) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.40)), labels = scales::comma) +
   labs(title = "Distributia tipului de tractiune - SUA",
-       subtitle = "AWD/4WD reflecta cultura SUV/Pick-up (Ingrassia)",
+
        x = NULL, y = "Numar masini") +
   tema +
   theme(panel.grid.major.y = element_blank())
 print(p3)
+salveaza_grafic('sua_p3.svg')
 
 # ============================================================
 # GRAFIC 4: Scatter - Cilindree vs Pret
@@ -120,12 +144,12 @@ p4 <- df_engine %>%
                                 paste0(">", scales::comma(round(y))),
                                 scales::comma(round(y)))
   ) +
-  labs(title = "Cilindree vs Pret - SUA",
-       subtitle = paste0("Corelatie Pearson r = ", cor_val,
-                         " (segment termic; electricele, fara cilindree, sunt omise)"),
-       x = "Cilindree (litri)", y = "Pret (EUR)") +
+  labs(title = "Capacitate vs Pret - SUA",
+
+       x = "Capacitate motor (litri)", y = "Pret (EUR)") +
   tema
 print(p4)
+salveaza_grafic('sua_p4.png')
 
 # ============================================================
 # GRAFIC 5: Scatter - Curba de depreciere (Pret vs Varsta) - SUA
@@ -136,8 +160,7 @@ marcaje_yp <- pretty(c(0, limita_99_p), n = 8)
 marcaje_yp <- c(marcaje_yp[marcaje_yp < limita_99_p * 0.95], limita_99_p)
 
 limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
-marcaje_varsta <- pretty(c(0, limita_99_age), n = 8)
-marcaje_varsta <- c(marcaje_varsta[marcaje_varsta < limita_99_age * 0.95], limita_99_age)
+marcaje_varsta <- c(seq(0, limita_99_age, by = 2), limita_99_age)
 marcaje_varsta <- unique(round(marcaje_varsta))
 
 p5 <- df %>%
@@ -161,10 +184,10 @@ p5 <- df %>%
                                 scales::comma(round(y)))
   ) +
   labs(title = "Curba de depreciere (Pret vs Varsta) - SUA",
-       subtitle = "Linia GAM = trend; depreciere accelerata in primii 3-5 ani (Storchmann, 2004)",
        x = "Varsta (ani)", y = "Pret (EUR)") +
   tema
 print(p5)
+salveaza_grafic('sua_p5.png')
 
 # ============================================================
 # GRAFIC 6: Boxplot - Pret vs Istoric proprietari (one_owner)
@@ -191,10 +214,10 @@ p6 <- df %>%
                                 scales::comma(round(y)))
   ) +
   labs(title = "Pret vs istoric proprietari - SUA",
-       subtitle = "Un singur proprietar = pret median mai mare (variabila folosita de modelul RF)",
        x = NULL, y = "Pret (EUR)") +
   tema
 print(p6)
+salveaza_grafic('sua_p6.png')
 
 cat("\n=== SUA - 6 grafice in Plots pane ===\n")
 cat("Corelatie Pearson cilindree-pret:", cor_val, "\n")

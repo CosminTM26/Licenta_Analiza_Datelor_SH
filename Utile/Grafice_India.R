@@ -25,10 +25,20 @@ limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
 marcaje <- pretty(c(0, limita_99), n = 8)
 marcaje <- c(marcaje[marcaje < limita_99 * 0.95], limita_99)
 
+# Linii de referinta: mediana (negru, intrerupt) si media (gri, punctat)
+mediana_pret <- median(df$price_in_euro, na.rm = TRUE)
+media_pret <- mean(df$price_in_euro, na.rm = TRUE)
+
 p1 <- df %>%
   mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE)) %>%
   ggplot(aes(x = price_plot)) +
   geom_histogram(bins = 50, fill = culori_piete["India"], color = "white") +
+  geom_vline(xintercept = mediana_pret, color = "black", linetype = "dashed", linewidth = 0.8) +
+  geom_vline(xintercept = media_pret, color = "grey35", linetype = "dotted", linewidth = 0.8) +
+  annotate("text", x = mediana_pret, y = Inf, label = paste0("Mediana: ", scales::comma(round(mediana_pret))),
+           vjust = 2, hjust = -0.05, size = 3.5) +
+  annotate("text", x = media_pret, y = Inf, label = paste0("Media: ", scales::comma(round(media_pret))),
+           vjust = 3.8, hjust = -0.05, size = 3.5) +
   scale_x_continuous(
     breaks = marcaje,
     labels = function(x) ifelse(x == limita_99,
@@ -37,24 +47,33 @@ p1 <- df %>%
   ) +
   scale_y_continuous(labels = scales::comma) +
   labs(title = "Distributia preturilor - India",
-       subtitle = paste0("N = ", nrow(df), " vehicule (ultima bara = preturi peste percentila 99%)"),
        x = "Pret (EUR)", y = "Numar masini") +
   tema
 print(p1)
+salveaza_grafic('india_p1.svg')
 
 # ============================================================
 # GRAFIC 2: Histograma varsta masini (distributie de baza)
 # Ultima bara grupeaza masinile cu varsta peste percentila 99%
 # ============================================================
 limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
-marcaje_varsta <- pretty(c(0, limita_99_age), n = 8)
-marcaje_varsta <- c(marcaje_varsta[marcaje_varsta < limita_99_age * 0.95], limita_99_age)
+marcaje_varsta <- c(seq(0, limita_99_age, by = 2), limita_99_age)
 marcaje_varsta <- unique(round(marcaje_varsta))
+
+# Linii de referinta: mediana (negru, intrerupt) si media (gri, punctat)
+mediana_age <- median(df$age, na.rm = TRUE)
+media_age <- mean(df$age, na.rm = TRUE)
 
 p2 <- df %>%
   mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE)) %>%
   ggplot(aes(x = age_plot)) +
   geom_histogram(binwidth = 1, center = 0, fill = culori_piete["India"], color = "white") +
+  geom_vline(xintercept = mediana_age, color = "black", linetype = "dashed", linewidth = 0.8) +
+  geom_vline(xintercept = media_age, color = "grey35", linetype = "dotted", linewidth = 0.8) +
+  annotate("text", x = mediana_age, y = Inf, label = paste0("Mediana: ", round(mediana_age), " ani"),
+           vjust = 2, hjust = -0.05, size = 3.5) +
+  annotate("text", x = media_age, y = Inf, label = paste0("Media: ", round(media_age, 1), " ani"),
+           vjust = 3.8, hjust = -0.05, size = 3.5) +
   scale_x_continuous(
     breaks = marcaje_varsta,
     labels = function(x) ifelse(x == limita_99_age,
@@ -64,10 +83,10 @@ p2 <- df %>%
   ) +
   scale_y_continuous(labels = scales::comma) +
   labs(title = "Distributia varstei masinilor - India",
-       subtitle = paste0("Ultima bara = varsta peste ", round(limita_99_age), " ani (arata retentia masinilor in piata)"),
        x = "Varsta (ani)", y = "Numar masini") +
   tema
 print(p2)
+salveaza_grafic('india_p2.svg')
 
 # ============================================================
 # GRAFIC 3: Bar - Distributia pe tip caroserie
@@ -83,12 +102,13 @@ p3 <- df %>%
   geom_col(fill = culori_piete["India"]) +
   geom_text(aes(label = scales::comma(n)), hjust = -0.1, size = 3.5) +
   coord_flip() +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.15)), labels = scales::comma) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.25)), labels = scales::comma) +
   labs(title = "Top 5 tipuri de caroserie - India",
-       subtitle = "Dominanta Hatchback confirma teoria frugal innovation",
        x = NULL, y = "Numar masini") +
-  tema + theme(panel.grid.major.y = element_blank())
+  tema +
+  theme(panel.grid.major.y = element_blank())
 print(p3)
+salveaza_grafic('india_p3.svg')
 
 # ============================================================
 # GRAFIC 4: Boxplot - Pret pe tip caroserie (top 5)
@@ -118,10 +138,10 @@ p4 <- df %>%
                                 scales::comma(round(y)))
   ) +
   labs(title = "Pret median pe tip caroserie (top 5) - India",
-       subtitle = "Hatchback = accesibil; SUV = top de gama",
        x = NULL, y = "Pret (EUR)") +
   tema
 print(p4)
+salveaza_grafic('india_p4.svg')
 
 # ============================================================
 # GRAFIC 5: Scatter - Curba de depreciere (Pret vs Varsta) - India
@@ -152,10 +172,10 @@ p5 <- df %>%
                                 scales::comma(round(y)))
   ) +
   labs(title = "Curba de depreciere (Pret vs Varsta) - India",
-       subtitle = "Linia GAM = trend median; depreciere mai lenta in piata emergenta (Storchmann, 2004)",
        x = "Varsta (ani)", y = "Pret (EUR)") +
   tema
 print(p5)
+salveaza_grafic('india_p5.svg')
 
 # ============================================================
 # GRAFIC 6: Bar - Top 10 branduri auto in India
@@ -171,12 +191,13 @@ p6 <- df %>%
   geom_col(fill = culori_piete["India"]) +
   geom_text(aes(label = scales::comma(n)), hjust = -0.1, size = 3.5) +
   coord_flip() +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.15)), labels = scales::comma) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.25)), labels = scales::comma) +
   labs(title = "Top 10 cele mai tranzactionate branduri - India",
-       subtitle = "Maruti Suzuki domina piata, confirmand 'The Maruti Story'",
        x = NULL, y = "Numar masini") +
-  tema + theme(panel.grid.major.y = element_blank())
+  tema +
+  theme(panel.grid.major.y = element_blank())
 print(p6)
+salveaza_grafic('india_p6.svg')
 
 # ============================================================
 # GRAFIC 7: Boxplot - Pret vs Tipul vanzatorului (seller_type)
@@ -201,9 +222,9 @@ p7 <- df %>%
                                 scales::comma(round(y)))
   ) +
   labs(title = "Pret vs tipul vanzatorului - India",
-       subtitle = "Dealerii au pret median mai mare decat vanzatorii privati (folosit de modelul RF)",
        x = NULL, y = "Pret (EUR)") +
   tema
 print(p7)
+salveaza_grafic('india_p7.svg')
 
 cat("\n=== INDIA - 7 grafice in Plots pane ===\n")
