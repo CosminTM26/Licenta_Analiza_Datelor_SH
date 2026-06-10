@@ -89,7 +89,7 @@ p2 <- df %>%
        x = "Varsta (ani)", y = "Pret (EUR)") +
   tema
 print(p2)
-salveaza_grafic('germania_p2.svg')
+salveaza_grafic('germania_p2.png')   # scatter cu ~240k puncte: PNG, nu SVG (fisier urias)
 
 # ============================================================
 # GRAFIC 3: Boxplot - Pret pe brand (top 12)
@@ -123,7 +123,7 @@ p3 <- df %>%
        x = NULL, y = "Pret (EUR)") +
   tema
 print(p3)
-salveaza_grafic('germania_p3.svg')
+salveaza_grafic('germania_p3.png')   # boxplot cu mii de outlieri desenati: PNG, nu SVG
 
 # ============================================================
 # GRAFIC 4: Scatter - CO2 vs An fabricatie
@@ -171,7 +171,7 @@ p4 <- df_co2 %>%
        x = "An fabricatie", y = "Emisii CO2 (g/km)") +
   tema
 print(p4)
-salveaza_grafic('germania_p4.svg')
+salveaza_grafic('germania_p4.png')   # scatter: PNG, nu SVG
 
 # ============================================================
 # GRAFIC 5: Scatter - CO2 vs Pret
@@ -208,7 +208,7 @@ p5 <- df_co2 %>%
        x = "Emisii CO2 (g/km)", y = "Pret (EUR)") +
   tema
 print(p5)
-salveaza_grafic('germania_p5.svg')
+salveaza_grafic('germania_p5.png')
 
 cat("\n=== GERMANIA - 5 grafice in Plots pane ===\n")
 cat("Corelatie Pearson CO2-pret:", cor_co2_pret, "\n")

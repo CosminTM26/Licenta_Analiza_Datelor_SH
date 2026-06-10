@@ -341,7 +341,7 @@ p5 <- pred_all %>%
   tema +
   theme(strip.text = element_text(face = "bold", size = 13))
 print(p5)
-salveaza_grafic('comparativ_p5.svg')
+salveaza_grafic('comparativ_p5.png')   # scatter ~15k puncte: PNG, nu SVG
 
 # ============================================================
 # GRAFIC 6: Structura transmisiilor (cota de piata %) - 3 piete

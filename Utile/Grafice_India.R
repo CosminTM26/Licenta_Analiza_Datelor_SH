@@ -141,7 +141,7 @@ p4 <- df %>%
        x = NULL, y = "Pret (EUR)") +
   tema
 print(p4)
-salveaza_grafic('india_p4.svg')
+salveaza_grafic('india_p4.png')   # boxplot cu outlieri: PNG, nu SVG
 
 # ============================================================
 # GRAFIC 5: Scatter - Curba de depreciere (Pret vs Varsta) - India
@@ -175,7 +175,7 @@ p5 <- df %>%
        x = "Varsta (ani)", y = "Pret (EUR)") +
   tema
 print(p5)
-salveaza_grafic('india_p5.svg')
+salveaza_grafic('india_p5.png')   # scatter cu ~37k puncte: PNG, nu SVG
 
 # ============================================================
 # GRAFIC 6: Bar - Top 10 branduri auto in India
@@ -225,6 +225,6 @@ p7 <- df %>%
        x = NULL, y = "Pret (EUR)") +
   tema
 print(p7)
-salveaza_grafic('india_p7.svg')
+salveaza_grafic('india_p7.png')   # boxplot cu outlieri: PNG, nu SVG
 
 cat("\n=== INDIA - 7 grafice in Plots pane ===\n")
