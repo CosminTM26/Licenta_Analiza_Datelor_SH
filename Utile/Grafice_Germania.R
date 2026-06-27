@@ -53,45 +53,6 @@ print(p1)
 salveaza_grafic('germania_p1.svg')
 
 # ============================================================
-# GRAFIC 2: Curba de depreciere (Pret vs Varsta) - Germania
-# TEORIE: Storchmann (2004) - depreciere accentuata in piete mature.
-# Acelasi tip de grafic ca la SUA si India => comparabilitate intre piete.
-# ============================================================
-limita_99_p <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
-marcaje_yp <- pretty(c(0, limita_99_p), n = 8)
-marcaje_yp <- c(marcaje_yp[marcaje_yp < limita_99_p * 0.95], limita_99_p)
-
-limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
-marcaje_varsta <- c(seq(0, limita_99_age, by = 2), limita_99_age)
-marcaje_varsta <- unique(round(marcaje_varsta))
-
-p2 <- df %>%
-  mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE),
-         price_plot = pmin(price_in_euro, limita_99_p, na.rm = TRUE)) %>%
-  ggplot(aes(x = age_plot, y = price_plot)) +
-  geom_point(alpha = 0.05, color = culori_piete["Germania"], size = 0.5) +
-  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), color = "black",
-              se = TRUE, linewidth = 1) +
-  scale_x_continuous(
-    breaks = marcaje_varsta,
-    labels = function(x) ifelse(x == limita_99_age,
-                                paste0(">", round(x)),
-                                as.character(round(x))),
-    limits = c(0, limita_99_age)
-  ) +
-  scale_y_continuous(
-    breaks = marcaje_yp,
-    labels = function(y) ifelse(y == limita_99_p,
-                                paste0(">", scales::comma(round(y))),
-                                scales::comma(round(y)))
-  ) +
-  labs(title = "Curba de depreciere (Pret vs Varsta) - Germania",
-       x = "Varsta (ani)", y = "Pret (EUR)") +
-  tema
-print(p2)
-salveaza_grafic('germania_p2.png')   # scatter cu ~240k puncte: PNG, nu SVG (fisier urias)
-
-# ============================================================
 # GRAFIC 3: Boxplot - Pret pe brand (top 12)
 # TEORIE: Triunghiul premium BMW/Mercedes/Audi domina segmentul;
 #   VW = volum mare dar mediana moderata; asiatice = value
@@ -210,5 +171,4 @@ p5 <- df_co2 %>%
 print(p5)
 salveaza_grafic('germania_p5.png')
 
-cat("\n=== GERMANIA - 5 grafice in Plots pane ===\n")
 cat("Corelatie Pearson CO2-pret:", cor_co2_pret, "\n")

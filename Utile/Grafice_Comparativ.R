@@ -127,11 +127,11 @@ to_friendly <- function(v) {
          "price_in_euro" = "Pret",
          "km" = "Km",
          "age" = "Varsta",
-         "engine_type" = "Cilindree",
+         "engine_type" = "Cilind.",
          "fuel_consumption_l_100km" = "Consum",
-         "co2_g" = "Emisii CO2",
-         "power_ps" = "Putere (CP)",
-         "one_owner" = "Un proprietar"
+         "co2_g" = "CO2",
+         "power_ps" = "Putere",
+         "one_owner" = "Un prop."
   )
 }
 
@@ -145,18 +145,20 @@ p2 <- bind_rows(
          var2 = to_friendly(var2)) %>%
   ggplot(aes(x = var1, y = var2, fill = cor)) +
   geom_tile(color = "white") +
-  geom_text(aes(label = scales::number(cor, accuracy = 0.01)), size = 3) +
+  geom_text(aes(label = scales::number(cor, accuracy = 0.01)), size = 2.0) +
   scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
                        midpoint = 0, limits = c(-1, 1)) +
   facet_wrap(~piata, scales = "free") +
   labs(title = "Matricea de corelatie - 3 piete",
        x = NULL, y = NULL, fill = "Cor.") +
   tema +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+        axis.text.y = element_text(size = 8),
         strip.text = element_text(face = "bold", size = 13),
-        panel.grid = element_blank())
+        panel.grid = element_blank(),
+        plot.margin = margin(5, 10, 5, 10))
 print(p2)
-salveaza_grafic('comparativ_p2.svg')
+salveaza_grafic('comparativ_p2.svg', latime = 22, inaltime = 12)
 
 # ============================================================
 # GRAFIC 3: Boxplot comparativ pe scara logaritmica (3 piete)
@@ -205,7 +207,7 @@ library(ranger)
 
 nume_prietenos_ml <- c(
   km = "Kilometraj", age = "Varsta", power_ps = "Putere (CP)",
-  engine_type = "Cilindree", fuel_consumption_l_100km = "Consum",
+  engine_type = "Capacitate", fuel_consumption_l_100km = "Consum",
   co2_g = "Emisii CO2", brand = "Brand", model = "Model",
   fuel_type = "Combustibil", transmission_type = "Transmisie",
   body_type = "Caroserie", drivetrain = "Tractiune",
@@ -227,54 +229,39 @@ proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_fac
     drop_na() %>%
     mutate(across(all_of(coloane_factor), as.factor))
 
-  set.seed(42)
-  index <- sample(seq_len(nrow(df_clean)), size = round(0.8 * nrow(df_clean)))
-  train_df <- df_clean[index,]
-  test_df <- df_clean[-index,]
-
-  # Esantioane EGALE intre piete: max 30.000 randuri (cat trainul celei mai mici
-  # piete, India). Asa comparatia R2/RMSE/MAE intre piete e echitabila, iar
-  # cifrele pentru Germania/SUA sunt estimari prudente (app.R foloseste tot).
-  if (nrow(train_df) > 30000) {
-    train_df <- train_df %>% slice_sample(n = 30000)
-  }
-
-  # Antrenare Random Forest pe log(pret) - stabilizeaza distributia asimetrica.
-  # Aceeasi configuratie ca in app.R (arbori per piata, quantreg cu mediana);
-  # singura diferenta este esantionul de antrenare plafonat la 30k (vezi mai sus).
-  model_rf <- ranger(log(price_in_euro) ~ ., data = train_df,
+  # Antrenare Random Forest pe log(pret) pe TOT setul, exact ca in app.R
+  # (arbori per piata). Evaluarea foloseste eroarea out-of-bag (datele lasate
+  # in afara fiecarui arbore la antrenare), deci nu mai e nevoie de o impartire
+  # separata in antrenare si testare.
+  model_rf <- ranger(log(price_in_euro) ~ ., data = df_clean,
                      num.trees = nr_arbori, max.depth = 20, min.node.size = 2,
                      importance = "impurity", respect.unordered.factors = "order",
-                     quantreg = TRUE, seed = 42, num.threads = 10)
+                     seed = 42, num.threads = 10)
 
-  # 1. Extragere importanta variabile
+  # 1. Extragere importanta variabile (din modelul pe tot setul)
   imp <- importance(model_rf)
   df_imp <- tibble(variabila = names(imp), importanta = as.numeric(imp)) %>%
     mutate(procent = round(100 * importanta / sum(importanta), 1),
            piata = nume_piata)
 
-  # 2. Predictie pe test set - mediana arborilor (ca in app.R), nu media
-  pred_log <- as.numeric(predict(model_rf, test_df,
-                                 type = "quantiles", quantiles = 0.5)$predictions)
-  pred_price <- exp(pred_log)
+  # 2. Predictii out-of-bag (pe datele nevazute de fiecare arbore), aduse in euro
+  pred_price <- exp(model_rf$predictions)
 
   df_pred <- tibble(
-    actual = test_df$price_in_euro,
+    actual = df_clean$price_in_euro,
     predicted = pred_price,
     piata = nume_piata
   )
 
-  # 3. Metrici de evaluare pe setul de test (cifrele pentru Capitolul 4)
-  # R2 = proportia din variatia pretului explicata de model
-  ss_rez <- sum((df_pred$actual - df_pred$predicted)^2)
-  ss_tot <- sum((df_pred$actual - mean(df_pred$actual))^2)
-  r2 <- 1 - ss_rez / ss_tot
+  # 3. Metrici out-of-bag (cifrele pentru Tabelul 4.1 din Capitolul 4).
+  # R2 OOB pe log = valoarea afisata si de aplicatie; RMSE/MAE in euro
   rmse <- sqrt(mean((df_pred$actual - df_pred$predicted)^2))
   mae <- mean(abs(df_pred$actual - df_pred$predicted))
-  cat("  ", nume_piata, "- R2 test:", round(r2, 3),
+  cat("  ", nume_piata, "- R2 OOB (log):", round(model_rf$r.squared, 3),
       "| RMSE:", round(rmse), "EUR | MAE:", round(mae), "EUR\n")
 
   # Esantionare predictii pentru plot (max 5000 puncte pentru claritate)
+  set.seed(42)
   df_pred_sample <- df_pred %>% slice_sample(n = min(5000, nrow(df_pred)))
 
   list(importanta = df_imp, predictii = df_pred_sample)
@@ -315,15 +302,16 @@ p4 <- imp_all %>%
   geom_text(aes(label = paste0(procent, "%")), hjust = -0.1, size = 3) +
   facet_wrap(~piata, scales = "free_y", ncol = 3) +
   scale_y_discrete(labels = function(x) sub("___.*", "", x)) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.30))) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.40))) +
   scale_fill_manual(values = culori_piete, guide = "none") +
   labs(title = "Importanta variabilelor in stabilirea pretului - Random Forest",
        x = "Importanta (% din total)", y = NULL) +
   tema +
   theme(panel.grid.major.y = element_blank(),
-        strip.text = element_text(face = "bold", size = 13))
+        strip.text = element_text(face = "bold", size = 13),
+        plot.margin = margin(5, 15, 5, 15))
 print(p4)
-salveaza_grafic('comparativ_p4.svg')
+salveaza_grafic('comparativ_p4.svg', latime = 22, inaltime = 10)
 
 # ============================================================
 # GRAFIC 5: Actual vs Predicted (facet 3 piete)
@@ -339,7 +327,8 @@ p5 <- pred_all %>%
   labs(title = "Performanta predictiei ML: Pret Real vs Pret Prezist - 3 piete",
        x = "Pret Real (EUR)", y = "Pret Prezist (EUR)") +
   tema +
-  theme(strip.text = element_text(face = "bold", size = 13))
+  theme(strip.text = element_text(face = "bold", size = 13),
+        axis.text.x = element_text(angle = 30, hjust = 1))
 print(p5)
 salveaza_grafic('comparativ_p5.png')   # scatter ~15k puncte: PNG, nu SVG
 
@@ -368,7 +357,7 @@ date_trans <- bind_rows(
 p6 <- date_trans %>%
   ggplot(aes(x = piata, y = procent, fill = transmission_type)) +
   geom_col(width = 0.55, color = "white", linewidth = 0.3) +
-  geom_text(aes(label = ifelse(procent > 0.02, paste0(round(procent * 100), "%"), "")),
+  geom_text(aes(label = ifelse(procent > 0.05, paste0(round(procent * 100), "%"), "")),
             position = position_stack(vjust = 0.5), color = "white", fontface = "bold", size = 3.5) +
   scale_y_continuous(labels = scales::percent_format()) +
   scale_fill_manual(values = c("Manual" = "#4393C3", "Automatic" = "#D6604D", "Semi-automatic" = "#969696")) +
@@ -407,7 +396,7 @@ date_fuel <- bind_rows(
 p7 <- date_fuel %>%
   ggplot(aes(x = piata, y = procent, fill = fuel_type)) +
   geom_col(width = 0.55, color = "white", linewidth = 0.3) +
-  geom_text(aes(label = ifelse(procent > 0.02, paste0(round(procent * 100), "%"), "")),
+  geom_text(aes(label = ifelse(procent > 0.05, paste0(round(procent * 100), "%"), "")),
             position = position_stack(vjust = 0.5), color = "white", fontface = "bold", size = 3.5) +
   scale_y_continuous(labels = scales::percent_format()) +
   scale_fill_manual(values = c("Petrol" = "#4393C3", "Diesel" = "#D6604D",

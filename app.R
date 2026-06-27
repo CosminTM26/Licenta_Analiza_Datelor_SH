@@ -27,8 +27,8 @@ DB <- "identifier.sqlite"
 
 con <- dbConnect(RSQLite::SQLite(), DB)
 germany_data <- dbReadTable(con, "Germany_Cars_Cleaned")
-india_data   <- dbReadTable(con, "India_Cars_Cleaned")
-sua_data     <- dbReadTable(con, "SUA_Cars_Cleaned")
+india_data <- dbReadTable(con, "India_Cars_Cleaned")
+sua_data <- dbReadTable(con, "SUA_Cars_Cleaned")
 dbDisconnect(con)
 
 
@@ -42,20 +42,20 @@ fmt <- function(x) {
 }
 
 ger_brands <- unique(germany_data$brand) %>% sort()
-ger_fuels  <- unique(germany_data$fuel_type) %>% sort()
-ger_trans  <- unique(germany_data$transmission_type) %>% sort()
+ger_fuels <- unique(germany_data$fuel_type) %>% sort()
+ger_trans <- unique(germany_data$transmission_type) %>% sort()
 
 ind_brands <- unique(india_data$brand) %>% sort()
-ind_fuels  <- unique(india_data$fuel_type) %>% sort()
-ind_trans  <- unique(india_data$transmission_type) %>% sort()
-ind_body   <- unique(india_data$body_type) %>% sort()
+ind_fuels <- unique(india_data$fuel_type) %>% sort()
+ind_trans <- unique(india_data$transmission_type) %>% sort()
+ind_body <- unique(india_data$body_type) %>% sort()
 ind_seller <- unique(india_data$seller_type) %>% sort()
-ind_drive  <- unique(india_data$drivetrain) %>% sort()
+ind_drive <- unique(india_data$drivetrain) %>% sort()
 
 sua_brands <- unique(sua_data$brand) %>% sort()
-sua_fuels  <- unique(sua_data$fuel_type) %>% sort()
-sua_trans  <- unique(sua_data$transmission_type) %>% sort()
-sua_drive  <- unique(sua_data$drivetrain) %>% sort()
+sua_fuels <- unique(sua_data$fuel_type) %>% sort()
+sua_trans <- unique(sua_data$transmission_type) %>% sort()
+sua_drive <- unique(sua_data$drivetrain) %>% sort()
 
 
 # ==============================================================================
@@ -76,7 +76,7 @@ campuri_baza <- function(piata, brands, fuels, trans, year_default, km_default, 
 
 camp_num <- function(piata, nume, label_cb, label_inp, default, min_val = 1, step = 0.1) {
   id_inp <- paste0("pred_", piata, "_", nume)
-  id_cb  <- paste0("pred_", piata, "_use_", nume)
+  id_cb <- paste0("pred_", piata, "_use_", nume)
   tagList(
     checkboxInput(id_cb, label_cb, value = FALSE),
     conditionalPanel(condition = paste0("input.", id_cb, " == true"),
@@ -86,7 +86,7 @@ camp_num <- function(piata, nume, label_cb, label_inp, default, min_val = 1, ste
 
 camp_sel <- function(piata, nume, label_cb, label_inp, choices) {
   id_inp <- paste0("pred_", piata, "_", nume)
-  id_cb  <- paste0("pred_", piata, "_use_", nume)
+  id_cb <- paste0("pred_", piata, "_use_", nume)
   tagList(
     checkboxInput(id_cb, label_cb, value = FALSE),
     conditionalPanel(condition = paste0("input.", id_cb, " == true"),
@@ -339,28 +339,31 @@ server <- function(input, output, session) {
 
   output$kpi_listings <- renderValueBox({
     date <- car_data(); req(nrow(date) > 0)
-    valueBox(fmt(nrow(date)), paste("Listari", sfx()), icon = icon("car"), color = "blue")
+    valueBox(fmt(nrow(date)), paste("Listari"), icon = icon("car"), color = "blue")
   })
   output$kpi_price <- renderValueBox({
     date <- car_data(); req(nrow(date) > 0)
     valueBox(paste0(fmt(mean(date$price_in_euro, na.rm = TRUE)), " EUR"),
-             paste("Pret Mediu", sfx()), icon = icon("euro-sign"), color = "green")
+             paste("Pret Mediu"), icon = icon("euro-sign"), color = "green")
   })
   output$kpi_km <- renderValueBox({
     date <- car_data(); req(nrow(date) > 0)
     valueBox(paste0(fmt(mean(date$km, na.rm = TRUE)), " km"),
-             paste("Kilometraj Mediu", sfx()), icon = icon("road"), color = "purple")
+             paste("Kilometraj Mediu"), icon = icon("road"), color = "purple")
   })
   output$kpi_age <- renderValueBox({
     date <- car_data(); req(nrow(date) > 0)
     valueBox(paste0(round(2023 - mean(date$year, na.rm = TRUE), 1), " ani"),
-             paste("Varsta Medie", sfx()), icon = icon("calendar-alt"), color = "yellow")
+             paste("Varsta Medie"), icon = icon("calendar-alt"), color = "yellow")
   })
   output$kpi_pop_model <- renderValueBox({
     date <- car_data(); req(nrow(date) > 0)
     coloana <- if (input$brand == "Toate Brandurile") "brand" else "model"
     eticheta <- if (input$brand == "Toate Brandurile") "Brand Popular" else "Model Popular"
-    cel_mai_frecvent <- date %>% count(.data[[coloana]], sort = TRUE) %>% slice(1) %>% pull(.data[[coloana]])
+    cel_mai_frecvent <- date %>%
+      count(.data[[coloana]], sort = TRUE) %>%
+      slice(1) %>%
+      pull(.data[[coloana]])
     valueBox(if (length(cel_mai_frecvent) > 0) cel_mai_frecvent else "N/A", eticheta,
              icon = icon("star"), color = "orange")
   })
@@ -368,7 +371,10 @@ server <- function(input, output, session) {
     date <- car_data(); req(nrow(date) > 0)
     coloana <- if (input$brand == "Toate Brandurile") "brand" else "model"
     eticheta <- if (input$brand == "Toate Brandurile") "Listari Brand Popular" else "Listari Model Popular"
-    nr_listari <- date %>% count(.data[[coloana]], sort = TRUE) %>% slice(1) %>% pull(n)
+    nr_listari <- date %>%
+      count(.data[[coloana]], sort = TRUE) %>%
+      slice(1) %>%
+      pull(n)
     if (length(nr_listari) == 0) nr_listari <- 0
     procent <- round((nr_listari / nrow(date)) * 100, 1)
     valueBox(paste0(fmt(nr_listari), " (", procent, "%)"), eticheta, icon = icon("list"), color = "blue")
@@ -377,18 +383,18 @@ server <- function(input, output, session) {
     date <- car_data(); req(nrow(date) > 0)
     valoare <- mean(date$fuel_consumption_l_100km, na.rm = TRUE)
     text <- if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare, 1), " l/100km")
-    valueBox(text, paste("Consum Mediu", sfx()), icon = icon("gas-pump"), color = "aqua")
+    valueBox(text, paste("Consum Mediu"), icon = icon("gas-pump"), color = "aqua")
   })
   output$kpi_spec1 <- renderValueBox({
     date <- car_data(); req(nrow(date) > 0)
     if (input$piata == "Germania") {
       valoare <- mean(date$co2_g, na.rm = TRUE)
       valueBox(if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare, 1), " g/km"),
-               paste("CO2 Mediu", sfx()), icon = icon("leaf"), color = "olive")
+               paste("CO2 Mediu"), icon = icon("leaf"), color = "olive")
     } else if (input$piata == "India") {
       valoare <- mean(date$power_ps, na.rm = TRUE)
       valueBox(if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare), " PS"),
-               paste("Putere Medie", sfx()), icon = icon("bolt"), color = "orange")
+               paste("Putere Medie"), icon = icon("bolt"), color = "orange")
     } else {
       tractiune_top <- date %>%
         filter(!is.na(drivetrain), drivetrain != "", drivetrain != "Unknown") %>%
@@ -396,7 +402,7 @@ server <- function(input, output, session) {
         slice(1) %>%
         pull(drivetrain)
       valueBox(if (length(tractiune_top) == 0) "N/A" else tractiune_top,
-               paste("Tractiune Majoritara", sfx()), icon = icon("cog"), color = "teal")
+               paste("Tractiune Majoritara"), icon = icon("cog"), color = "teal")
     }
   })
   output$kpi_spec2 <- renderValueBox({
@@ -404,7 +410,7 @@ server <- function(input, output, session) {
     if (input$piata == "Germania") {
       valoare <- mean(date$power_ps, na.rm = TRUE)
       valueBox(if (is.nan(valoare) || valoare <= 0) "N/A" else paste0(round(valoare), " PS"),
-               paste("Putere Medie", sfx()), icon = icon("bolt"), color = "orange")
+               paste("Putere Medie"), icon = icon("bolt"), color = "orange")
     } else if (input$piata == "India") {
       caroserie_top <- date %>%
         filter(!is.na(body_type), body_type != "") %>%
@@ -412,12 +418,12 @@ server <- function(input, output, session) {
         slice(1) %>%
         pull(body_type)
       valueBox(if (length(caroserie_top) == 0) "N/A" else caroserie_top,
-               paste("Caroserie Majoritara", sfx()), icon = icon("car-side"), color = "navy")
+               paste("Caroserie Majoritara"), icon = icon("car-side"), color = "navy")
     } else {
       date_valide <- date %>% filter(!is.na(one_owner), one_owner != "Unknown")
       text <- if (nrow(date_valide) == 0) "N/A"
       else paste0(round(sum(date_valide$one_owner == "Yes") / nrow(date_valide) * 100, 1), "%")
-      valueBox(text, paste("Un Proprietar", sfx()), icon = icon("user-check"), color = "green")
+      valueBox(text, paste("Un Proprietar"), icon = icon("user-check"), color = "green")
     }
   })
 
@@ -519,7 +525,7 @@ server <- function(input, output, session) {
     bar_plot(date, coloana, eticheta, top_n = 5)
   })
   output$trans_plot <- renderPlot({ date <- car_data(); req(nrow(date) > 0); bar_plot(date, "transmission_type") })
-  output$fuel_plot  <- renderPlot({ date <- car_data(); req(nrow(date) > 0); bar_plot(date, "fuel_type") })
+  output$fuel_plot <- renderPlot({ date <- car_data(); req(nrow(date) > 0); bar_plot(date, "fuel_type") })
 
   output$india_extra_plot <- renderPlot({
     date <- car_data()
@@ -580,38 +586,51 @@ server <- function(input, output, session) {
   # --- PREDICTOR: helper-e si stari reactive ---
 
   get_avg <- function(date, coloana, marca, model_ales, combustibil = NULL) {
-    if (!is.null(combustibil) && combustibil == "Electric" &&
-        coloana %in% c("engine_type", "fuel_consumption_l_100km", "co2_g")) return(0)
+    if (!is.null(combustibil) &&
+      combustibil == "Electric" &&
+      coloana %in% c("engine_type", "fuel_consumption_l_100km", "co2_g")) return(0)
 
-    media <- function(d) d %>% summarise(mean(.data[[coloana]], na.rm = TRUE)) %>% pull()
+    media <- function(d) d %>%
+      summarise(mean(.data[[coloana]], na.rm = TRUE)) %>%
+      pull()
 
-    rezultat <- date %>% filter(brand == marca, model == model_ales,
-                                !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>% media()
+    rezultat <- date %>%
+      filter(brand == marca, model == model_ales,
+             !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>%
+      media()
     if (!is.na(rezultat) && rezultat > 0) return(rezultat)
 
-    rezultat <- date %>% filter(brand == marca,
-                                !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>% media()
+    rezultat <- date %>%
+      filter(brand == marca,
+             !is.na(.data[[coloana]]), .data[[coloana]] > 0) %>%
+      media()
     if (!is.na(rezultat) && rezultat > 0) return(rezultat)
 
     mean(date[[coloana]], na.rm = TRUE)
   }
 
   get_mode <- function(date, coloana, marca, model_ales) {
-    cel_mai_frecvent <- function(d) d %>% count(.data[[coloana]]) %>%
-      slice_max(n, n = 1, with_ties = FALSE) %>% pull(.data[[coloana]])
 
-    rezultat <- date %>% filter(brand == marca, model == model_ales,
-                                !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
-                cel_mai_frecvent()
+    cel_mai_frecvent <- function(d) d %>%
+      count(.data[[coloana]]) %>%
+      slice_max(n, n = 1, with_ties = FALSE) %>%
+      pull(.data[[coloana]])
+
+    rezultat <- date %>%
+      filter(brand == marca, model == model_ales,
+             !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
+      cel_mai_frecvent()
     if (length(rezultat) > 0) return(as.character(rezultat))
 
-    rezultat <- date %>% filter(brand == marca,
-                                !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
-                cel_mai_frecvent()
+    rezultat <- date %>%
+      filter(brand == marca,
+             !is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
+      cel_mai_frecvent()
     if (length(rezultat) > 0) return(as.character(rezultat))
 
-    as.character(date %>% filter(!is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
-                 cel_mai_frecvent())
+    as.character(date %>%
+                   filter(!is.na(.data[[coloana]]), .data[[coloana]] != "") %>%
+                   cel_mai_frecvent())
   }
 
   val_num <- function(piata, nume, date, coloana, marca, model_ales, combustibil = NULL) {
@@ -700,10 +719,10 @@ server <- function(input, output, session) {
     model_ales <- input$pred_ger_model
     combustibil <- input$pred_ger_fuel
 
-    ps_val     <- val_num("ger", "ps",     date_piata, "power_ps",                 marca, model_ales, combustibil)
-    engine_val <- val_num("ger", "engine", date_piata, "engine_type",              marca, model_ales, combustibil)
-    cons_val   <- val_num("ger", "cons",   date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
-    co2_val    <- val_num("ger", "co2",    date_piata, "co2_g",                    marca, model_ales, combustibil)
+    ps_val <- val_num("ger", "ps", date_piata, "power_ps", marca, model_ales, combustibil)
+    engine_val <- val_num("ger", "engine", date_piata, "engine_type", marca, model_ales, combustibil)
+    cons_val <- val_num("ger", "cons", date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
+    co2_val <- val_num("ger", "co2", date_piata, "co2_g", marca, model_ales, combustibil)
     if (combustibil == "Electric") engine_val <- 0
 
     km_total <- as.numeric(input$pred_ger_km)
@@ -751,12 +770,12 @@ server <- function(input, output, session) {
     model_ales <- input$pred_ind_model
     combustibil <- input$pred_ind_fuel
 
-    ps_val     <- val_num("ind", "ps",     date_piata, "power_ps",                 marca, model_ales, combustibil)
-    engine_val <- val_num("ind", "engine", date_piata, "engine_type",              marca, model_ales, combustibil)
-    cons_val   <- val_num("ind", "cons",   date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
-    body_val   <- val_cat("ind", "body",   date_piata, "body_type",   marca, model_ales)
-    owner_val  <- val_cat("ind", "owner",  date_piata, "one_owner",   marca, model_ales)
-    drive_val  <- val_cat("ind", "drive",  date_piata, "drivetrain",  marca, model_ales)
+    ps_val <- val_num("ind", "ps", date_piata, "power_ps", marca, model_ales, combustibil)
+    engine_val <- val_num("ind", "engine", date_piata, "engine_type", marca, model_ales, combustibil)
+    cons_val <- val_num("ind", "cons", date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
+    body_val <- val_cat("ind", "body", date_piata, "body_type", marca, model_ales)
+    owner_val <- val_cat("ind", "owner", date_piata, "one_owner", marca, model_ales)
+    drive_val <- val_cat("ind", "drive", date_piata, "drivetrain", marca, model_ales)
     seller_val <- val_cat("ind", "seller", date_piata, "seller_type", marca, model_ales)
     if (combustibil == "Electric") engine_val <- 0
 
@@ -807,10 +826,10 @@ server <- function(input, output, session) {
     model_ales <- input$pred_sua_model
     combustibil <- input$pred_sua_fuel
 
-    engine_val <- val_num("sua", "engine", date_piata, "engine_type",              marca, model_ales, combustibil)
-    cons_val   <- val_num("sua", "cons",   date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
-    drive_val  <- val_cat("sua", "drive",  date_piata, "drivetrain",               marca, model_ales)
-    owner_val  <- val_cat("sua", "owner",  date_piata, "one_owner",                marca, model_ales)
+    engine_val <- val_num("sua", "engine", date_piata, "engine_type", marca, model_ales, combustibil)
+    cons_val <- val_num("sua", "cons", date_piata, "fuel_consumption_l_100km", marca, model_ales, combustibil)
+    drive_val <- val_cat("sua", "drive", date_piata, "drivetrain", marca, model_ales)
+    owner_val <- val_cat("sua", "owner", date_piata, "one_owner", marca, model_ales)
     if (combustibil == "Electric") engine_val <- 0
 
     km_total <- as.numeric(input$pred_sua_km)

@@ -152,72 +152,37 @@ print(p4)
 salveaza_grafic('sua_p4.png')
 
 # ============================================================
-# GRAFIC 5: Scatter - Curba de depreciere (Pret vs Varsta) - SUA
-# TEORIE: Storchmann (2004) - depreciere rapida in primii 3-5 ani
+# GRAFIC 6: Pret vs istoric proprietari (one_owner) - test statistic
+# one_owner (Yes/No) e folosit ca factor de modelul RF.
+# ggbetweenstats arata distributia + testul Mann-Whitney (pret non-normal)
+# + marimea efectului. Esantion de 5000 puncte, pentru claritate.
 # ============================================================
-limita_99_p <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
-marcaje_yp <- pretty(c(0, limita_99_p), n = 8)
-marcaje_yp <- c(marcaje_yp[marcaje_yp < limita_99_p * 0.95], limita_99_p)
+library(ggstatsplot)
 
-limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
-marcaje_varsta <- c(seq(0, limita_99_age, by = 2), limita_99_age)
-marcaje_varsta <- unique(round(marcaje_varsta))
-
-p5 <- df %>%
-  mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE),
-         price_plot = pmin(price_in_euro, limita_99_p, na.rm = TRUE)) %>%
-  ggplot(aes(x = age_plot, y = price_plot)) +
-  geom_point(alpha = 0.05, color = culori_piete["SUA"], size = 0.5) +
-  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), color = "black",
-              se = TRUE, linewidth = 1) +
-  scale_x_continuous(
-    breaks = marcaje_varsta,
-    labels = function(x) ifelse(x == limita_99_age,
-                                paste0(">", round(x)),
-                                as.character(round(x))),
-    limits = c(0, limita_99_age)
-  ) +
-  scale_y_continuous(
-    breaks = marcaje_yp,
-    labels = function(y) ifelse(y == limita_99_p,
-                                paste0(">", scales::comma(round(y))),
-                                scales::comma(round(y)))
-  ) +
-  labs(title = "Curba de depreciere (Pret vs Varsta) - SUA",
-       x = "Varsta (ani)", y = "Pret (EUR)") +
-  tema
-print(p5)
-salveaza_grafic('sua_p5.png')
-
-# ============================================================
-# GRAFIC 6: Boxplot - Pret vs Istoric proprietari (one_owner)
-# Variabila one_owner (Yes/No) e folosita direct ca factor de modelul RF.
-# Masinile cu un singur proprietar isi pastreaza valoarea mai bine.
-# (excludem 'Unknown', exact ca la antrenarea modelului)
-# ============================================================
-limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
-marcaje_pret <- pretty(c(0, limita_99), n = 8)
-marcaje_pret <- c(marcaje_pret[marcaje_pret < limita_99 * 0.95], limita_99)
-
-p6 <- df %>%
+set.seed(42)
+date_owner <- df %>%
   filter(one_owner %in% c("Yes", "No")) %>%
-  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE),
-         proprietari = recode(one_owner, "Yes" = "Un proprietar", "No" = "Mai multi proprietari"),
-         proprietari = fct_reorder(proprietari, price_plot, median)) %>%
-  ggplot(aes(x = proprietari, y = price_plot, fill = proprietari)) +
-  geom_boxplot(outlier.alpha = 0.1) +
-  scale_fill_brewer(palette = "Set2", guide = "none") +
-  scale_y_continuous(
-    breaks = marcaje_pret,
-    labels = function(y) ifelse(y == limita_99,
-                                paste0(">", scales::comma(round(y))),
-                                scales::comma(round(y)))
-  ) +
-  labs(title = "Pret vs istoric proprietari - SUA",
-       x = NULL, y = "Pret (EUR)") +
-  tema
+  mutate(proprietari = recode(one_owner,
+                              "Yes" = "Un proprietar",
+                              "No"  = "Mai multi proprietari")) %>%
+  slice_sample(n = 5000)
+
+p6 <- ggbetweenstats(
+  data  = date_owner,
+  x     = proprietari,
+  y     = price_in_euro,
+  type  = "np",                                # Mann-Whitney (non-parametric)
+  xlab  = NULL,
+  ylab  = "Pret (EUR)",
+  title = "Pret vs istoric proprietari - SUA",
+  point.args = list(alpha = 0.15, size = 1),
+  ggtheme = theme_minimal()
+) +
+  scale_color_manual(values = c("Un proprietar" = "#0A3161",
+                                "Mai multi proprietari" = "#5B7FA6")) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(plot.title = element_text(hjust = 0.5))
 print(p6)
 salveaza_grafic('sua_p6.png')
 
-cat("\n=== SUA - 6 grafice in Plots pane ===\n")
 cat("Corelatie Pearson cilindree-pret:", cor_val, "\n")

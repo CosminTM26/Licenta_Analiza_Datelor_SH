@@ -26,6 +26,8 @@ incarca_piata <- function(tabel) {
   df
 }
 
+options(scipen = 999, digits = 3)
+
 # ---- Tema standard pentru toate graficele ----
 # Titlul e centrat; graficele nu folosesc subtitluri (explicatiile sunt in lucrare)
 tema <- theme_minimal(base_size = 12) +

@@ -53,42 +53,6 @@ print(p1)
 salveaza_grafic('india_p1.svg')
 
 # ============================================================
-# GRAFIC 2: Histograma varsta masini (distributie de baza)
-# Ultima bara grupeaza masinile cu varsta peste percentila 99%
-# ============================================================
-limita_99_age <- quantile(df$age, 0.99, na.rm = TRUE)
-marcaje_varsta <- c(seq(0, limita_99_age, by = 2), limita_99_age)
-marcaje_varsta <- unique(round(marcaje_varsta))
-
-# Linii de referinta: mediana (negru, intrerupt) si media (gri, punctat)
-mediana_age <- median(df$age, na.rm = TRUE)
-media_age <- mean(df$age, na.rm = TRUE)
-
-p2 <- df %>%
-  mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE)) %>%
-  ggplot(aes(x = age_plot)) +
-  geom_histogram(binwidth = 1, center = 0, fill = culori_piete["India"], color = "white") +
-  geom_vline(xintercept = mediana_age, color = "black", linetype = "dashed", linewidth = 0.8) +
-  geom_vline(xintercept = media_age, color = "grey35", linetype = "dotted", linewidth = 0.8) +
-  annotate("text", x = mediana_age, y = Inf, label = paste0("Mediana: ", round(mediana_age), " ani"),
-           vjust = 2, hjust = -0.05, size = 3.5) +
-  annotate("text", x = media_age, y = Inf, label = paste0("Media: ", round(media_age, 1), " ani"),
-           vjust = 3.8, hjust = -0.05, size = 3.5) +
-  scale_x_continuous(
-    breaks = marcaje_varsta,
-    labels = function(x) ifelse(x == limita_99_age,
-                                paste0(">", round(x)),
-                                as.character(round(x))),
-    limits = c(-0.5, limita_99_age + 0.5)
-  ) +
-  scale_y_continuous(labels = scales::comma) +
-  labs(title = "Distributia varstei masinilor - India",
-       x = "Varsta (ani)", y = "Numar masini") +
-  tema
-print(p2)
-salveaza_grafic('india_p2.svg')
-
-# ============================================================
 # GRAFIC 3: Bar - Distributia pe tip caroserie
 # TEORIE: Frugal Innovation (Bhargava & Freiberg)
 #   Hatchback domina = utilitate maxima la cost minim
@@ -109,73 +73,6 @@ p3 <- df %>%
   theme(panel.grid.major.y = element_blank())
 print(p3)
 salveaza_grafic('india_p3.svg')
-
-# ============================================================
-# GRAFIC 4: Boxplot - Pret pe tip caroserie (top 5)
-# Combina volumul (graf 3) cu pretul: Hatchback ieftin, SUV scump
-# ============================================================
-top_body <- df %>%
-  filter(!is.na(body_type), body_type != "") %>%
-  count(body_type, sort = TRUE) %>%
-  slice_max(n, n = 5) %>%
-  pull(body_type)
-
-limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
-marcaje_pret <- pretty(c(0, limita_99), n = 8)
-marcaje_pret <- c(marcaje_pret[marcaje_pret < limita_99 * 0.95], limita_99)
-
-p4 <- df %>%
-  filter(body_type %in% top_body) %>%
-  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE),
-         body_type = fct_reorder(body_type, price_plot, median)) %>%
-  ggplot(aes(x = body_type, y = price_plot, fill = body_type)) +
-  geom_boxplot(outlier.alpha = 0.2) +
-  scale_fill_brewer(palette = "Set2", guide = "none") +
-  scale_y_continuous(
-    breaks = marcaje_pret,
-    labels = function(y) ifelse(y == limita_99,
-                                paste0(">", scales::comma(round(y))),
-                                scales::comma(round(y)))
-  ) +
-  labs(title = "Pret median pe tip caroserie (top 5) - India",
-       x = NULL, y = "Pret (EUR)") +
-  tema
-print(p4)
-salveaza_grafic('india_p4.png')   # boxplot cu outlieri: PNG, nu SVG
-
-# ============================================================
-# GRAFIC 5: Scatter - Curba de depreciere (Pret vs Varsta) - India
-# TEORIE: Storchmann (2004) - depreciere mai lenta in piete emergente (~15% anual)
-# ============================================================
-limita_99_p <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
-marcaje_yp <- pretty(c(0, limita_99_p), n = 8)
-marcaje_yp <- c(marcaje_yp[marcaje_yp < limita_99_p * 0.95], limita_99_p)
-
-p5 <- df %>%
-  mutate(age_plot = pmin(age, limita_99_age, na.rm = TRUE),
-         price_plot = pmin(price_in_euro, limita_99_p, na.rm = TRUE)) %>%
-  ggplot(aes(x = age_plot, y = price_plot)) +
-  geom_point(alpha = 0.15, color = culori_piete["India"], size = 0.8) +
-  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), color = "black",
-              se = TRUE, linewidth = 1) +
-  scale_x_continuous(
-    breaks = marcaje_varsta,
-    labels = function(x) ifelse(x == limita_99_age,
-                                paste0(">", round(x)),
-                                as.character(round(x))),
-    limits = c(0, limita_99_age)
-  ) +
-  scale_y_continuous(
-    breaks = marcaje_yp,
-    labels = function(y) ifelse(y == limita_99_p,
-                                paste0(">", scales::comma(round(y))),
-                                scales::comma(round(y)))
-  ) +
-  labs(title = "Curba de depreciere (Pret vs Varsta) - India",
-       x = "Varsta (ani)", y = "Pret (EUR)") +
-  tema
-print(p5)
-salveaza_grafic('india_p5.png')   # scatter cu ~37k puncte: PNG, nu SVG
 
 # ============================================================
 # GRAFIC 6: Bar - Top 10 branduri auto in India
@@ -200,31 +97,32 @@ print(p6)
 salveaza_grafic('india_p6.svg')
 
 # ============================================================
-# GRAFIC 7: Boxplot - Pret vs Tipul vanzatorului (seller_type)
+# GRAFIC 7: Pret vs tipul vanzatorului (seller_type) - test statistic
 # seller_type (Dealer / Individual) e folosit ca factor de modelul RF India.
-# Aceeasi logica ca one_owner la SUA: aratam ca am valorificat fiecare coloana.
+# Aceeasi abordare ca one_owner la SUA: ggbetweenstats cu test Mann-Whitney.
 # ============================================================
-limita_99 <- quantile(df$price_in_euro, 0.99, na.rm = TRUE)
-marcaje_pret <- pretty(c(0, limita_99), n = 8)
-marcaje_pret <- c(marcaje_pret[marcaje_pret < limita_99 * 0.95], limita_99)
+library(ggstatsplot)
 
-p7 <- df %>%
+set.seed(42)
+date_seller <- df %>%
   filter(!is.na(seller_type), seller_type != "") %>%
-  mutate(price_plot = pmin(price_in_euro, limita_99, na.rm = TRUE),
-         seller_type = fct_reorder(seller_type, price_plot, median)) %>%
-  ggplot(aes(x = seller_type, y = price_plot, fill = seller_type)) +
-  geom_boxplot(outlier.alpha = 0.1) +
-  scale_fill_brewer(palette = "Set2", guide = "none") +
-  scale_y_continuous(
-    breaks = marcaje_pret,
-    labels = function(y) ifelse(y == limita_99,
-                                paste0(">", scales::comma(round(y))),
-                                scales::comma(round(y)))
-  ) +
-  labs(title = "Pret vs tipul vanzatorului - India",
-       x = NULL, y = "Pret (EUR)") +
-  tema
-print(p7)
-salveaza_grafic('india_p7.png')   # boxplot cu outlieri: PNG, nu SVG
+  mutate(seller_type = recode(seller_type, "Individual" = "Particular")) %>%
+  slice_sample(n = 5000)
 
-cat("\n=== INDIA - 7 grafice in Plots pane ===\n")
+p7 <- ggbetweenstats(
+  data  = date_seller,
+  x     = seller_type,
+  y     = price_in_euro,
+  type  = "np",                                # Mann-Whitney (non-parametric)
+  xlab  = NULL,
+  ylab  = "Pret (EUR)",
+  title = "Pret vs tipul vanzatorului - India",
+  point.args = list(alpha = 0.15, size = 1),
+  ggtheme = theme_minimal()
+) +
+  scale_color_manual(values = c("Dealer" = "#046A38",
+                                "Particular" = "#5FA37D")) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(plot.title = element_text(hjust = 0.5))
+print(p7)
+salveaza_grafic('india_p7.png')
