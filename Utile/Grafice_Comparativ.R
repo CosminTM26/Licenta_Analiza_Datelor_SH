@@ -20,9 +20,6 @@ ger <- incarca_piata("Germany_Cars_Cleaned")
 sua <- incarca_piata("SUA_Cars_Cleaned")
 ind <- incarca_piata("India_Cars_Cleaned")
 
-cat("Randuri din DB:  Germania:", nrow(ger),
-    "| SUA:", nrow(sua), "| India:", nrow(ind), "\n\n")
-
 # ============================================================
 # GRAFIC 1: Curbe depreciere (facet 3 piete)
 # TEORIE: Storchmann - pante mai abrupte = depreciere mai rapida

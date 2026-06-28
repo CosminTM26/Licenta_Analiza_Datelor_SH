@@ -28,12 +28,13 @@ incarca_piata <- function(tabel) {
 
 options(scipen = 999, digits = 3)
 
+
 # ---- Tema standard pentru toate graficele ----
 # Titlul e centrat; graficele nu folosesc subtitluri (explicatiile sunt in lucrare)
 tema <- theme_minimal(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5))
 
-salveaza_grafic <- function(nume_fisier, plot_obiect = last_plot(), latime = 16.5, inaltime = 8.25) {
+salveaza_grafic <- function(nume_fisier, plot_obiect = last_plot(), latime = 17.5, inaltime = 8.25) {
   # Note:
   # - plot_obiect foloseste 'last_plot()' ca default (salveaza ultimul grafic afisat)
   # - latime si inaltime sunt calibrate fix pe marginile paginii tale de Word

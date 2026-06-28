@@ -14,7 +14,6 @@ source("Utile/Grafice_Helpers.R")
 # ---- Incarcare date (filtrarea anilor > 2023 e facuta in incarca_piata) ----
 df <- incarca_piata("Germany_Cars_Cleaned") %>%
   mutate(age = 2023 - year)
-cat("Germania - randuri din baza de date (pana in 2023):", nrow(df), "\n")
 
 # ============================================================
 # GRAFIC 1: Histograma pret (distributie de baza)

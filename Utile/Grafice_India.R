@@ -14,7 +14,6 @@ source("Utile/Grafice_Helpers.R")
 # ---- Incarcare date (filtrarea anilor > 2023 e facuta in incarca_piata) ----
 df <- incarca_piata("India_Cars_Cleaned") %>%
   mutate(age = 2023 - year)
-cat("India - randuri din baza de date (pana in 2023):", nrow(df), "\n")
 
 # ============================================================
 # GRAFIC 1: Histograma pret (distributie de baza)
@@ -103,19 +102,17 @@ salveaza_grafic('india_p6.svg')
 # ============================================================
 library(ggstatsplot)
 
-set.seed(42)
 date_seller <- df %>%
   filter(!is.na(seller_type), seller_type != "") %>%
-  mutate(seller_type = recode(seller_type, "Individual" = "Particular")) %>%
   slice_sample(n = 5000)
 
 p7 <- ggbetweenstats(
-  data  = date_seller,
-  x     = seller_type,
-  y     = price_in_euro,
-  type  = "np",                                # Mann-Whitney (non-parametric)
-  xlab  = NULL,
-  ylab  = "Pret (EUR)",
+  data = date_seller,
+  x = seller_type,
+  y = price_in_euro,
+  type = "np",                                # Mann-Whitney (non-parametric)
+  xlab = "Tipul Vanzatorului",
+  ylab = "Pret (EUR)",
   title = "Pret vs tipul vanzatorului - India",
   point.args = list(alpha = 0.15, size = 1),
   ggtheme = theme_minimal()
@@ -123,6 +120,7 @@ p7 <- ggbetweenstats(
   scale_color_manual(values = c("Dealer" = "#046A38",
                                 "Particular" = "#5FA37D")) +
   scale_y_continuous(labels = scales::comma) +
+  scale_y_log10(labels = scales::comma) +
   theme(plot.title = element_text(hjust = 0.5))
 print(p7)
 salveaza_grafic('india_p7.png')

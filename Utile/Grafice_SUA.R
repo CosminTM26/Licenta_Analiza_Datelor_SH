@@ -14,7 +14,6 @@ source("Utile/Grafice_Helpers.R")
 # ---- Incarcare date (filtrarea anilor > 2023 e facuta in incarca_piata) ----
 df <- incarca_piata("SUA_Cars_Cleaned") %>%
   mutate(age = 2023 - year)
-cat("SUA - randuri din baza de date (pana in 2023):", nrow(df), "\n")
 
 # ============================================================
 # GRAFIC 1: Histograma pret (distributie de baza)
@@ -159,29 +158,29 @@ salveaza_grafic('sua_p4.png')
 # ============================================================
 library(ggstatsplot)
 
-set.seed(42)
 date_owner <- df %>%
   filter(one_owner %in% c("Yes", "No")) %>%
   mutate(proprietari = recode(one_owner,
                               "Yes" = "Un proprietar",
-                              "No"  = "Mai multi proprietari")) %>%
+                              "No" = "Mai multi proprietari")) %>%
   slice_sample(n = 5000)
 
 p6 <- ggbetweenstats(
-  data  = date_owner,
-  x     = proprietari,
-  y     = price_in_euro,
-  type  = "np",                                # Mann-Whitney (non-parametric)
-  xlab  = NULL,
-  ylab  = "Pret (EUR)",
+  data = date_owner,
+  x = proprietari,
+  y = price_in_euro,
+  type = "np",                                # Mann-Whitney (non-parametric)
+  xlab = NULL,
+  ylab = "Pret (EUR)",
   title = "Pret vs istoric proprietari - SUA",
   point.args = list(alpha = 0.15, size = 1),
   ggtheme = theme_minimal()
 ) +
   scale_color_manual(values = c("Un proprietar" = "#0A3161",
-                                "Mai multi proprietari" = "#5B7FA6")) +
-  scale_y_continuous(labels = scales::comma) +
+                                "Mai multi proprietari" = "#0A3161")) +
+  scale_y_log10(labels = scales::comma) +
   theme(plot.title = element_text(hjust = 0.5))
+
 print(p6)
 salveaza_grafic('sua_p6.png')
 
