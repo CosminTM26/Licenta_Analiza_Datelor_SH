@@ -124,7 +124,7 @@ train_rf <- function(date, coloane_factor, nr_arbori, model_rv, levels_rv, statu
     drop_na() %>%
     mutate(across(all_of(coloane_factor), as.factor))
 
-  # Antrenam pe log(pret): stabilizeaza distributia asimetrica a preturilor (vezi DECIZII 13.5)
+  # Antrenam pe log(pret) - stabilizeaza distributia asimetrica a preturilor
   padure <- ranger(log(price_in_euro) ~ ., data = date,
                    num.trees = nr_arbori, max.depth = 20, min.node.size = 2,
                    quantreg = TRUE, importance = "impurity",
@@ -135,8 +135,8 @@ train_rf <- function(date, coloane_factor, nr_arbori, model_rv, levels_rv, statu
 
   r2 <- round(padure$r.squared, 3)
 
-  # RMSE si MAE pe predictiile Out-of-Bag (aduse din log in EUR). Afisate DOAR in consola R,
-  # nu in interfata web: servesc la evaluarea din lucrare (Tabelul 4.1), nu utilizatorului final.
+  # Predictiile OOB sunt in log, exp() le aduce inapoi in EUR
+  # RMSE = radacina mediei erorilor la patrat, MAE = media erorilor absolute (afisate in consola)
   pret_oob <- exp(padure$predictions)
   rmse <- round(sqrt(mean((date$price_in_euro - pret_oob)^2)))
   mae  <- round(mean(abs(date$price_in_euro - pret_oob)))

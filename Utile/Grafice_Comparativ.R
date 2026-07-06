@@ -250,8 +250,8 @@ proceseaza_piata_ml <- function(date, nume_piata, coloane_selectate, coloane_fac
     piata = nume_piata
   )
 
-  # 3. Metrici out-of-bag (cifrele pentru Tabelul 4.1 din Capitolul 4).
-  # R2 OOB pe log = valoarea afisata si de aplicatie; RMSE/MAE in euro
+  # 3. R2 OOB, RMSE si MAE
+  # R2 OOB e pe log, la fel ca in aplicatie - RMSE si MAE le aducem in euro
   rmse <- sqrt(mean((df_pred$actual - df_pred$predicted)^2))
   mae <- mean(abs(df_pred$actual - df_pred$predicted))
   cat("  ", nume_piata, "- R2 OOB (log):", round(model_rf$r.squared, 3),

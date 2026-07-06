@@ -30,7 +30,7 @@ options(scipen = 999, digits = 3)
 
 
 # ---- Tema standard pentru toate graficele ----
-# Titlul e centrat; graficele nu folosesc subtitluri (explicatiile sunt in lucrare)
+# Titlul e centrat, fara subtitluri
 tema <- theme_minimal(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5))
 
