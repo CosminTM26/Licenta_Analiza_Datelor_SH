@@ -134,16 +134,20 @@ train_rf <- function(date, coloane_factor, nr_arbori, model_rv, levels_rv, statu
   levels_rv(lapply(date[coloane_factor], levels))
 
   r2 <- round(padure$r.squared, 3)
-  # RMSE si MAE pe predictiile Out-of-Bag, aduse din log inapoi in EUR (exp inverseaza log(pret))
-  pret_oob <- exp(padure$predictions)                            # predictia OOB a fiecarei masini, in EUR
-  rmse <- round(sqrt(mean((date$price_in_euro - pret_oob)^2)))   # penalizeaza erorile mari
-  mae  <- round(mean(abs(date$price_in_euro - pret_oob)))        # eroare medie in EUR, usor de interpretat
+
+  # RMSE si MAE pe predictiile Out-of-Bag (aduse din log in EUR). Afisate DOAR in consola R,
+  # nu in interfata web: servesc la evaluarea din lucrare (Tabelul 4.1), nu utilizatorului final.
+  pret_oob <- exp(padure$predictions)
+  rmse <- round(sqrt(mean((date$price_in_euro - pret_oob)^2)))
+  mae  <- round(mean(abs(date$price_in_euro - pret_oob)))
+  cat("Metrici model (", nr_arbori, "arbori): R2 OOB =", r2,
+      "| RMSE =", rmse, "EUR | MAE =", mae, "EUR\n")
+
   importanta <- sort(importance(padure), decreasing = TRUE)
   procente <- round(100 * importanta / sum(importanta), 1)
   text_importanta <- paste(names(procente), paste0(procente, "%"), sep = ": ", collapse = " | ")
   status_rv(paste0("Antrenat pe ", fmt(nrow(date)), " masini (", nr_arbori, " arbori). ",
                    "R² OOB = ", r2,
-                   " | RMSE = ", fmt(rmse), " EUR | MAE = ", fmt(mae), " EUR",
                    "\nCum decide modelul: ", text_importanta))
 }
 
